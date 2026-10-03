@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/lucide-static@0.469.0/font/lucide.css">
+<style>
+html{background:#07080A}body{margin:0;background:#07080A;color:#E9ECF2;font-family:Inter,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#E9ECF2;text-decoration:underline;text-underline-offset:3px}a:hover{color:#fff}
+@keyframes labpulse{0%,100%{box-shadow:0 0 0 1px #10B981,0 0 0 0 rgba(16,185,129,.12)}50%{box-shadow:0 0 0 1px #10B981,0 0 28px 4px rgba(16,185,129,.18)}}
+@keyframes labshimmer{from{background-position:-200% 0}to{background-position:200% 0}}
+@keyframes labflow{to{stroke-dashoffset:-24}}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;gap:120px;padding:72px">
+
+<header style="display:flex;flex-direction:column;gap:12px;max-width:1000px">
+  <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;color:#9AA3B5">PROPOSTA · 2026-10-02 · TELAS 0–4 (BANCADA)</span>
+  <h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:48px;line-height:52px;letter-spacing:-0.03em">Lab<span style="color:#3DDFA6">IA</span> — telas</h1>
+  <p style="margin:0;font-size:15px;line-height:24px;color:#9AA3B5;text-wrap:pretty">Desktop 1440 e celular 375 por tela, com estados ao lado. Tokens e componentes em <a href="LabIA Design System.dc.html">LabIA Design System</a>; telas 5–8 e acesso em <a href="LabIA Telas — Casa e Acesso.dc.html">Casa e Acesso</a>. Valores em R$ são de exemplo — vêm do catálogo de preços.</p>
+</header>
+
+<!-- ============ 0 SHELL ============ -->
+<section id="0" style="display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #262A35;padding-bottom:20px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:500 12px 'JetBrains Mono';color:#7D869A">00</span><h2 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:32px">App shell</h2><span style="font:12px 'JetBrains Mono';color:#7D869A">components/app/app-shell.tsx</span></div>
+    <p style="margin:0;font-size:14px;line-height:22px;color:#9AA3B5;max-width:900px">Três itens cabem sem rolar. Criar no header. Custo do mês com estado "indisponível" (nunca R$0 em falha). Conexões e "em breve" no menu de perfil <span style="font-family:'JetBrains Mono';font-size:11px;border:1px dashed #343947;border-radius:99px;padding:1px 6px">PROPOSTA</span>.</p>
+  </div>
+  <div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">0a</b> · desktop · padrão / custo indisponível / deslogado</span>
+      <div style="width:1440px;display:flex;flex-direction:column;gap:12px">
+        <dc-import name="LabIA Header" active="fluxos" hint-size="1440px,56px"></dc-import>
+        <dc-import name="LabIA Header" active="fluxos" cost="indisponivel" hint-size="1440px,56px"></dc-import>
+        <dc-import name="LabIA Header" active="none" logged-out="{{ true }}" hint-size="1440px,56px"></dc-import>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">0b</b> · celular · header</span>
+      <div style="width:375px;display:flex;flex-direction:column;gap:12px">
+        <dc-import name="LabIA Header" mobile="{{ true }}" hint-size="375px,56px"></dc-import>
+        <dc-import name="LabIA Header" mobile="{{ true }}" cost="indisponivel" hint-size="375px,56px"></dc-import>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">0c</b> · celular · menu (sheet)</span>
+      <div style="width:375px;height:720px;border:1px solid #262A35;border-radius:12px;overflow:hidden;background:rgba(10,11,14,.8);position:relative">
+        <div style="position:absolute;inset:0 56px 0 0;background:#12141A;border-right:1px solid #343947;display:flex;flex-direction:column">
+          <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 4px 0 16px;border-bottom:1px solid #262A35"><span style="font-family:'Space Grotesk';font-weight:700;font-size:19px">Lab<span style="color:#3DDFA6">IA</span></span><span style="width:44px;height:44px;display:grid;place-items:center"><i class="icon-x" style="font-size:20px"></i></span></div>
+          <div style="padding:12px;display:flex;flex-direction:column;gap:4px">
+            <span style="height:48px;padding:0 12px;border-radius:8px;border:1px solid #343947;background:#1A1D26;display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500"><i class="icon-plus" style="font-size:17px"></i>Criar</span>
+            <span style="height:48px;padding:0 12px;border-radius:8px;background:#1A1D26;display:flex;align-items:center;gap:10px;font-size:15px;margin-top:8px"><i class="icon-folder" style="font-size:17px;color:#9AA3B5"></i>Projetos</span>
+            <span style="height:48px;padding:0 12px;display:flex;align-items:center;gap:10px;font-size:15px;color:#9AA3B5"><i class="icon-workflow" style="font-size:17px"></i>Fluxos</span>
+            <span style="height:48px;padding:0 12px;display:flex;align-items:center;gap:10px;font-size:15px;color:#9AA3B5"><i class="icon-library" style="font-size:17px"></i>Biblioteca</span>
+          </div>
+          <div style="margin:0 12px;padding:12px;border-radius:8px;border:1px solid #262A35;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:#9AA3B5">Gasto em outubro</span><span style="font:500 14px 'JetBrains Mono';color:#3DDFA6">R$42,18</span></div>
+          <div style="flex:1"></div>
+          <div style="border-top:1px solid #262A35;padding:12px;display:flex;flex-direction:column;gap:2px">
+            <div style="display:flex;gap:10px;align-items:center;padding:8px 4px"><span style="width:32px;height:32px;border-radius:99px;background:#262A35;display:grid;place-items:center;font:600 12px 'Space Grotesk'">FZ</span><span style="display:flex;flex-direction:column"><span style="font-size:14px;font-weight:500">Felipe Zilli</span><span style="font-size:12px;color:#9AA3B5">felipe-labia</span></span></div>
+            <span style="height:44px;padding:0 4px;display:flex;align-items:center;gap:10px;font-size:14px"><i class="icon-plug" style="font-size:16px;color:#9AA3B5"></i>Conexões</span>
+            <span style="height:44px;padding:0 4px;display:flex;align-items:center;gap:10px;font-size:14px"><i class="icon-user" style="font-size:16px;color:#9AA3B5"></i>Conta</span>
+            <span style="height:44px;padding:0 4px;display:flex;align-items:center;gap:10px;font-size:14px"><i class="icon-log-out" style="font-size:16px;color:#9AA3B5"></i>Sair</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1 PAINEL ============ -->
+<section id="1" style="display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #262A35;padding-bottom:20px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:500 12px 'JetBrains Mono';color:#7D869A">01</span><h2 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:32px">Início · Painel (logado)</h2><span style="font:12px 'JetBrains Mono';color:#7D869A">app/page.tsx · components/home/painel-section.tsx</span><span style="font:500 11px 'JetBrains Mono';border:1px dashed #343947;border-radius:99px;padding:2px 8px;color:#9AA3B5">PROPOSTA · depende do login</span></div>
+    <p style="margin:0;font-size:14px;line-height:22px;color:#9AA3B5;max-width:900px">Logado abre direto no Painel — sem rolar pela landing, sem botão "Pular". A landing pública vive em <a href="LabIA Telas — Casa e Acesso.dc.html">Casa e Acesso · 1L</a>.</p>
+  </div>
+  <div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">1a</b> · desktop · padrão</span>
+      <div style="width:1440px;height:900px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <dc-import name="LabIA Header" active="none" hint-size="100%,56px"></dc-import>
+        <div style="width:1152px;margin:0 auto;padding:40px 0;display:flex;flex-direction:column;gap:40px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:32px">
+            <div style="display:flex;flex-direction:column;gap:8px"><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">QUINTA, 2 DE OUTUBRO</span><h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:32px;line-height:40px;letter-spacing:-0.02em">Boa noite, Felipe.</h1><span style="font-size:14px;color:#9AA3B5">2 Projetos em revisão e 1 fluxo rodando.</span></div>
+            <div style="display:flex;gap:32px;align-items:center;padding:16px 20px;border:1px solid #262A35;border-radius:12px;background:#12141A">
+              <div style="display:flex;flex-direction:column;gap:2px"><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">GASTO EM OUTUBRO</span><span style="font:600 28px/32px 'JetBrains Mono';color:#3DDFA6">R$42,18</span></div>
+              <div style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:#9AA3B5;border-left:1px solid #262A35;padding-left:20px"><span>23 gerações</span><a href="#" style="font-size:12px">Ver na Biblioteca</a></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:18px">Criar</h3><a href="#" style="font-size:13px">Todas as receitas</a></div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+              <sc-for list="{{ quickRecipes }}" as="r" hint-placeholder-count="3">
+                <div style="display:flex;gap:14px;align-items:center;padding:14px 16px;border-radius:12px;border:1px solid {{ r.border }};background:#12141A">
+                  <span style="width:40px;height:40px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;display:grid;place-items:center;color:{{ r.color }}"><i class="{{ r.icon }}" style="font-size:18px"></i></span>
+                  <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:500">{{ r.name }}</span><span style="font-size:12px;color:#9AA3B5">{{ r.sub }}</span></span>
+                  <span style="height:22px;padding:0 8px;border-radius:999px;border:1px {{ r.chipStyle }} {{ r.chipBorder }};background:{{ r.chipBg }};color:{{ r.chipFg }};font:500 11px 'JetBrains Mono';display:inline-flex;align-items:center">{{ r.cost }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1.25fr 1fr;gap:32px">
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:18px">Projetos recentes</h3><a href="#" style="font-size:13px">Ver todos</a></div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+                <sc-for list="{{ projects3 }}" as="p" hint-placeholder-count="3">
+                  <div style="border:1px solid #262A35;border-radius:12px;background:#12141A;overflow:hidden;display:flex;flex-direction:column">
+                    <div style="aspect-ratio:4/5;background:repeating-linear-gradient(135deg,#1A1D26 0 8px,#12141A 8px 16px);display:grid;place-items:center;font:11px 'JetBrains Mono';color:#7D869A;position:relative">{{ p.ratio }}<span style="position:absolute;top:8px;left:8px;height:22px;padding:0 8px;border-radius:999px;border:1px solid {{ p.sBorder }};background:rgba(10,11,14,.85);font:500 11px Inter;display:inline-flex;align-items:center;gap:6px"><i style="width:6px;height:6px;border-radius:99px;background:{{ p.sDot }};display:inline-block"></i>{{ p.status }}</span></div>
+                    <div style="padding:12px;display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500">{{ p.name }}</span><div style="display:flex;justify-content:space-between"><span style="font:11px 'JetBrains Mono';color:#9AA3B5">{{ p.meta }}</span><span style="font:500 11px 'JetBrains Mono';color:#3DDFA6">{{ p.cost }}</span></div></div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:18px">Fluxos recentes</h3><a href="#" style="font-size:13px">Ver todos</a></div>
+              <div style="border:1px solid #262A35;border-radius:12px;background:#12141A;overflow:hidden">
+                <sc-for list="{{ flows4 }}" as="f" hint-placeholder-count="4">
+                  <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #262A35">
+                    <span style="width:48px;height:48px;border-radius:8px;background:repeating-linear-gradient(135deg,#1A1D26 0 6px,#12141A 6px 12px);flex-shrink:0"></span>
+                    <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.name }}</span><span style="font-size:12px;color:#9AA3B5;display:flex;gap:6px;align-items:center"><i style="width:6px;height:6px;border-radius:99px;background:{{ f.sDot }};display:inline-block"></i>{{ f.status }} · {{ f.project }}</span></span>
+                    <span style="font:500 12px 'JetBrains Mono';color:{{ f.costColor }}">{{ f.cost }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">1b</b> · celular · padrão</span>
+      <div style="width:375px;height:812px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <dc-import name="LabIA Header" mobile="{{ true }}" hint-size="100%,56px"></dc-import>
+        <div style="padding:24px 20px;display:flex;flex-direction:column;gap:24px">
+          <div style="display:flex;flex-direction:column;gap:6px"><h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:28px;line-height:34px;letter-spacing:-0.02em">Boa noite, Felipe.</h1><span style="font-size:14px;color:#9AA3B5">2 em revisão · 1 rodando</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border:1px solid #262A35;border-radius:12px;background:#12141A"><span style="display:flex;flex-direction:column;gap:2px"><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">OUTUBRO</span><span style="font-size:12px;color:#9AA3B5">23 gerações</span></span><span style="font:600 24px 'JetBrains Mono';color:#3DDFA6">R$42,18</span></div>
+          <span style="height:48px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 15px Inter;display:flex;align-items:center;justify-content:center;gap:8px"><i class="icon-plus" style="font-size:17px"></i>Criar</span>
+          <div style="display:flex;flex-direction:column;gap:10px"><span style="font-family:'Space Grotesk';font-weight:500;font-size:17px">Projetos recentes</span>
+            <div style="display:flex;gap:10px;overflow:hidden">
+              <sc-for list="{{ projects3 }}" as="p" hint-placeholder-count="3">
+                <div style="width:140px;flex-shrink:0;border:1px solid #262A35;border-radius:12px;background:#12141A;overflow:hidden"><div style="aspect-ratio:4/5;background:repeating-linear-gradient(135deg,#1A1D26 0 8px,#12141A 8px 16px)"></div><div style="padding:10px;display:flex;flex-direction:column;gap:4px"><span style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</span><span style="font-size:11px;color:#9AA3B5;display:flex;gap:5px;align-items:center"><i style="width:6px;height:6px;border-radius:99px;background:{{ p.sDot }};display:inline-block"></i>{{ p.status }}</span></div></div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px"><span style="font-family:'Space Grotesk';font-weight:500;font-size:17px">Fluxos recentes</span>
+            <div style="border:1px solid #262A35;border-radius:12px;background:#12141A;overflow:hidden">
+              <sc-for list="{{ flows3 }}" as="f" hint-placeholder-count="3">
+                <div style="display:flex;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid #262A35;min-height:44px">
+                  <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.name }}</span><span style="font-size:12px;color:#9AA3B5;display:flex;gap:6px;align-items:center"><i style="width:6px;height:6px;border-radius:99px;background:{{ f.sDot }};display:inline-block"></i>{{ f.status }}</span></span>
+                  <span style="font:500 12px 'JetBrains Mono';color:{{ f.costColor }}">{{ f.cost }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">1c</b> · carregando</span>
+        <div style="width:700px;padding:28px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;display:flex;flex-direction:column;gap:20px;box-sizing:border-box">
+          <div style="display:flex;justify-content:space-between"><div style="display:flex;flex-direction:column;gap:10px"><div style="width:120px;height:10px;border-radius:4px;background:#1A1D26"></div><div style="width:260px;height:24px;border-radius:6px;background:linear-gradient(90deg,#1A1D26,#232733,#1A1D26);background-size:200% 100%;animation:labshimmer 1.6s linear infinite"></div></div><div style="width:200px;height:64px;border-radius:12px;border:1px solid #262A35;background:#12141A"></div></div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px"><div style="height:68px;border-radius:12px;background:#12141A;border:1px solid #262A35"></div><div style="height:68px;border-radius:12px;background:#12141A;border:1px solid #262A35"></div><div style="height:68px;border-radius:12px;background:#12141A;border:1px solid #262A35"></div></div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"><div style="aspect-ratio:4/5;border-radius:12px;background:linear-gradient(90deg,#12141A,#1A1D26,#12141A);background-size:200% 100%;animation:labshimmer 1.6s linear infinite"></div><div style="aspect-ratio:4/5;border-radius:12px;background:#12141A"></div><div style="aspect-ratio:4/5;border-radius:12px;background:#12141A"></div><div style="aspect-ratio:4/5;border-radius:12px;background:#12141A"></div></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">1d</b> · vazio (primeiro acesso)</span>
+        <div style="width:700px;padding:36px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box">
+          <h3 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:28px;letter-spacing:-0.02em">A bancada está limpa.</h3>
+          <p style="margin:0;font-size:15px;line-height:24px;color:#9AA3B5;max-width:500px">Comece com a receita mais usada: suba a foto do produto e ela vira um vídeo curto de 5s. Você vê o custo antes de rodar.</p>
+          <div style="display:flex;gap:12px;align-items:center"><span style="height:40px;padding:0 14px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 14px Inter;display:flex;align-items:center;gap:8px"><i class="icon-clapperboard" style="font-size:16px"></i>Produto importado → Vídeo curto</span><span style="height:24px;padding:0 8px;border-radius:999px;border:1px solid rgba(16,185,129,.28);background:rgba(16,185,129,.12);color:#3DDFA6;font:500 12px 'JetBrains Mono';display:inline-flex;align-items:center">~R$1,93</span><a href="#" style="font-size:13px;margin-left:8px">Ver outras receitas</a></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">1e</b> · erro (banco fora) — não finge vazio</span>
+        <div style="width:700px;padding:24px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box">
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:'Space Grotesk';font-weight:700;font-size:24px">Boa noite, Felipe.</span><span style="height:28px;padding:0 10px;border-radius:999px;border:1px solid #262A35;background:#1A1D26;color:#7D869A;font:500 12px 'JetBrains Mono';display:inline-flex;align-items:center;gap:6px">outubro<i class="icon-cloud-off" style="font-size:12px"></i>indisponível</span></div>
+          <div style="display:flex;gap:14px;align-items:flex-start;padding:18px;border-radius:12px;border:1px solid rgba(251,113,133,.4);background:#12141A"><i class="icon-database-zap" style="font-size:20px;color:#FB7185"></i><div style="flex:1;display:flex;flex-direction:column;gap:4px"><span style="font-family:'Space Grotesk';font-weight:500;font-size:16px">Não conseguimos carregar seus Projetos e fluxos</span><span style="font-size:13px;line-height:18px;color:#9AA3B5">O banco não respondeu. Nada foi perdido. Criar continua disponível.</span></div><span style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;font:500 12px Inter;display:flex;gap:6px;align-items:center"><i class="icon-rotate-ccw" style="font-size:13px"></i>Tentar de novo</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2 CRIAR ============ -->
+<section id="2" style="display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #262A35;padding-bottom:20px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:500 12px 'JetBrains Mono';color:#7D869A">02</span><h2 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:32px">Criar</h2><span style="font:12px 'JetBrains Mono';color:#7D869A">/criar · components/create/create-workspace.tsx</span></div>
+    <p style="margin:0;font-size:14px;line-height:22px;color:#9AA3B5;max-width:900px">Receita → Projeto inline → abrir. Custo típico por receita. Primário = "Criar Projeto"; "Editar no canvas" vira secundário. Este é o único formulário de Projeto do app (Projetos reutiliza).</p>
+  </div>
+  <div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">2a</b> · desktop · receita selecionada</span>
+      <div style="width:1440px;height:900px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <dc-import name="LabIA Header" active="none" hint-size="100%,56px"></dc-import>
+        <div style="width:1152px;margin:0 auto;padding:40px 0;display:grid;grid-template-columns:1fr 440px;gap:40px">
+          <div style="display:flex;flex-direction:column;gap:24px">
+            <div style="display:flex;flex-direction:column;gap:8px"><h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:40px;line-height:48px;letter-spacing:-0.02em">O que você quer criar?</h1><span style="font-size:15px;color:#9AA3B5">Escolha uma receita. Nada é gerado nesta etapa.</span></div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ recipes }}" as="r" hint-placeholder-count="4">
+                <div style="display:grid;grid-template-columns:44px 1fr auto;gap:16px;align-items:center;padding:16px 18px;border-radius:12px;border:1px solid {{ r.border }};background:{{ r.bg }};box-shadow:{{ r.shadow }}">
+                  <span style="width:44px;height:44px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;display:grid;place-items:center;color:{{ r.color }}"><i class="{{ r.icon }}" style="font-size:19px"></i></span>
+                  <span style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                    <span style="display:flex;gap:10px;align-items:center"><span style="font-family:'Space Grotesk';font-weight:500;font-size:17px">{{ r.name }}</span><sc-if value="{{ r.recommended }}" hint-placeholder-val="{{ false }}"><span style="height:20px;padding:0 7px;border-radius:999px;border:1px solid #343947;font:500 10px 'JetBrains Mono';letter-spacing:.08em;color:#9AA3B5;display:inline-flex;align-items:center">RECOMENDADO</span></sc-if></span>
+                    <span style="font-size:13px;color:#9AA3B5">{{ r.result }}</span>
+                    <span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;font:11px 'JetBrains Mono';color:#9AA3B5"><sc-for list="{{ r.steps }}" as="s" hint-placeholder-count="2"><span style="display:flex;gap:5px;align-items:center;border:1px solid #262A35;border-radius:999px;padding:2px 8px"><i style="width:6px;height:6px;border-radius:2px;background:{{ s.c }};display:inline-block"></i>{{ s.n }}</span></sc-for></span>
+                  </span>
+                  <span style="height:24px;padding:0 8px;border-radius:999px;border:1px {{ r.chipStyle }} {{ r.chipBorder }};background:{{ r.chipBg }};color:{{ r.chipFg }};font:500 12px 'JetBrains Mono';display:inline-flex;align-items:center">{{ r.cost }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <span style="font-size:12px;color:#7D869A">Custo típico = soma dos nós pagos da receita no modelo padrão. Valor final aparece na confirmação antes de rodar.</span>
+          </div>
+          <div style="border:1px solid #262A35;border-radius:12px;background:#12141A;padding:24px;display:flex;flex-direction:column;gap:18px;align-self:start">
+            <div style="display:flex;flex-direction:column;gap:4px"><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">NOVO PROJETO</span><span style="font-family:'Space Grotesk';font-weight:500;font-size:20px">Imagem-base → Vídeo curto</span></div>
+            <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">NOME</span><span style="height:40px;border:1px solid #343947;background:#1A1D26;border-radius:8px;padding:0 12px;display:flex;align-items:center;font-size:14px;box-shadow:0 0 0 1px #10B981,0 0 24px rgba(16,185,129,.12)">Bento · pote térmico</span></label>
+            <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">OBJETIVO</span><span style="min-height:64px;border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:10px 12px;font-size:14px;line-height:20px;color:#E9ECF2">Reel de lançamento: pote girando no balcão, luz de fim de tarde.</span></label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">FORMATO</span><div style="display:flex;border:1px solid #262A35;border-radius:8px;padding:3px;gap:3px;background:#1A1D26"><span style="flex:1;height:30px;border-radius:6px;background:#343947;display:grid;place-items:center;font:500 12px 'JetBrains Mono'">9:16</span><span style="flex:1;height:30px;display:grid;place-items:center;font:12px 'JetBrains Mono';color:#9AA3B5">1:1</span><span style="flex:1;height:30px;display:grid;place-items:center;font:12px 'JetBrains Mono';color:#9AA3B5">16:9</span></div></div>
+              <div style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">DURAÇÃO</span><span style="height:38px;border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;font:13px 'JetBrains Mono'">5s<i class="icon-chevron-down" style="font-size:14px;color:#9AA3B5"></i></span></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:8px;border:1px solid #262A35"><span style="font-size:13px;color:#9AA3B5">Custo típico ao rodar</span><span style="font:500 14px 'JetBrains Mono';color:#3DDFA6">~R$2,07</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px"><span style="height:44px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 15px Inter;display:flex;align-items:center;justify-content:center">Criar Projeto</span><span style="height:40px;border-radius:8px;color:#9AA3B5;font:500 14px Inter;display:flex;align-items:center;justify-content:center">Editar no canvas</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">2b</b> · celular · selecionado + form</span>
+      <div style="width:375px;height:812px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;position:relative">
+        <dc-import name="LabIA Header" mobile="{{ true }}" hint-size="100%,56px"></dc-import>
+        <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+          <h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:28px;line-height:34px;letter-spacing:-0.02em">O que você quer criar?</h1>
+          <div style="border:1px solid #10B981;box-shadow:0 0 0 1px #10B981;border-radius:12px;background:#12141A;padding:14px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:'Space Grotesk';font-weight:500;font-size:16px">Imagem-base → Vídeo curto</span><span style="font:500 12px 'JetBrains Mono';color:#3DDFA6">~R$2,07</span></div>
+            <span style="font-size:13px;color:#9AA3B5">Gera a imagem e anima em 5s.</span>
+            <span style="height:44px;border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:0 12px;display:flex;align-items:center;font-size:15px">Bento · pote térmico</span>
+            <span style="min-height:60px;border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:10px 12px;font-size:14px;line-height:20px;color:#7D869A">Objetivo do Projeto</span>
+            <div style="display:flex;border:1px solid #262A35;border-radius:8px;padding:3px;gap:3px;background:#1A1D26"><span style="flex:1;height:38px;border-radius:6px;background:#343947;display:grid;place-items:center;font:500 13px 'JetBrains Mono'">9:16</span><span style="flex:1;height:38px;display:grid;place-items:center;font:13px 'JetBrains Mono';color:#9AA3B5">1:1</span><span style="flex:1;height:38px;display:grid;place-items:center;font:13px 'JetBrains Mono';color:#9AA3B5">16:9</span></div>
+          </div>
+          <sc-for list="{{ recipesRest }}" as="r" hint-placeholder-count="3">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;border:1px solid #262A35;border-radius:12px;background:#12141A;min-height:44px"><span style="display:flex;gap:10px;align-items:center;font-size:14px;font-weight:500"><i class="{{ r.icon }}" style="font-size:17px;color:{{ r.color }}"></i>{{ r.name }}</span><span style="font:500 12px 'JetBrains Mono';color:{{ r.chipFg }}">{{ r.cost }}</span></div>
+          </sc-for>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:12px 20px 20px;background:#12141A;border-top:1px solid #262A35"><span style="height:48px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 15px Inter;display:flex;align-items:center;justify-content:center">Criar Projeto</span></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">2c</b> · criando</span>
+        <div style="width:440px;padding:20px;background:#12141A;border:1px solid #262A35;border-radius:12px;display:flex;flex-direction:column;gap:12px;box-sizing:border-box">
+          <span style="height:40px;border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:0 12px;display:flex;align-items:center;font-size:14px;opacity:.6">Bento · pote térmico</span>
+          <span style="height:44px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 15px Inter;display:flex;align-items:center;justify-content:center;gap:8px;opacity:.85"><i class="icon-loader-circle" style="font-size:16px"></i>Criando Projeto…</span>
+          <span style="font-size:12px;color:#7D869A">Campos travados até responder. Nada é gerado.</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">2d</b> · erro — campos preservados</span>
+        <div style="width:440px;padding:20px;background:#12141A;border:1px solid #262A35;border-radius:12px;display:flex;flex-direction:column;gap:12px;box-sizing:border-box">
+          <div style="display:flex;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid rgba(251,113,133,.4);background:rgba(251,113,133,.1);font-size:13px;line-height:18px"><i class="icon-circle-x" style="font-size:15px;color:#FB7185"></i>Não foi possível criar o Projeto. Seus dados continuam aqui.</div>
+          <span style="height:40px;border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:0 12px;display:flex;align-items:center;font-size:14px">Bento · pote térmico</span>
+          <span style="min-height:56px;border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:10px 12px;font-size:14px;line-height:20px">Reel de lançamento: pote girando no balcão…</span>
+          <span style="height:44px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 15px Inter;display:flex;align-items:center;justify-content:center">Tentar de novo</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">2e</b> · validação</span>
+        <div style="width:440px;padding:20px;background:#12141A;border:1px solid #262A35;border-radius:12px;display:flex;flex-direction:column;gap:6px;box-sizing:border-box">
+          <span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">NOME</span>
+          <span style="height:40px;border:1px solid #FB7185;background:#1A1D26;border-radius:8px"></span>
+          <span style="font-size:12px;color:#FB7185">Dê um nome ao Projeto.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3 FLUXOS ============ -->
+<section id="3" style="display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #262A35;padding-bottom:20px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:500 12px 'JetBrains Mono';color:#7D869A">03</span><h2 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:32px">Fluxos</h2><span style="font:12px 'JetBrains Mono';color:#7D869A">app/(studio)/fluxos/page.tsx (+ loading.tsx, error.tsx)</span></div>
+    <p style="margin:0;font-size:14px;line-height:22px;color:#9AA3B5;max-width:900px">Nome em 2 linhas, Projeto, miniatura, status do último run e custo (estimado ~ ou real ✓). Busca <span style="font-family:'JetBrains Mono';font-size:11px;border:1px dashed #343947;border-radius:99px;padding:1px 6px">PROPOSTA</span>. Caractere quebrado vira "?" discreto, sem quebrar layout.</p>
+  </div>
+  <div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">3a</b> · desktop · padrão</span>
+      <div style="width:1440px;height:900px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <dc-import name="LabIA Header" active="fluxos" hint-size="100%,56px"></dc-import>
+        <div style="width:1152px;margin:0 auto;padding:40px 0;display:flex;flex-direction:column;gap:24px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-end">
+            <div style="display:flex;flex-direction:column;gap:6px"><h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:32px;letter-spacing:-0.02em">Fluxos</h1><span style="font-size:14px;color:#9AA3B5">12 fluxos em 5 Projetos</span></div>
+            <div style="display:flex;gap:10px"><span style="width:280px;height:36px;border:1px solid #262A35;background:#12141A;border-radius:8px;display:flex;align-items:center;gap:8px;padding:0 12px;font-size:14px;color:#7D869A"><i class="icon-search" style="font-size:15px"></i>Buscar por nome ou Projeto</span><span style="height:36px;padding:0 12px;border-radius:8px;border:1px solid #343947;background:#1A1D26;font:500 14px Inter;display:flex;gap:6px;align-items:center"><i class="icon-plus" style="font-size:15px"></i>Novo fluxo</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+            <sc-for list="{{ flows8 }}" as="f" hint-placeholder-count="8">
+              <div style="border:1px solid #262A35;border-radius:12px;background:#12141A;overflow:hidden;display:flex;flex-direction:column">
+                <div style="aspect-ratio:16/10;background:{{ f.thumb }};display:grid;place-items:center;font:11px 'JetBrains Mono';color:#7D869A;position:relative">{{ f.thumbLabel }}<span style="position:absolute;top:8px;left:8px;height:22px;padding:0 8px;border-radius:999px;border:1px solid {{ f.sBorder }};background:rgba(10,11,14,.85);font:500 11px Inter;display:inline-flex;align-items:center;gap:6px"><i style="width:6px;height:6px;border-radius:99px;background:{{ f.sDot }};display:inline-block"></i>{{ f.status }}</span></div>
+                <div style="padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px;flex:1">
+                  <span style="font-family:'Space Grotesk';font-weight:500;font-size:15px;line-height:20px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:40px">{{ f.name }}</span>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto"><span style="font-size:12px;color:#9AA3B5;display:flex;gap:6px;align-items:center"><i style="width:6px;height:6px;border-radius:2px;background:#38BDF8;display:inline-block"></i>{{ f.project }} · {{ f.when }}</span><span style="height:22px;padding:0 7px;border-radius:999px;border:1px {{ f.chipStyle }} {{ f.chipBorder }};background:{{ f.chipBg }};color:{{ f.costColor }};font:500 11px 'JetBrains Mono';display:inline-flex;align-items:center">{{ f.cost }}</span></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">3b</b> · celular · lista</span>
+      <div style="width:375px;height:812px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <dc-import name="LabIA Header" mobile="{{ true }}" hint-size="100%,56px"></dc-import>
+        <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+          <h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:28px">Fluxos</h1>
+          <span style="height:44px;border:1px solid #262A35;background:#12141A;border-radius:8px;display:flex;align-items:center;gap:8px;padding:0 12px;font-size:15px;color:#7D869A"><i class="icon-search" style="font-size:16px"></i>Buscar</span>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ flows6 }}" as="f" hint-placeholder-count="6">
+              <div style="display:flex;gap:12px;align-items:center;padding:10px;border:1px solid #262A35;border-radius:12px;background:#12141A">
+                <span style="width:56px;height:56px;border-radius:8px;background:{{ f.thumb }};flex-shrink:0"></span>
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><span style="font-size:14px;font-weight:500;line-height:18px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ f.name }}</span><span style="font-size:12px;color:#9AA3B5;display:flex;gap:6px;align-items:center"><i style="width:6px;height:6px;border-radius:99px;background:{{ f.sDot }};display:inline-block"></i>{{ f.status }} · {{ f.project }}</span></span>
+                <span style="font:500 11px 'JetBrains Mono';color:{{ f.costColor }};white-space:nowrap">{{ f.cost }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">3c</b> · carregando</span>
+        <div style="width:700px;padding:24px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;box-sizing:border-box">
+          <sc-for list="{{ six }}" as="x" hint-placeholder-count="6"><div style="border:1px solid #262A35;border-radius:12px;background:#12141A;overflow:hidden"><div style="aspect-ratio:16/10;background:linear-gradient(90deg,#12141A,#1A1D26,#12141A);background-size:200% 100%;animation:labshimmer 1.6s linear infinite"></div><div style="padding:12px;display:flex;flex-direction:column;gap:8px"><div style="height:12px;width:80%;border-radius:4px;background:#1A1D26"></div><div style="height:10px;width:50%;border-radius:4px;background:#1A1D26"></div></div></div></sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">3d</b> · vazio · <b style="color:#E9ECF2">3e</b> · busca sem resultado</span>
+        <div style="width:700px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="padding:24px;border:1px dashed #343947;border-radius:12px;background:#12141A;display:flex;flex-direction:column;gap:12px"><span style="font-family:'Space Grotesk';font-weight:500;font-size:18px">Nenhum fluxo ainda</span><span style="font-size:13px;line-height:19px;color:#9AA3B5">Todo fluxo nasce de uma receita. A mais usada:</span><span style="height:36px;padding:0 12px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 13px Inter;display:flex;align-items:center;gap:8px;align-self:flex-start">Imagem-base → Vídeo curto<span style="font:500 11px 'JetBrains Mono'">~R$2,07</span></span></div>
+          <div style="padding:24px;border:1px solid #262A35;border-radius:12px;background:#12141A;display:flex;flex-direction:column;gap:10px"><span style="font-family:'Space Grotesk';font-weight:500;font-size:18px">Nada com "carrossel"</span><span style="font-size:13px;line-height:19px;color:#9AA3B5">Tente o nome do Projeto ou limpe a busca.</span><a href="#" style="font-size:13px">Limpar busca</a></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">3f</b> · erro</span>
+        <div style="width:700px;padding:20px;border:1px solid rgba(251,113,133,.4);border-radius:12px;background:#12141A;display:flex;gap:14px;align-items:flex-start;box-sizing:border-box"><i class="icon-database-zap" style="font-size:20px;color:#FB7185"></i><div style="flex:1;display:flex;flex-direction:column;gap:4px"><span style="font-family:'Space Grotesk';font-weight:500;font-size:16px">Não foi possível carregar seus fluxos</span><span style="font-size:13px;color:#9AA3B5">O banco não respondeu. Isto não é uma lista vazia.</span></div><span style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;font:500 12px Inter;display:flex;gap:6px;align-items:center"><i class="icon-rotate-ccw" style="font-size:13px"></i>Tentar de novo</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4 CANVAS ============ -->
+<section id="4" style="display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #262A35;padding-bottom:20px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:500 12px 'JetBrains Mono';color:#7D869A">04</span><h2 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:32px">Canvas · a bancada</h2><span style="font:12px 'JetBrains Mono';color:#7D869A">fluxos/flow-canvas.tsx · nodes/lab-flow-node.tsx · flows/cost-confirm-modal.tsx</span></div>
+    <p style="margin:0;font-size:14px;line-height:22px;color:#9AA3B5;max-width:1000px">Toolbar com Projeto e volta. Custo total honesto. "Salvo" correto ao abrir. Bandas de fase, aviso de conexão inválida junto da aresta, tooltip de nó e picker de porta. Grade de pontos mais visível; selo do React Flow oculto; minimapa leve.</p>
+  </div>
+  <div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">4a</b> · desktop · rodando, com conexão inválida e tooltip</span>
+      <div style="width:1440px;height:900px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <dc-import name="LabIA Header" active="fluxos" hint-size="100%,56px"></dc-import>
+        <div style="height:48px;flex-shrink:0;background:#12141A;border-bottom:1px solid #262A35;display:flex;align-items:center;gap:12px;padding:0 16px">
+          <span style="height:30px;padding:0 10px 0 6px;border-radius:8px;border:1px solid #262A35;display:flex;align-items:center;gap:8px;font-size:13px"><i class="icon-chevron-left" style="font-size:15px;color:#9AA3B5"></i><i style="width:8px;height:8px;border-radius:2px;background:#38BDF8;display:inline-block"></i>Bento · pote térmico</span>
+          <span style="color:#343947">/</span>
+          <span style="height:30px;padding:0 8px;border-radius:8px;display:flex;align-items:center;font-family:'Space Grotesk';font-weight:500;font-size:14px">Flow principal</span>
+          <span style="font-size:12px;color:#7D869A;display:flex;gap:6px;align-items:center"><i class="icon-check" style="font-size:13px"></i>Salvo às 21:14</span>
+          <div style="flex:1"></div>
+          <span style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9AA3B5">Total<span style="height:26px;padding:0 9px;border-radius:999px;border:1px solid rgba(16,185,129,.28);background:rgba(16,185,129,.12);color:#3DDFA6;font:500 12px 'JetBrains Mono';display:inline-flex;align-items:center">R$0,14 ✓ + ~R$1,93</span></span>
+          <span style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;color:#7D869A;font:500 13px Inter;display:flex;align-items:center">Salvar</span>
+          <span style="height:32px;padding:0 12px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 13px Inter;display:flex;align-items:center;gap:6px;opacity:.85"><i class="icon-loader-circle" style="font-size:14px"></i>Executando 1 de 2</span>
+        </div>
+        <div style="flex:1;position:relative;background-color:#0A0B0E;background-image:radial-gradient(#242833 1px,transparent 1px);background-size:16px 16px;overflow:hidden">
+          <div style="position:absolute;inset:0;display:grid;grid-template-columns:repeat(7,1fr)">
+            <sc-for list="{{ phases }}" as="ph" hint-placeholder-count="7">
+              <div style="border-right:1px solid rgba(233,236,242,.035);background:{{ ph.bg }};padding:12px 14px;font:500 10px 'JetBrains Mono';letter-spacing:.1em;color:#5D6577">{{ ph.name }}</div>
+            </sc-for>
+          </div>
+          <svg width="1440" height="796" style="position:absolute;inset:0;pointer-events:none" fill="none">
+            <path d="M300 124 C 340 124, 340 104, 380 104" stroke="#343947" stroke-width="2"></path>
+            <path d="M300 484 C 360 484, 360 464, 420 464" stroke="#38BDF8" stroke-width="2" stroke-dasharray="6 6" style="animation:labflow 1s linear infinite"></path>
+            <path d="M660 464 C 730 464, 730 484, 800 484" stroke="#343947" stroke-width="2"></path>
+            <path d="M620 104 C 700 104, 640 300, 700 330" stroke="#FB7185" stroke-width="2" stroke-dasharray="5 5"></path>
+          </svg>
+          <sc-for list="{{ canvasNodes }}" as="n" hint-placeholder-count="5">
+            <div style="position:absolute;left:{{ n.x }};top:{{ n.y }};width:240px;border-radius:12px;border:1px {{ n.borderStyle }} {{ n.border }};background:#1A1D26;box-shadow:{{ n.shadow }};animation:{{ n.anim }}">
+              <div style="height:2px;background:{{ n.accent }};border-radius:12px 12px 0 0"></div>
+              <div style="display:flex;justify-content:space-between;gap:8px;padding:10px 10px 0;opacity:{{ n.op }}">
+                <div style="display:flex;gap:8px;align-items:center;min-width:0"><span style="width:28px;height:28px;border-radius:7px;border:1px solid #262A35;background:#12141A;display:grid;place-items:center;color:{{ n.accent }}"><i class="{{ n.icon }}" style="font-size:14px"></i></span><span style="display:flex;flex-direction:column;min-width:0"><span style="font-family:'Space Grotesk';font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ n.title }}</span><span style="font:500 10px 'JetBrains Mono';letter-spacing:.08em;text-transform:uppercase;color:#7D869A">{{ n.kind }}</span></span></div>
+                <span style="height:20px;padding:0 6px;border-radius:999px;border:1px {{ n.chipStyle }} {{ n.chipBorder }};background:{{ n.chipBg }};color:{{ n.chipFg }};font:500 10px 'JetBrains Mono';display:inline-flex;align-items:center;white-space:nowrap">{{ n.cost }}</span>
+              </div>
+              <div style="padding:10px;display:flex;flex-direction:column;gap:8px">
+                <sc-if value="{{ n.hasText }}" hint-placeholder-val="{{ false }}"><div style="border:1px solid #262A35;background:#12141A;border-radius:7px;padding:8px;font:11px/17px 'JetBrains Mono';color:#E9ECF2">{{ n.text }}</div></sc-if>
+                <sc-if value="{{ n.running }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:8px;align-items:center;font:11px 'JetBrains Mono';color:#9AA3B5"><span style="flex:1;height:3px;border-radius:99px;background:#12141A;overflow:hidden"><span style="display:block;height:100%;background:linear-gradient(90deg,transparent,#10B981,transparent);background-size:200% 100%;animation:labshimmer 1.6s linear infinite"></span></span>Gerando · 00:42</div></sc-if>
+                <sc-if value="{{ n.blocked }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:6px;align-items:center;font-size:11px;color:#9AA3B5"><i class="icon-lock" style="font-size:12px"></i>{{ n.blockedText }}</div></sc-if>
+                <sc-if value="{{ n.hasMedia }}" hint-placeholder-val="{{ false }}"><div style="aspect-ratio:{{ n.ratio }};border-radius:7px;border:1px {{ n.mediaBorderStyle }} #262A35;background:{{ n.media }};display:grid;place-items:center;font:10px 'JetBrains Mono';color:#7D869A">{{ n.mediaLabel }}</div></sc-if>
+                <sc-if value="{{ n.hasTags }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:4px;flex-wrap:wrap;font:10px 'JetBrains Mono';color:#9AA3B5"><sc-for list="{{ n.tags }}" as="tg" hint-placeholder-count="2"><span style="border:1px solid #262A35;border-radius:999px;padding:1px 6px">{{ tg }}</span></sc-for></div></sc-if>
+              </div>
+              <sc-if value="{{ n.hasIn }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;left:-8px;top:36px;width:16px;height:16px;border-radius:99px;border:3px solid #0A0B0E;background:#343947;box-sizing:border-box"></span></sc-if>
+              <span style="position:absolute;right:-8px;top:36px;width:16px;height:16px;border-radius:99px;border:3px solid #0A0B0E;background:{{ n.portOut }};box-sizing:border-box"></span>
+            </div>
+          </sc-for>
+          <div style="position:absolute;left:590px;top:230px;width:250px;padding:10px 12px;border-radius:8px;background:#12141A;box-shadow:0 0 0 1px rgba(251,113,133,.5),0 16px 40px rgba(0,0,0,.55);display:flex;flex-direction:column;gap:6px">
+            <span style="display:flex;gap:6px;align-items:center;font-size:12px;font-weight:600;color:#FB7185"><i class="icon-ban" style="font-size:13px"></i>Conexão não permitida</span>
+            <span style="font-size:12px;line-height:17px;color:#E9ECF2">Juntar clipes recebe vídeos, e isto é uma imagem.</span>
+            <span style="font-size:12px;line-height:17px;color:#9AA3B5">Passe por <b style="color:#E9ECF2;font-weight:500">Animar imagem</b> primeiro.</span>
+          </div>
+          <div style="position:absolute;left:1070px;top:410px;width:260px;padding:12px;border-radius:8px;background:#12141A;box-shadow:0 0 0 1px #343947,0 16px 40px rgba(0,0,0,.55);display:flex;flex-direction:column;gap:8px">
+            <span style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:'Space Grotesk';font-weight:500;font-size:14px">Juntar clipes</span><span style="font:500 11px 'JetBrains Mono';color:#3DDFA6">R$0,00</span></span>
+            <span style="font-size:12px;line-height:17px;color:#9AA3B5">Monta 2 ou mais clipes na ordem, da esquerda para a direita. Roda local, sem custo.</span>
+            <span style="display:flex;gap:6px;font:10px 'JetBrains Mono';color:#9AA3B5"><span style="border:1px solid #262A35;border-radius:99px;padding:1px 6px">entra: vídeo ×2+</span><span style="border:1px solid #262A35;border-radius:99px;padding:1px 6px">sai: vídeo</span><span style="border:1px solid #262A35;border-radius:99px;padding:1px 6px">áudio opcional</span></span>
+            <span style="position:absolute;left:-6px;top:30px;width:10px;height:10px;background:#12141A;transform:rotate(45deg);box-shadow:-1px 1px 0 #343947"></span>
+          </div>
+          <span style="position:absolute;left:20px;bottom:20px;height:40px;padding:0 14px;border-radius:999px;border:1px solid #343947;background:#12141A;font:500 14px Inter;display:flex;gap:8px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.4)"><i class="icon-plus" style="font-size:16px"></i>Criar nó</span>
+          <div style="position:absolute;left:160px;bottom:20px;display:flex;border:1px solid #262A35;border-radius:8px;background:#12141A;overflow:hidden"><span style="width:36px;height:36px;display:grid;place-items:center;color:#9AA3B5;border-right:1px solid #262A35"><i class="icon-minus" style="font-size:15px"></i></span><span style="height:36px;padding:0 10px;display:grid;place-items:center;font:12px 'JetBrains Mono';color:#9AA3B5;border-right:1px solid #262A35">100%</span><span style="width:36px;height:36px;display:grid;place-items:center;color:#9AA3B5;border-right:1px solid #262A35"><i class="icon-plus" style="font-size:15px"></i></span><span style="width:36px;height:36px;display:grid;place-items:center;color:#9AA3B5"><i class="icon-scan" style="font-size:15px"></i></span></div>
+          <div style="position:absolute;right:20px;bottom:20px;width:160px;height:104px;border:1px solid #262A35;border-radius:8px;background:#12141A;overflow:hidden"><span style="position:absolute;left:16px;top:16px;width:22px;height:10px;border-radius:2px;background:#343947"></span><span style="position:absolute;left:46px;top:12px;width:22px;height:22px;border-radius:2px;background:#343947"></span><span style="position:absolute;left:16px;top:60px;width:22px;height:12px;border-radius:2px;background:#343947"></span><span style="position:absolute;left:52px;top:56px;width:22px;height:18px;border-radius:2px;background:#10B981;opacity:.6"></span><span style="position:absolute;left:96px;top:60px;width:22px;height:12px;border-radius:2px;background:#343947"></span><span style="position:absolute;left:8px;top:8px;width:120px;height:80px;border:1px solid #7D869A;border-radius:3px"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">4b</b> · desktop · menu Criar aberto + picker de porta <span style="border:1px dashed #343947;border-radius:99px;padding:1px 6px;font-size:10px">PROPOSTA</span></span>
+      <div style="width:1440px;height:900px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <dc-import name="LabIA Header" active="fluxos" hint-size="100%,56px"></dc-import>
+        <div style="height:48px;flex-shrink:0;background:#12141A;border-bottom:1px solid #262A35;display:flex;align-items:center;gap:12px;padding:0 16px">
+          <span style="height:30px;padding:0 10px 0 6px;border-radius:8px;border:1px solid #262A35;display:flex;align-items:center;gap:8px;font-size:13px"><i class="icon-chevron-left" style="font-size:15px;color:#9AA3B5"></i><i style="width:8px;height:8px;border-radius:2px;background:#38BDF8;display:inline-block"></i>Bento · pote térmico</span><span style="color:#343947">/</span><span style="font-family:'Space Grotesk';font-weight:500;font-size:14px">Flow principal</span><span style="font-size:12px;color:#FBBF24;display:flex;gap:6px;align-items:center"><i style="width:6px;height:6px;border-radius:99px;background:#FBBF24;display:inline-block"></i>Alterações não salvas</span>
+          <div style="flex:1"></div>
+          <span style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9AA3B5">Total<span style="height:26px;padding:0 9px;border-radius:999px;border:1px dashed #343947;color:#9AA3B5;font:500 12px 'JetBrains Mono';display:inline-flex;align-items:center">A calcular</span></span>
+          <span style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #343947;background:#1A1D26;font:500 13px Inter;display:flex;align-items:center">Salvar</span>
+          <span style="height:32px;padding:0 12px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 13px Inter;display:flex;align-items:center;gap:6px"><i class="icon-play" style="font-size:14px"></i>Executar</span>
+        </div>
+        <div style="flex:1;position:relative;background-color:#0A0B0E;background-image:radial-gradient(#242833 1px,transparent 1px);background-size:16px 16px;overflow:hidden">
+          <div style="position:absolute;left:240px;top:120px;width:240px;border-radius:12px;border:1px solid #10B981;box-shadow:0 0 0 1px #10B981,0 0 24px rgba(16,185,129,.12);background:#1A1D26">
+            <div style="height:2px;background:#8B7CFF;border-radius:12px 12px 0 0"></div>
+            <div style="display:flex;justify-content:space-between;padding:10px"><span style="display:flex;gap:8px;align-items:center"><span style="width:28px;height:28px;border-radius:7px;border:1px solid #262A35;background:#12141A;display:grid;place-items:center;color:#8B7CFF"><i class="icon-wand-sparkles" style="font-size:14px"></i></span><span style="display:flex;flex-direction:column"><span style="font-family:'Space Grotesk';font-weight:500;font-size:13px">Pote no balcão</span><span style="font:500 10px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">GERAR IMAGEM</span></span></span><span style="height:20px;padding:0 6px;border-radius:999px;border:1px solid rgba(16,185,129,.28);background:rgba(16,185,129,.12);color:#3DDFA6;font:500 10px 'JetBrains Mono';display:inline-flex;align-items:center">R$0,14 ✓</span></div>
+            <div style="margin:0 10px 10px;aspect-ratio:1;border-radius:7px;background:repeating-linear-gradient(135deg,#1A1D26 0 8px,#12141A 8px 16px);display:grid;place-items:center;font:10px 'JetBrains Mono';color:#7D869A">imagem gerada</div>
+            <span style="position:absolute;right:-8px;top:36px;width:16px;height:16px;border-radius:99px;border:3px solid #0A0B0E;background:#3DDFA6;box-sizing:border-box;box-shadow:0 0 0 4px rgba(16,185,129,.12)"></span>
+          </div>
+          <svg width="1440" height="796" style="position:absolute;inset:0;pointer-events:none" fill="none"><path d="M480 164 C 540 164, 520 220, 580 220" stroke="#3DDFA6" stroke-width="2" stroke-dasharray="4 4"></path></svg>
+          <div style="position:absolute;left:584px;top:206px;width:300px;background:#12141A;border-radius:12px;box-shadow:0 0 0 1px #343947,0 16px 40px rgba(0,0,0,.55);overflow:hidden">
+            <div style="padding:10px 12px;border-bottom:1px solid #262A35;display:flex;flex-direction:column;gap:2px"><span style="font:500 10px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">LIGAR SAÍDA · IMAGEM</span><span style="font-size:12px;color:#9AA3B5">Só nós que aceitam imagem</span></div>
+            <div style="padding:6px">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:#1A1D26"><span style="display:flex;gap:10px;align-items:center;font-size:14px"><i class="icon-clapperboard" style="font-size:15px;color:#4DD8FF"></i>Animar imagem</span><span style="font:500 11px 'JetBrains Mono';color:#3DDFA6">~R$1,93</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px"><span style="display:flex;gap:10px;align-items:center;font-size:14px"><i class="icon-upload" style="font-size:15px;color:#9AA3B5"></i>Saída</span><span style="font:500 11px 'JetBrains Mono';color:#3DDFA6">R$0,00</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px"><span style="display:flex;gap:10px;align-items:center;font-size:14px"><i class="icon-sticky-note" style="font-size:15px;color:#9AA3B5"></i>Nota</span><span style="font:500 11px 'JetBrains Mono';color:#3DDFA6">R$0,00</span></div>
+            </div>
+          </div>
+          <div style="position:absolute;left:20px;bottom:72px;width:340px;background:#12141A;border-radius:12px;box-shadow:0 0 0 1px #343947,0 16px 40px rgba(0,0,0,.55);overflow:hidden">
+            <div style="padding:10px;border-bottom:1px solid #262A35"><div style="height:36px;border-radius:8px;border:1px solid #343947;background:#1A1D26;display:flex;align-items:center;gap:8px;padding:0 10px;font-size:14px;box-shadow:0 0 0 1px #10B981"><i class="icon-search" style="font-size:15px;color:#7D869A"></i>anim<span style="width:1px;height:16px;background:#E9ECF2"></span></div></div>
+            <sc-for list="{{ menuGroups }}" as="mg" hint-placeholder-count="4">
+              <div style="padding:6px;border-bottom:1px solid #262A35">
+                <div style="display:flex;gap:8px;align-items:center;padding:4px 8px;font:500 10px 'JetBrains Mono';letter-spacing:.08em;text-transform:uppercase;color:#9AA3B5"><i style="width:8px;height:8px;border-radius:2px;background:{{ mg.color }};display:inline-block"></i>{{ mg.name }}</div>
+                <sc-for list="{{ mg.items }}" as="mi" hint-placeholder-count="2">
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 8px;border-radius:8px;background:{{ mi.bg }}"><span style="display:flex;gap:10px;align-items:center;font-size:14px;color:{{ mi.fg }}"><i class="{{ mi.icon }}" style="font-size:15px;color:{{ mg.color }}"></i>{{ mi.name }}</span><span style="font:500 11px 'JetBrains Mono';color:{{ mi.costColor }}">{{ mi.cost }}</span></div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+          <span style="position:absolute;left:20px;bottom:20px;height:40px;padding:0 14px;border-radius:999px;border:1px solid #10B981;box-shadow:0 0 0 1px #10B981;background:#1A1D26;font:500 14px Inter;display:flex;gap:8px;align-items:center"><i class="icon-x" style="font-size:16px"></i>Fechar</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">4c</b> · celular · modo revisão <span style="border:1px dashed #343947;border-radius:99px;padding:1px 6px;font-size:10px">PROPOSTA</span></span>
+      <div style="width:375px;height:812px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;position:relative">
+        <dc-import name="LabIA Header" mobile="{{ true }}" active="fluxos" hint-size="100%,56px"></dc-import>
+        <div style="background:#12141A;border-bottom:1px solid #262A35;padding:8px 12px 12px 4px;display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:2px"><span style="width:44px;height:44px;display:grid;place-items:center"><i class="icon-chevron-left" style="font-size:20px"></i></span><span style="display:flex;flex-direction:column;min-width:0;flex:1"><span style="font-size:12px;color:#9AA3B5;display:flex;gap:6px;align-items:center"><i style="width:6px;height:6px;border-radius:2px;background:#38BDF8;display:inline-block"></i>Bento · pote térmico</span><span style="font-family:'Space Grotesk';font-weight:500;font-size:16px">Flow principal</span></span><span style="height:26px;padding:0 8px;border-radius:999px;border:1px solid rgba(16,185,129,.28);background:rgba(16,185,129,.12);color:#3DDFA6;font:500 11px 'JetBrains Mono';display:inline-flex;align-items:center">~R$2,07</span></div>
+          <span style="margin-left:12px;font-size:12px;color:#9AA3B5;display:flex;gap:6px;align-items:center"><i class="icon-monitor" style="font-size:13px"></i>Modo revisão · edite o grafo no computador</span>
+        </div>
+        <div style="padding:14px 16px 100px;display:flex;flex-direction:column;gap:0">
+          <sc-for list="{{ mobileNodes }}" as="m" hint-placeholder-count="4">
+            <div style="display:flex;gap:12px">
+              <div style="display:flex;flex-direction:column;align-items:center;width:12px;padding-top:18px"><i style="width:10px;height:10px;border-radius:99px;background:{{ m.dot }};display:block;box-shadow:0 0 0 3px #0A0B0E"></i><i style="flex:1;width:2px;background:#262A35;display:block"></i></div>
+              <div style="flex:1;margin-bottom:10px;border-radius:12px;border:1px {{ m.borderStyle }} {{ m.border }};background:#1A1D26;overflow:hidden;animation:{{ m.anim }}">
+                <div style="height:2px;background:{{ m.accent }}"></div>
+                <div style="padding:10px 12px;display:flex;gap:10px;align-items:center">
+                  <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:500">{{ m.title }}</span><span style="font-size:12px;color:#9AA3B5">{{ m.sub }}</span></span>
+                  <sc-if value="{{ m.hasThumb }}" hint-placeholder-val="{{ false }}"><span style="width:44px;height:44px;border-radius:6px;background:repeating-linear-gradient(135deg,#262A35 0 6px,#12141A 6px 12px)"></span></sc-if>
+                  <span style="font:500 11px 'JetBrains Mono';color:{{ m.costColor }};white-space:nowrap">{{ m.cost }}</span>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:12px 16px 20px;background:#12141A;border-top:1px solid #262A35;display:flex;gap:8px"><span style="width:48px;height:48px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;display:grid;place-items:center"><i class="icon-share-2" style="font-size:18px;color:#9AA3B5"></i></span><span style="flex:1;height:48px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 15px Inter;display:flex;align-items:center;justify-content:center;gap:8px"><i class="icon-play" style="font-size:16px"></i>Executar · confirma custo</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">4d</b> · carregando</span>
+        <div style="width:700px;height:300px;border:1px solid #262A35;border-radius:12px;background-color:#0A0B0E;background-image:radial-gradient(#242833 1px,transparent 1px);background-size:16px 16px;display:grid;place-items:center">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px"><span style="width:160px;height:3px;border-radius:99px;background:#1A1D26;overflow:hidden"><span style="display:block;height:100%;background:linear-gradient(90deg,transparent,#10B981,transparent);background-size:200% 100%;animation:labshimmer 1.6s linear infinite"></span></span><span style="font:500 12px 'JetBrains Mono';letter-spacing:.06em;color:#9AA3B5">Preparando o laboratório…</span></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">4e</b> · vazio — receita concreta</span>
+        <div style="width:700px;height:300px;border:1px solid #262A35;border-radius:12px;background-color:#0A0B0E;background-image:radial-gradient(#242833 1px,transparent 1px);background-size:16px 16px;display:grid;place-items:center">
+          <div style="width:420px;padding:22px;border-radius:12px;border:1px dashed #343947;background:#12141A;display:flex;flex-direction:column;gap:12px">
+            <span style="font-family:'Space Grotesk';font-weight:500;font-size:18px">Bancada vazia</span>
+            <span style="font-size:13px;line-height:19px;color:#9AA3B5">Monte a receita mais usada em um clique: Imagem-base do Projeto → Animar imagem. Nada roda até você confirmar o custo.</span>
+            <div style="display:flex;gap:8px;align-items:center"><span style="height:36px;padding:0 12px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 13px Inter;display:flex;align-items:center">Montar receita</span><span style="font:500 12px 'JetBrains Mono';color:#3DDFA6">~R$1,93</span><span style="flex:1"></span><span style="font-size:13px;color:#9AA3B5">ou Criar nó</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">4f</b> · erro de carregamento</span>
+        <div style="width:700px;height:220px;border:1px solid #262A35;border-radius:12px;background:#0A0B0E;display:grid;place-items:center">
+          <div style="width:440px;padding:20px;border-radius:12px;border:1px solid rgba(251,113,133,.4);background:#12141A;display:flex;gap:14px;align-items:flex-start"><i class="icon-unplug" style="font-size:20px;color:#FB7185"></i><div style="flex:1;display:flex;flex-direction:column;gap:6px"><span style="font-family:'Space Grotesk';font-weight:500;font-size:16px">Não foi possível abrir este fluxo</span><span style="font-size:13px;line-height:18px;color:#9AA3B5">Ele pode ter sido removido ou o banco não respondeu.</span><div style="display:flex;gap:8px;margin-top:4px"><span style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;font:500 12px Inter;display:flex;gap:6px;align-items:center"><i class="icon-rotate-ccw" style="font-size:13px"></i>Tentar de novo</span><span style="height:32px;padding:0 10px;font:500 12px Inter;display:flex;align-items:center;color:#9AA3B5">Voltar ao Projeto</span></div></div></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">4g</b> · modal de custo — erro na estimativa</span>
+        <div style="width:700px;padding:24px;border:1px solid #262A35;border-radius:12px;background:rgba(10,11,14,.8);box-sizing:border-box;display:grid;place-items:center">
+          <div style="width:440px;background:#12141A;border-radius:12px;box-shadow:0 0 0 1px #343947,0 24px 64px rgba(0,0,0,.65);padding:20px;display:flex;flex-direction:column;gap:14px">
+            <span style="font-family:'Space Grotesk';font-weight:500;font-size:18px">Confirmar custo do fluxo</span>
+            <div style="border:1px dashed #343947;border-radius:8px;padding:12px 16px"><div style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;color:#9AA3B5">CUSTO ESTIMADO TOTAL</div><div style="font:600 24px 'JetBrains Mono';color:#9AA3B5;margin-top:4px">A calcular</div></div>
+            <div style="display:flex;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid rgba(251,113,133,.4);background:rgba(251,113,133,.1);font-size:13px;line-height:18px"><i class="icon-circle-x" style="font-size:15px;color:#FB7185"></i>Não conseguimos estimar o custo agora. Sem estimativa, nada roda.</div>
+            <div style="display:flex;justify-content:flex-end;gap:8px"><span style="height:36px;padding:0 12px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;font:500 14px Inter;display:flex;align-items:center">Cancelar</span><span style="height:36px;padding:0 12px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;font:500 14px Inter;display:flex;align-items:center;gap:6px"><i class="icon-rotate-ccw" style="font-size:14px"></i>Estimar de novo</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const ST = {
+      ready: { status: 'Pronto', sDot: '#4ADE80', sBorder: 'rgba(74,222,128,.3)' },
+      running: { status: 'Rodando', sDot: '#38BDF8', sBorder: 'rgba(56,189,248,.3)' },
+      draft: { status: 'Rascunho', sDot: '#7D869A', sBorder: '#343947' },
+      error: { status: 'Erro', sDot: '#FB7185', sBorder: 'rgba(251,113,133,.4)' },
+      review: { status: 'Em revisão', sDot: '#FBBF24', sBorder: 'rgba(251,191,36,.4)' },
+      progress: { status: 'Em andamento', sDot: '#38BDF8', sBorder: 'rgba(56,189,248,.3)' },
+      approved: { status: 'Aprovado', sDot: '#4ADE80', sBorder: 'rgba(74,222,128,.3)' },
+    };
+    const G = '#3DDFA6', D = '#9AA3B5';
+    const chip = (cost) => cost === 'A calcular'
+      ? { chipStyle: 'dashed', chipBorder: '#343947', chipBg: 'transparent', chipFg: D, costColor: D }
+      : { chipStyle: 'solid', chipBorder: 'rgba(16,185,129,.28)', chipBg: 'rgba(16,185,129,.12)', chipFg: G, costColor: G };
+    const stripes = 'repeating-linear-gradient(135deg,#1A1D26 0 8px,#12141A 8px 16px)';
+    const flowsAll = [
+      ['Bento · Flow principal — reel do pote girando', 'Bento', 'ready', 'R$1,87 ✓', 'há 2 h'],
+      ['Vega · teaser 30s com 3 cenas encadeadas', 'Vega', 'running', '~R$8,24', 'agora'],
+      ['PagFinance · post visual cartão novo', 'PagFinance', 'draft', 'A calcular', 'ontem'],
+      ['Monad · variações de capa', 'Monad', 'ready', 'R$0,56 ✓', '28 set'],
+      ['QA Preview ? corte visual', 'Sem projeto', 'error', 'R$0,00 ✓', '27 set'],
+      ['Felipe-Creator · bastidores em vídeo curto', 'Felipe-Creator', 'ready', 'R$1,93 ✓', '25 set'],
+      ['Bento · referência de luz', 'Bento', 'draft', '~R$0,14', '24 set'],
+      ['Vega · produto importado em 5s', 'Vega', 'ready', 'R$1,65 ✓', '22 set'],
+    ].map(([name, project, st, cost, when]) => ({ name, project, when, cost, ...ST[st], ...chip(cost), thumb: st === 'draft' ? '#12141A' : stripes, thumbLabel: st === 'draft' ? 'sem resultado' : st === 'running' ? 'gerando…' : 'último resultado' }));
+    const projects3 = [
+      ['Bento · pote térmico', 'review', 'Vídeo · 9:16', 'R$4,87 ✓', '9:16'],
+      ['Vega · teaser', 'progress', 'Vídeo · 16:9', 'R$12,40 ✓', '16:9'],
+      ['Monad · capas', 'approved', 'Imagem · 1:1', 'R$1,12 ✓', '1:1'],
+    ].map(([name, st, meta, cost, ratio]) => ({ name, meta, cost, ratio, ...ST[st] }));
+    const quickRecipes = [
+      { name: 'Imagem-base → Vídeo curto', sub: 'Gera e anima · 5s', icon: 'icon-clapperboard', color: '#4DD8FF', cost: '~R$2,07', border: '#262A35' },
+      { name: 'Produto importado → Vídeo', sub: 'Sua foto vira 5s', icon: 'icon-package', color: '#38BDF8', cost: '~R$1,93', border: '#262A35' },
+      { name: 'Imagem-base', sub: 'Uma imagem 9:16', icon: 'icon-wand-sparkles', color: '#8B7CFF', cost: '~R$0,14', border: '#262A35' },
+    ].map(r => ({ ...r, ...chip(r.cost) }));
+    const steps = (arr) => arr.map(([n, c]) => ({ n, c }));
+    const recipesBase = [
+      { name: 'Imagem-base → Vídeo curto', result: 'Uma imagem gerada e animada em vídeo de 5s, 9:16.', icon: 'icon-clapperboard', color: '#4DD8FF', cost: '~R$2,07', recommended: true, sel: true, steps: steps([['Prompt', '#8B7CFF'], ['Gerar imagem', '#8B7CFF'], ['Animar imagem', '#4DD8FF']]) },
+      { name: 'Imagem-base', result: 'Uma imagem para o Projeto, sem vídeo.', icon: 'icon-wand-sparkles', color: '#8B7CFF', cost: '~R$0,14', steps: steps([['Prompt', '#8B7CFF'], ['Gerar imagem', '#8B7CFF']]) },
+      { name: 'Produto importado → Vídeo curto', result: 'A foto real do produto vira o primeiro frame.', icon: 'icon-package', color: '#38BDF8', cost: '~R$1,93', steps: steps([['Imagem-base do Projeto', '#38BDF8'], ['Animar imagem', '#4DD8FF']]) },
+      { name: 'Blueprint de produção → Vídeo de produto', result: 'Roteiro multi-cena montado a partir do blueprint.', icon: 'icon-layout-list', color: '#FFC46B', cost: 'A calcular', steps: steps([['Blueprint', '#FF7AC6'], ['Animar ×N', '#4DD8FF'], ['Juntar clipes', '#FFC46B']]) },
+    ];
+    const recipes = recipesBase.map(r => ({ ...r, ...chip(r.cost), recommended: !!r.recommended, border: r.sel ? '#10B981' : '#262A35', shadow: r.sel ? '0 0 0 1px #10B981' : 'none', bg: r.sel ? '#12141A' : '#0E1015' }));
+    const recipesRest = recipes.slice(1);
+    const phases = ['BRIEFING', 'DIREÇÃO', 'PRODUÇÃO', 'REVISÃO', 'MONTAGEM', 'PUBLICAÇÃO', 'APRENDIZADO'].map((name, i) => ({ name, bg: i % 2 ? 'rgba(233,236,242,.018)' : 'transparent' }));
+    const node = (o) => ({ borderStyle: 'solid', border: '#262A35', shadow: 'none', anim: 'none', op: 1, hasText: false, running: false, blocked: false, hasMedia: false, hasTags: false, hasIn: true, portOut: '#343947', ratio: '16/9', mediaBorderStyle: 'solid', media: stripes, mediaLabel: '', tags: [], ...chip(o.cost), ...o });
+    const canvasNodes = [
+      node({ x: '60px', y: '80px', title: 'Briefing visual', kind: 'prompt', accent: '#8B7CFF', icon: 'icon-message-square-text', cost: 'R$0,00', hasText: true, text: 'pote térmico no balcão de madeira, luz de fim de tarde, 9:16', hasIn: false }),
+      node({ x: '380px', y: '60px', title: 'Pote no balcão', kind: 'gerar imagem', accent: '#8B7CFF', icon: 'icon-wand-sparkles', cost: 'R$0,14 ✓', border: '#343947', hasMedia: true, ratio: '4/3', mediaLabel: 'imagem gerada · 1024×1365', hasTags: true, tags: ['FLUX DEV', 'fal.ai'], portOut: '#FB7185' }),
+      node({ x: '60px', y: '440px', title: 'Foto do pote (real)', kind: 'imagem-base do projeto', accent: '#38BDF8', icon: 'icon-image', cost: 'R$0,00', hasMedia: true, ratio: '16/9', mediaLabel: 'pote-frente.jpg', hasIn: false }),
+      node({ x: '420px', y: '420px', title: 'Pote girando', kind: 'animar imagem', accent: '#4DD8FF', icon: 'icon-clapperboard', cost: '~R$1,93', border: '#10B981', anim: 'labpulse 1.6s ease-in-out infinite', running: true, hasTags: true, tags: ['KLING 2.5', '5s', '9:16'] }),
+      node({ x: '800px', y: '440px', title: 'Reel final', kind: 'juntar clipes', accent: '#FFC46B', icon: 'icon-film', cost: 'R$0,00', borderStyle: 'dashed', border: '#343947', op: 0.72, blocked: true, blockedText: 'Aguardando 2º clipe' }),
+    ];
+    const it = (name, icon, cost, sel) => ({ name, icon, cost, bg: sel ? '#1A1D26' : 'transparent', fg: '#E9ECF2', costColor: cost === 'A calcular' ? D : G });
+    const menuGroups = [
+      { name: 'Projeto', color: '#38BDF8', items: [it('Imagem-base do Projeto', 'icon-image', 'R$0,00')] },
+      { name: 'Criar', color: '#8B7CFF', items: [it('Animar imagem', 'icon-clapperboard', '~R$1,93', true)] },
+      { name: 'Pós-produção', color: '#FFC46B', items: [it('Continuar clipe', 'icon-fast-forward', '~R$1,93')] },
+      { name: 'Direção', color: '#FF7AC6', items: [{ name: 'Production Director · indisponível', icon: 'icon-compass', cost: '—', bg: 'transparent', fg: '#7D869A', costColor: D }] },
+    ];
+    const mobileNodes = [
+      { title: 'Foto do pote (real)', sub: 'Imagem-base do Projeto', accent: '#38BDF8', dot: '#4ADE80', cost: 'R$0,00', costColor: G, border: '#262A35', borderStyle: 'solid', anim: 'none', hasThumb: true },
+      { title: 'Pote girando', sub: 'Animar imagem · gerando 00:42', accent: '#4DD8FF', dot: '#10B981', cost: '~R$1,93', costColor: G, border: '#10B981', borderStyle: 'solid', anim: 'labpulse 1.6s ease-in-out infinite', hasThumb: false },
+      { title: 'Pote no balcão', sub: 'Gerar imagem · pronto', accent: '#8B7CFF', dot: '#4ADE80', cost: 'R$0,14 ✓', costColor: G, border: '#343947', borderStyle: 'solid', anim: 'none', hasThumb: true },
+      { title: 'Reel final', sub: 'Juntar clipes · aguardando 2º clipe', accent: '#FFC46B', dot: '#343947', cost: 'R$0,00', costColor: G, border: '#343947', borderStyle: 'dashed', anim: 'none', hasThumb: false },
+    ];
+    return {
+      flows8: flowsAll, flows6: flowsAll.slice(0, 6), flows4: flowsAll.slice(0, 4), flows3: flowsAll.slice(0, 3),
+      projects3, quickRecipes, recipes, recipesRest, phases, canvasNodes, menuGroups, mobileNodes, six: [1, 2, 3, 4, 5, 6],
+    };
+  }
+}
+</script>
+</body>
+</html>

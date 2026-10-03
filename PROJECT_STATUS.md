@@ -34,7 +34,7 @@ User, Influencer (with `visualSignature`), Content, Step (`kind CHARACTER` belon
 
 ## Roadmap to a finished V2
 
-Goal: a platform that is feature-complete, deployed and ready for the founders to test real models by hand. Building and testing here never runs a real generation (use `FAL_MOCK=1`). Do not polish visuals: Claude Design will redo the identity (tokens live in `tailwind.config.ts`, `src/app/globals.css`, `src/components/ui`), so the reskin must stay a token change.
+Goal: a platform that is feature-complete, deployed and ready for the founders to test real models by hand. Building and testing here never runs a real generation (use `FAL_MOCK=1`). The UI must follow `design/reference/` (Claude Design handoff; see AGENTS.md): the current build is generic and must be improved from that reference, adapted to V2's structure. Keep everything in the tokens (`tailwind.config.ts`, `src/app/globals.css`, `src/components/ui`) so that a later rebrand by Claude Design is a token change.
 
 ### Done
 - Foundation: Next 16, Prisma 7 on Neon, Auth.js with Google, access code gate, Claude Design tokens and `ui` components.
@@ -49,7 +49,8 @@ Goal: a platform that is feature-complete, deployed and ready for the founders t
 4. **Complete the pipeline.** Real SCRIPT step (needs the founders: user-written vs AI-written, and the model), retry/regeneration of any step, reuse clips of a failed chain, download the final video, archive/delete content and influencers.
 5. **Management screens.** Library with filters (V1 has them), balance and top-up screen (today a script), per-user spend limit, cost-per-piece report (the metric the founders will measure).
 6. **Canvas** as a second view of the same steps (port V1 pieces: typed handles, invalid-edge hint, palette by area).
-7. **Finish.** Terms and privacy pages, error/loading/empty states, mobile pass, optional MCP.
+7. **UI/UX pass from the design reference.** Rework the shell/header (cost chip, mobile sheet), home, influencer and content screens, library and states (loading, empty, error) using `design/reference/` and its `MAPA-DE-APLICACAO.md` copy rules, adapted to Influencers > Content > Steps. Can start now, no decisions needed.
+8. **Finish.** Terms and privacy pages, mobile pass, optional MCP.
 
 Not now: payments, self-service signup, locale currency, auto-posting, Cloudflare.
 

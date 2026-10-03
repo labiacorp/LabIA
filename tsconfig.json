@@ -37,6 +37,6 @@
   ],
   "exclude": [
     "node_modules",
-    "Proposta LabIA com Design System"
+    "design"
   ]
 }

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/lucide-static@0.469.0/font/lucide.css">
+<style>
+html{background:#07080A}body{margin:0;background:#07080A;color:#E9ECF2;font-family:Inter,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#E9ECF2;text-decoration:underline;text-underline-offset:3px}a:hover{color:#fff}
+@keyframes labshimmer{from{background-position:-200% 0}to{background-position:200% 0}}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;gap:120px;padding:72px">
+
+<header style="display:flex;flex-direction:column;gap:12px;max-width:1000px">
+  <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;color:#9AA3B5">PROPOSTA · 2026-10-02 · TELAS 5–8, LANDING E ACESSO</span>
+  <h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:48px;line-height:52px;letter-spacing:-0.03em">Casa e acesso</h1>
+  <p style="margin:0;font-size:15px;line-height:24px;color:#9AA3B5">Projeto é a casa; a Biblioteca é o acervo. Telas 0–4 em <a href="LabIA Telas.dc.html">LabIA Telas</a>; tokens em <a href="LabIA Design System.dc.html">Design System</a>.</p>
+</header>
+
+<!-- ============ 5 PROJETOS ============ -->
+<section id="5" style="display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #262A35;padding-bottom:20px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:500 12px 'JetBrains Mono';color:#7D869A">05</span><h2 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:32px">Projetos</h2><span style="font:12px 'JetBrains Mono';color:#7D869A">app/(studio)/projetos/page.tsx</span></div>
+    <p style="margin:0;font-size:14px;line-height:22px;color:#9AA3B5;max-width:900px">Sem formulário fixo ao lado. "Novo Projeto" abre /criar (formulário único). Ícone neutro; o status é que dá cor. Custo acumulado por Projeto.</p>
+  </div>
+  <div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">5a</b> · desktop · padrão</span>
+      <div style="width:1440px;height:900px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <dc-import name="LabIA Header" active="projetos" hint-size="100%,56px"></dc-import>
+        <div style="width:1152px;margin:0 auto;padding:40px 0;display:flex;flex-direction:column;gap:24px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-end">
+            <div style="display:flex;flex-direction:column;gap:6px"><h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:32px;letter-spacing:-0.02em">Projetos</h1><span style="font-size:14px;color:#9AA3B5">Peças que você quer aprovar.</span></div>
+            <span style="height:36px;padding:0 12px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 14px Inter;display:flex;gap:6px;align-items:center"><i class="icon-plus" style="font-size:15px"></i>Novo Projeto</span>
+          </div>
+          <div style="display:flex;gap:6px">
+            <sc-for list="{{ statusTabs }}" as="t" hint-placeholder-count="6">
+              <span style="height:32px;padding:0 12px;border-radius:8px;border:1px solid {{ t.border }};background:{{ t.bg }};color:{{ t.fg }};font:500 13px Inter;display:flex;align-items:center;gap:8px">{{ t.label }}<span style="font:11px 'JetBrains Mono';color:#7D869A">{{ t.n }}</span></span>
+            </sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+            <sc-for list="{{ projects }}" as="p" hint-placeholder-count="8">
+              <div style="border:1px solid #262A35;border-radius:12px;background:#12141A;overflow:hidden;display:flex;flex-direction:column">
+                <div style="height:200px;background:{{ p.thumb }};display:grid;place-items:center;font:11px 'JetBrains Mono';color:#7D869A;position:relative">{{ p.thumbLabel }}<span style="position:absolute;top:8px;left:8px;height:22px;padding:0 8px;border-radius:999px;border:1px solid {{ p.sBorder }};background:rgba(10,11,14,.85);font:500 11px Inter;display:inline-flex;align-items:center;gap:6px"><i style="width:6px;height:6px;border-radius:99px;background:{{ p.sDot }};display:inline-block"></i>{{ p.status }}</span></div>
+                <div style="padding:12px 14px 14px;display:flex;flex-direction:column;gap:8px">
+                  <span style="font-family:'Space Grotesk';font-weight:500;font-size:15px">{{ p.name }}</span>
+                  <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:11px 'JetBrains Mono';color:#9AA3B5">{{ p.meta }}</span><span style="font:500 12px 'JetBrains Mono';color:{{ p.costColor }}">{{ p.cost }}</span></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">5b</b> · celular</span>
+      <div style="width:375px;height:812px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;position:relative">
+        <dc-import name="LabIA Header" mobile="{{ true }}" hint-size="100%,56px"></dc-import>
+        <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+          <h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:28px">Projetos</h1>
+          <div style="display:flex;gap:6px;overflow:hidden"><span style="height:36px;padding:0 12px;border-radius:8px;border:1px solid #343947;background:#1A1D26;font:500 13px Inter;display:flex;align-items:center;white-space:nowrap">Ativos 5</span><span style="height:36px;padding:0 12px;border-radius:8px;border:1px solid #262A35;color:#9AA3B5;font:500 13px Inter;display:flex;align-items:center;white-space:nowrap">Em revisão 2</span><span style="height:36px;padding:0 12px;border-radius:8px;border:1px solid #262A35;color:#9AA3B5;font:500 13px Inter;display:flex;align-items:center;white-space:nowrap">Aprovados</span></div>
+          <sc-for list="{{ projects5 }}" as="p" hint-placeholder-count="5">
+            <div style="display:flex;gap:12px;align-items:center;padding:10px;border:1px solid #262A35;border-radius:12px;background:#12141A">
+              <span style="width:52px;height:64px;border-radius:8px;background:{{ p.thumb }};flex-shrink:0"></span>
+              <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><span style="font-size:14px;font-weight:500">{{ p.name }}</span><span style="font-size:12px;color:#9AA3B5;display:flex;gap:6px;align-items:center"><i style="width:6px;height:6px;border-radius:99px;background:{{ p.sDot }};display:inline-block"></i>{{ p.status }} · {{ p.short }}</span></span>
+              <span style="font:500 11px 'JetBrains Mono';color:{{ p.costColor }}">{{ p.cost }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:12px 20px 20px;background:#12141A;border-top:1px solid #262A35"><span style="height:48px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 15px Inter;display:flex;align-items:center;justify-content:center;gap:8px"><i class="icon-plus" style="font-size:17px"></i>Novo Projeto</span></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:12px"><span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">5c</b> · carregando</span>
+        <div style="width:600px;padding:20px;border:1px solid #262A35;border-radius:12px;background:#0A0B0E;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;box-sizing:border-box"><sc-for list="{{ three }}" as="x" hint-placeholder-count="3"><div style="border:1px solid #262A35;border-radius:12px;background:#12141A;overflow:hidden"><div style="height:140px;background:linear-gradient(90deg,#12141A,#1A1D26,#12141A);background-size:200% 100%;animation:labshimmer 1.6s linear infinite"></div><div style="padding:12px;display:flex;flex-direction:column;gap:8px"><div style="height:12px;width:70%;border-radius:4px;background:#1A1D26"></div><div style="height:10px;width:40%;border-radius:4px;background:#1A1D26"></div></div></div></sc-for></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px"><span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">5d</b> · vazio</span>
+        <div style="width:600px;padding:28px;border:1px dashed #343947;border-radius:12px;background:#12141A;display:flex;flex-direction:column;gap:12px;box-sizing:border-box"><span style="font-family:'Space Grotesk';font-weight:500;font-size:20px">Nenhum Projeto ainda</span><span style="font-size:14px;line-height:21px;color:#9AA3B5;max-width:440px">Um Projeto guarda objetivo, formato, fontes e resultados de uma peça. Comece pelo produto que você quer mostrar.</span><span style="align-self:flex-start;height:36px;padding:0 12px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 13px Inter;display:flex;align-items:center;gap:8px">Produto importado → Vídeo curto<span style="font:500 11px 'JetBrains Mono'">~R$1,93</span></span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px"><span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">5e</b> · erro</span>
+        <div style="width:600px;padding:20px;border:1px solid rgba(251,113,133,.4);border-radius:12px;background:#12141A;display:flex;gap:14px;align-items:flex-start;box-sizing:border-box"><i class="icon-database-zap" style="font-size:20px;color:#FB7185"></i><div style="flex:1;display:flex;flex-direction:column;gap:4px"><span style="font-family:'Space Grotesk';font-weight:500;font-size:16px">Não foi possível carregar seus Projetos</span><span style="font-size:13px;color:#9AA3B5">O banco não respondeu. Isto não é uma lista vazia.</span></div><span style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;font:500 12px Inter;display:flex;gap:6px;align-items:center"><i class="icon-rotate-ccw" style="font-size:13px"></i>Tentar de novo</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6 PROJETO ============ -->
+<section id="6" style="display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #262A35;padding-bottom:20px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:500 12px 'JetBrains Mono';color:#7D869A">06</span><h2 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:32px">Projeto · a casa</h2><span style="font:12px 'JetBrains Mono';color:#7D869A">projects/project-workspace.tsx · project-assets-panel.tsx</span></div>
+    <p style="margin:0;font-size:14px;line-height:22px;color:#9AA3B5;max-width:900px">Objetivo uma vez só. Fontes com papel visível — imagem-base ≠ referência, sem ID cru. Resultados do Flow com custo real. Duração em mono neutro, não verde.</p>
+  </div>
+  <div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">6a</b> · desktop · padrão</span>
+      <div style="width:1440px;height:900px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <dc-import name="LabIA Header" active="projetos" hint-size="100%,56px"></dc-import>
+        <div style="width:1152px;margin:0 auto;padding:32px 0;display:flex;flex-direction:column;gap:28px">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <span style="font-size:13px;color:#9AA3B5;display:flex;gap:6px;align-items:center"><a href="#" style="color:#9AA3B5">Projetos</a><i class="icon-chevron-right" style="font-size:13px"></i>Bento · pote térmico</span>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:32px">
+              <div style="display:flex;flex-direction:column;gap:10px;max-width:680px">
+                <div style="display:flex;gap:12px;align-items:center"><h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:32px;letter-spacing:-0.02em">Bento · pote térmico</h1><span style="height:24px;padding:0 9px;border-radius:999px;border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.1);font:500 12px Inter;display:inline-flex;align-items:center;gap:6px"><i style="width:6px;height:6px;border-radius:99px;background:#FBBF24;display:inline-block"></i>Em revisão</span></div>
+                <span style="font-size:15px;line-height:23px;color:#9AA3B5">Reel de lançamento: pote girando no balcão, luz de fim de tarde.</span>
+                <div style="display:flex;gap:6px;font:500 11px 'JetBrains Mono';letter-spacing:.06em;color:#9AA3B5"><span style="border:1px solid #262A35;border-radius:999px;padding:3px 8px">VÍDEO</span><span style="border:1px solid #262A35;border-radius:999px;padding:3px 8px">9:16</span><span style="border:1px solid #262A35;border-radius:999px;padding:3px 8px">5s</span></div>
+              </div>
+              <div style="display:flex;gap:12px;align-items:center">
+                <span style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;padding-right:12px;border-right:1px solid #262A35"><span style="font:500 10px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">GASTO NO PROJETO</span><span style="font:600 18px 'JetBrains Mono';color:#3DDFA6">R$4,87 ✓</span></span>
+                <span style="height:36px;padding:0 12px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;font:500 14px Inter;display:flex;align-items:center;gap:6px"><i class="icon-pencil" style="font-size:14px;color:#9AA3B5"></i>Editar</span>
+                <span style="height:36px;padding:0 12px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 14px Inter;display:flex;align-items:center;gap:6px"><i class="icon-workflow" style="font-size:15px"></i>Abrir Flow</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:420px 1fr;gap:28px">
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:18px">Fontes e referências</h3><span style="font-size:12px;color:#7D869A">Importar não cobra nada</span></div>
+              <sc-for list="{{ sources }}" as="s" hint-placeholder-count="3">
+                <div style="border:1px {{ s.borderStyle }} {{ s.border }};border-radius:12px;background:#12141A;padding:12px;display:flex;gap:12px;align-items:center">
+                  <span style="width:64px;height:64px;border-radius:8px;background:{{ s.thumb }};display:grid;place-items:center;flex-shrink:0;color:#7D869A"><i class="{{ s.thumbIcon }}" style="font-size:18px"></i></span>
+                  <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+                    <span style="display:flex;gap:6px;align-items:center;font:500 10px 'JetBrains Mono';letter-spacing:.08em;color:#9AA3B5"><i style="width:6px;height:6px;border-radius:2px;background:#38BDF8;display:inline-block"></i>{{ s.role }}</span>
+                    <span style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.file }}</span>
+                    <span style="font-size:12px;color:#9AA3B5">{{ s.hint }}</span>
+                  </span>
+                  <span style="font:500 12px Inter;color:#9AA3B5">{{ s.action }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:18px">Resultados do Flow</h3><span style="font-size:12px;color:#9AA3B5">3 runs · último há 2 h</span></div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+                <sc-for list="{{ results }}" as="r" hint-placeholder-count="4">
+                  <div style="border:1px solid {{ r.border }};border-radius:12px;background:#12141A;overflow:hidden">
+                    <div style="aspect-ratio:9/14;background:repeating-linear-gradient(135deg,#1A1D26 0 8px,#12141A 8px 16px);display:grid;place-items:center;font:10px 'JetBrains Mono';color:#7D869A;position:relative">{{ r.kind }}<sc-if value="{{ r.chosen }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:8px;left:8px;height:20px;padding:0 7px;border-radius:999px;background:rgba(10,11,14,.85);border:1px solid rgba(74,222,128,.3);font:500 10px Inter;display:inline-flex;align-items:center;gap:5px"><i style="width:5px;height:5px;border-radius:99px;background:#4ADE80;display:inline-block"></i>Escolhido</span></sc-if></div>
+                    <div style="padding:10px;display:flex;flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:500">{{ r.name }}</span><span style="font:500 11px 'JetBrains Mono';color:#3DDFA6">{{ r.cost }}</span></div><span style="font-size:11px;color:#9AA3B5">{{ r.meta }}</span></div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">6b</b> · celular</span>
+      <div style="width:375px;height:812px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;position:relative">
+        <dc-import name="LabIA Header" mobile="{{ true }}" hint-size="100%,56px"></dc-import>
+        <div style="padding:16px 20px 100px;display:flex;flex-direction:column;gap:16px">
+          <span style="font-size:13px;color:#9AA3B5;display:flex;gap:4px;align-items:center;min-height:32px"><i class="icon-chevron-left" style="font-size:15px"></i>Projetos</span>
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="align-self:flex-start;height:22px;padding:0 8px;border-radius:999px;border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.1);font:500 11px Inter;display:inline-flex;align-items:center;gap:6px"><i style="width:6px;height:6px;border-radius:99px;background:#FBBF24;display:inline-block"></i>Em revisão</span><h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:26px;line-height:32px">Bento · pote térmico</h1><span style="font-size:14px;line-height:21px;color:#9AA3B5">Reel de lançamento: pote girando no balcão.</span><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:11px 'JetBrains Mono';color:#9AA3B5">VÍDEO · 9:16 · 5s</span><span style="font:600 14px 'JetBrains Mono';color:#3DDFA6">R$4,87 ✓</span></div></div>
+          <span style="font-family:'Space Grotesk';font-weight:500;font-size:16px">Fontes</span>
+          <sc-for list="{{ sources }}" as="s" hint-placeholder-count="3">
+            <div style="border:1px {{ s.borderStyle }} {{ s.border }};border-radius:12px;background:#12141A;padding:10px;display:flex;gap:10px;align-items:center;min-height:44px"><span style="width:44px;height:44px;border-radius:6px;background:{{ s.thumb }};display:grid;place-items:center;color:#7D869A;flex-shrink:0"><i class="{{ s.thumbIcon }}" style="font-size:15px"></i></span><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:500 10px 'JetBrains Mono';letter-spacing:.08em;color:#9AA3B5">{{ s.role }}</span><span style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.file }}</span></span></div>
+          </sc-for>
+          <span style="font-family:'Space Grotesk';font-weight:500;font-size:16px">Resultados</span>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><sc-for list="{{ results2 }}" as="r" hint-placeholder-count="2"><div style="border:1px solid #262A35;border-radius:12px;background:#12141A;overflow:hidden"><div style="aspect-ratio:9/12;background:repeating-linear-gradient(135deg,#1A1D26 0 8px,#12141A 8px 16px)"></div><div style="padding:8px 10px;display:flex;justify-content:space-between"><span style="font-size:12px">{{ r.name }}</span><span style="font:500 11px 'JetBrains Mono';color:#3DDFA6">{{ r.cost }}</span></div></div></sc-for></div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:12px 20px 20px;background:#12141A;border-top:1px solid #262A35"><span style="height:48px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 15px Inter;display:flex;align-items:center;justify-content:center;gap:8px"><i class="icon-workflow" style="font-size:17px"></i>Abrir Flow</span></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:12px"><span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">6c</b> · upload — enviando / erro / tipo não aceito</span>
+        <div style="width:420px;display:flex;flex-direction:column;gap:10px">
+          <div style="border:1px solid #262A35;border-radius:12px;background:#12141A;padding:12px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;gap:10px;align-items:center"><i class="icon-loader-circle" style="font-size:16px;color:#9AA3B5"></i><span style="flex:1;font-size:13px">pote-lado.jpg</span><span style="font:12px 'JetBrains Mono';color:#9AA3B5">62%</span></div><span style="height:3px;border-radius:99px;background:#1A1D26;overflow:hidden"><span style="display:block;width:62%;height:100%;background:#9AA3B5"></span></span></div>
+          <div style="border:1px solid rgba(251,113,133,.4);border-radius:12px;background:#12141A;padding:12px;display:flex;gap:10px;align-items:center"><i class="icon-circle-x" style="font-size:16px;color:#FB7185"></i><span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:13px">pote-lado.jpg</span><span style="font-size:12px;color:#9AA3B5">O envio caiu. Nada foi cobrado.</span></span><span style="font:500 12px Inter">Tentar de novo</span></div>
+          <div style="border:1px solid rgba(251,191,36,.4);border-radius:12px;background:#12141A;padding:12px;display:flex;gap:10px;align-items:center"><i class="icon-file-x" style="font-size:16px;color:#FBBF24"></i><span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:13px">briefing.pdf</span><span style="font-size:12px;color:#9AA3B5">Aceitamos JPG, PNG, WEBP, MP4 e MOV.</span></span></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px"><span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">6d</b> · carregando · <b style="color:#E9ECF2">6e</b> · erro (padrão atual mantido)</span>
+        <div style="width:600px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="padding:18px;border:1px solid #262A35;border-radius:12px;background:#0A0B0E;display:flex;flex-direction:column;gap:10px"><div style="height:22px;width:70%;border-radius:6px;background:linear-gradient(90deg,#1A1D26,#232733,#1A1D26);background-size:200% 100%;animation:labshimmer 1.6s linear infinite"></div><div style="height:12px;width:90%;border-radius:4px;background:#1A1D26"></div><div style="height:64px;border-radius:12px;background:#12141A;border:1px solid #262A35;margin-top:6px"></div><div style="height:64px;border-radius:12px;background:#12141A;border:1px solid #262A35"></div></div>
+          <div style="padding:18px;border:1px solid rgba(251,113,133,.4);border-radius:12px;background:#12141A;display:flex;flex-direction:column;gap:8px"><i class="icon-folder-x" style="font-size:20px;color:#FB7185"></i><span style="font-family:'Space Grotesk';font-weight:500;font-size:16px">Projeto indisponível</span><span style="font-size:13px;line-height:18px;color:#9AA3B5">Não encontramos este Projeto ou o banco não respondeu.</span><span style="align-self:flex-start;height:32px;padding:0 10px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;font:500 12px Inter;display:flex;gap:6px;align-items:center;margin-top:4px"><i class="icon-rotate-ccw" style="font-size:13px"></i>Tentar de novo</span></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px"><span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">6f</b> · resultados vazios</span>
+        <div style="width:600px;padding:22px;border:1px dashed #343947;border-radius:12px;background:#12141A;display:flex;justify-content:space-between;align-items:center;box-sizing:border-box"><span style="display:flex;flex-direction:column;gap:4px"><span style="font-family:'Space Grotesk';font-weight:500;font-size:16px">Ainda sem resultados</span><span style="font-size:13px;color:#9AA3B5">Abra o Flow, revise o custo e execute.</span></span><span style="height:36px;padding:0 12px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 13px Inter;display:flex;align-items:center">Abrir Flow</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7 BIBLIOTECA ============ -->
+<section id="7" style="display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #262A35;padding-bottom:20px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:500 12px 'JetBrains Mono';color:#7D869A">07</span><h2 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:32px">Biblioteca</h2><span style="font:12px 'JetBrains Mono';color:#7D869A">app/(studio)/biblioteca/page.tsx</span></div>
+    <p style="margin:0;font-size:14px;line-height:22px;color:#9AA3B5;max-width:900px">Quatro filtros agrupados em menus (sheet no celular). Nome amigável do modelo. Importado = R$0,00. Painel de detalhe com proveniência <span style="font-family:'JetBrains Mono';font-size:11px;border:1px dashed #343947;border-radius:99px;padding:1px 6px">PROPOSTA</span>.</p>
+  </div>
+  <div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">7a</b> · desktop · com detalhe aberto</span>
+      <div style="width:1440px;height:900px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <dc-import name="LabIA Header" active="biblioteca" hint-size="100%,56px"></dc-import>
+        <div style="flex:1;display:grid;grid-template-columns:1fr 400px;min-height:0">
+          <div style="padding:32px 32px 32px 48px;display:flex;flex-direction:column;gap:20px;min-width:0">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end"><div style="display:flex;flex-direction:column;gap:6px"><h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:32px;letter-spacing:-0.02em">Biblioteca</h1><span style="font-size:14px;color:#9AA3B5">148 itens · R$38,22 ✓ em gerações</span></div><span style="width:260px;height:36px;border:1px solid #262A35;background:#12141A;border-radius:8px;display:flex;align-items:center;gap:8px;padding:0 12px;font-size:14px;color:#7D869A"><i class="icon-search" style="font-size:15px"></i>Buscar no prompt</span></div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
+                <span style="height:34px;padding:0 10px 0 12px;border-radius:8px;border:1px solid {{ f.border }};background:{{ f.bg }};display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:#7D869A">{{ f.group }}</span><span style="font-weight:500">{{ f.value }}</span><i class="icon-chevron-down" style="font-size:14px;color:#9AA3B5"></i></span>
+              </sc-for>
+              <a href="#" style="font-size:13px;margin-left:4px">Limpar</a>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+              <sc-for list="{{ assets }}" as="a" hint-placeholder-count="8">
+                <div style="border:1px solid {{ a.border }};box-shadow:{{ a.shadow }};border-radius:12px;background:#12141A;overflow:hidden">
+                  <div style="aspect-ratio:1;background:repeating-linear-gradient(135deg,#1A1D26 0 8px,#12141A 8px 16px);display:grid;place-items:center;font:10px 'JetBrains Mono';color:#7D869A;position:relative">{{ a.type }}<span style="position:absolute;bottom:8px;right:8px;font:10px 'JetBrains Mono';color:#9AA3B5;background:rgba(10,11,14,.85);padding:2px 6px;border-radius:4px">{{ a.dim }}</span></div>
+                  <div style="padding:10px 12px;display:flex;flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.model }}</span><span style="font:500 11px 'JetBrains Mono';color:#3DDFA6;white-space:nowrap">{{ a.cost }}</span></div><span style="font-size:11px;color:#9AA3B5">{{ a.project }} · {{ a.date }}</span></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="border-left:1px solid #262A35;background:#12141A;padding:20px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:500 10px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">DETALHE · PROPOSTA</span><i class="icon-x" style="font-size:16px;color:#9AA3B5"></i></div>
+            <div style="aspect-ratio:9/12;border-radius:8px;background:repeating-linear-gradient(135deg,#1A1D26 0 8px,#12141A 8px 16px);display:grid;place-items:center;font:11px 'JetBrains Mono';color:#7D869A">vídeo · 5s</div>
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:'Space Grotesk';font-weight:500;font-size:16px">Kling 2.5 Turbo · fal.ai</span><span style="font:600 14px 'JetBrains Mono';color:#3DDFA6">R$1,87 ✓</span></div>
+            <div style="border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:10px;font:11px/18px 'JetBrains Mono'">pote térmico gira 15° no balcão, câmera desce devagar, luz de fim de tarde</div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px"><span style="color:#7D869A">Estimado</span><span style="font-family:'JetBrains Mono';color:#9AA3B5">~R$1,93</span><span style="color:#7D869A">Formato</span><span style="font-family:'JetBrains Mono';color:#9AA3B5">720×1280 · 9:16</span><span style="color:#7D869A">Gerado</span><span style="font-family:'JetBrains Mono';color:#9AA3B5">2 out · 19:02</span></div>
+            <div style="display:flex;flex-direction:column;gap:6px;padding-top:12px;border-top:1px solid #262A35"><span style="font:500 10px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">PROVENIÊNCIA</span><span style="display:flex;gap:8px;align-items:center;font-size:13px"><i style="width:6px;height:6px;border-radius:2px;background:#38BDF8;display:inline-block"></i><a href="#">Bento · pote térmico</a></span><span style="display:flex;gap:8px;align-items:center;font-size:13px"><i class="icon-workflow" style="font-size:13px;color:#9AA3B5"></i><a href="#">Flow principal · run de 2 out, 19:01</a></span></div>
+            <div style="display:flex;gap:8px;margin-top:auto"><span style="flex:1;height:36px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;font:500 13px Inter;display:flex;align-items:center;justify-content:center;gap:6px"><i class="icon-download" style="font-size:14px"></i>Baixar</span><span style="flex:1;height:36px;border-radius:8px;border:1px solid #343947;background:#1A1D26;font:500 13px Inter;display:flex;align-items:center;justify-content:center">Abrir Flow</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">7b</b> · celular · grade</span>
+      <div style="width:375px;height:812px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <dc-import name="LabIA Header" mobile="{{ true }}" hint-size="100%,56px"></dc-import>
+        <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:28px">Biblioteca</h1><span style="height:44px;padding:0 12px;border-radius:8px;border:1px solid #343947;background:#1A1D26;font:500 14px Inter;display:flex;align-items:center;gap:8px"><i class="icon-sliders-horizontal" style="font-size:16px"></i>Filtros<span style="font:11px 'JetBrains Mono';background:#343947;border-radius:99px;padding:1px 6px">2</span></span></div>
+          <span style="font-size:12px;color:#9AA3B5">Bento · Vídeos · 12 itens</span>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <sc-for list="{{ assets6 }}" as="a" hint-placeholder-count="6">
+              <div style="border:1px solid #262A35;border-radius:12px;background:#12141A;overflow:hidden"><div style="aspect-ratio:1;background:repeating-linear-gradient(135deg,#1A1D26 0 8px,#12141A 8px 16px)"></div><div style="padding:8px 10px;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.model }}</span><span style="font:500 11px 'JetBrains Mono';color:#3DDFA6">{{ a.cost }}</span></div></div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">7c</b> · celular · filtros (sheet)</span>
+      <div style="width:375px;height:812px;background:rgba(10,11,14,.8);border:1px solid #262A35;border-radius:12px;overflow:hidden;position:relative">
+        <div style="position:absolute;left:0;right:0;bottom:0;height:620px;background:#12141A;border-top:1px solid #343947;border-radius:16px 16px 0 0;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:center;padding:8px"><span style="width:36px;height:4px;border-radius:99px;background:#343947"></span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 20px 12px"><span style="font-family:'Space Grotesk';font-weight:500;font-size:18px">Filtros</span><a href="#" style="font-size:14px">Limpar</a></div>
+          <div style="flex:1;padding:0 20px;display:flex;flex-direction:column;gap:18px">
+            <sc-for list="{{ sheetGroups }}" as="g" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;gap:8px"><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">{{ g.name }}</span><div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ g.opts }}" as="o" hint-placeholder-count="3"><span style="height:40px;padding:0 12px;border-radius:8px;border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.fg }};font:500 13px Inter;display:flex;align-items:center">{{ o.label }}</span></sc-for></div></div>
+            </sc-for>
+          </div>
+          <div style="padding:12px 20px 20px;border-top:1px solid #262A35"><span style="height:48px;border-radius:8px;border:1px solid #343947;background:#1A1D26;font:500 15px Inter;display:flex;align-items:center;justify-content:center">Ver 12 itens</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:12px"><span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">7d</b> · carregando</span>
+        <div style="width:600px;padding:20px;border:1px solid #262A35;border-radius:12px;background:#0A0B0E;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;box-sizing:border-box"><sc-for list="{{ four }}" as="x" hint-placeholder-count="4"><div style="aspect-ratio:1;border-radius:12px;background:linear-gradient(90deg,#12141A,#1A1D26,#12141A);background-size:200% 100%;animation:labshimmer 1.6s linear infinite"></div></sc-for></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px"><span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">7e</b> · vazio · <b style="color:#E9ECF2">7f</b> · filtro sem resultado</span>
+        <div style="width:600px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="padding:20px;border:1px dashed #343947;border-radius:12px;background:#12141A;display:flex;flex-direction:column;gap:10px"><span style="font-family:'Space Grotesk';font-weight:500;font-size:16px">Nada gerado ainda</span><span style="font-size:13px;line-height:18px;color:#9AA3B5">Tudo que você gerar ou importar aparece aqui, com prompt e custo real.</span><span style="align-self:flex-start;height:32px;padding:0 10px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 12px Inter;display:flex;align-items:center">Criar</span></div>
+          <div style="padding:20px;border:1px solid #262A35;border-radius:12px;background:#12141A;display:flex;flex-direction:column;gap:10px"><span style="font-family:'Space Grotesk';font-weight:500;font-size:16px">Nenhum vídeo do Monad hoje</span><span style="font-size:13px;line-height:18px;color:#9AA3B5">Tente "7 dias" ou remova o filtro de modelo.</span><a href="#" style="font-size:13px">Limpar filtros</a></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px"><span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">7g</b> · erro</span>
+        <div style="width:600px;padding:20px;border:1px solid rgba(251,113,133,.4);border-radius:12px;background:#12141A;display:flex;gap:14px;align-items:flex-start;box-sizing:border-box"><i class="icon-database-zap" style="font-size:20px;color:#FB7185"></i><div style="flex:1;display:flex;flex-direction:column;gap:4px"><span style="font-family:'Space Grotesk';font-weight:500;font-size:16px">Não foi possível carregar a Biblioteca</span><span style="font-size:13px;color:#9AA3B5">Seus arquivos estão salvos. Tente de novo em instantes.</span></div><span style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;font:500 12px Inter;display:flex;gap:6px;align-items:center"><i class="icon-rotate-ccw" style="font-size:13px"></i>Tentar de novo</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8 CONEXÕES ============ -->
+<section id="8" style="display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #262A35;padding-bottom:20px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:500 12px 'JetBrains Mono';color:#7D869A">08</span><h2 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:32px">Conexões</h2><span style="font:12px 'JetBrains Mono';color:#7D869A">conexoes/page.tsx · providers/provider-connections-panel.tsx</span></div>
+    <p style="margin:0;font-size:14px;line-height:22px;color:#9AA3B5;max-width:900px">De painel de diagnóstico para tela de usuário: estado em linguagem simples, o que cada conexão libera e uma ação. Acesso pelo menu de perfil <span style="font-family:'JetBrains Mono';font-size:11px;border:1px dashed #343947;border-radius:99px;padding:1px 6px">PROPOSTA</span>.</p>
+  </div>
+  <div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">8a</b> · desktop · padrão</span>
+      <div style="width:1440px;height:900px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <dc-import name="LabIA Header" active="none" hint-size="100%,56px"></dc-import>
+        <div style="width:760px;margin:0 auto;padding:40px 0;display:flex;flex-direction:column;gap:24px">
+          <div style="display:flex;flex-direction:column;gap:6px"><h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:32px;letter-spacing:-0.02em">Conexões</h1><span style="font-size:14px;color:#9AA3B5">Contas e máquinas que o LabIA usa para gerar.</span></div>
+          <div style="border:1px solid #262A35;border-radius:12px;background:#12141A;overflow:hidden">
+            <sc-for list="{{ connections }}" as="c" hint-placeholder-count="3">
+              <div style="display:grid;grid-template-columns:44px 1fr auto;gap:16px;align-items:center;padding:18px 20px;border-bottom:1px solid #262A35">
+                <span style="width:44px;height:44px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;display:grid;place-items:center;color:#9AA3B5"><i class="{{ c.icon }}" style="font-size:19px"></i></span>
+                <span style="display:flex;flex-direction:column;gap:5px">
+                  <span style="display:flex;gap:10px;align-items:center"><span style="font-family:'Space Grotesk';font-weight:500;font-size:16px">{{ c.name }}</span><span style="height:22px;padding:0 8px;border-radius:999px;border:1px solid {{ c.sBorder }};background:{{ c.sBg }};font:500 11px Inter;display:inline-flex;align-items:center;gap:6px"><i style="width:6px;height:6px;border-radius:99px;background:{{ c.sDot }};display:inline-block"></i>{{ c.state }}</span></span>
+                  <span style="font-size:13px;color:#9AA3B5">{{ c.unlocks }}</span>
+                  <span style="font-size:12px;color:#7D869A">{{ c.meta }}</span>
+                </span>
+                <span style="height:34px;padding:0 12px;border-radius:8px;border:1px solid {{ c.btnBorder }};background:{{ c.btnBg }};color:{{ c.btnFg }};font:500 13px Inter;display:flex;align-items:center">{{ c.action }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="border:1px solid #262A35;border-radius:12px;background:#12141A;padding:14px 20px;display:flex;justify-content:space-between;align-items:center"><span style="display:flex;gap:10px;align-items:center;font-size:14px;color:#9AA3B5"><i class="icon-chevron-right" style="font-size:15px"></i>Detalhes técnicos</span><span style="font:10px 'JetBrains Mono';letter-spacing:.06em;color:#9AA3B5;border:1px dashed #343947;border-radius:99px;padding:2px 7px">PROPOSTA · recolhido</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">8b</b> · celular</span>
+      <div style="width:375px;height:812px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <dc-import name="LabIA Header" mobile="{{ true }}" hint-size="100%,56px"></dc-import>
+        <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
+          <h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:28px">Conexões</h1>
+          <sc-for list="{{ connections }}" as="c" hint-placeholder-count="3">
+            <div style="border:1px solid #262A35;border-radius:12px;background:#12141A;padding:14px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center"><span style="display:flex;gap:10px;align-items:center;font-family:'Space Grotesk';font-weight:500;font-size:16px"><i class="{{ c.icon }}" style="font-size:17px;color:#9AA3B5"></i>{{ c.name }}</span><span style="height:22px;padding:0 8px;border-radius:999px;border:1px solid {{ c.sBorder }};background:{{ c.sBg }};font:500 11px Inter;display:inline-flex;align-items:center;gap:6px"><i style="width:6px;height:6px;border-radius:99px;background:{{ c.sDot }};display:inline-block"></i>{{ c.state }}</span></div>
+              <span style="font-size:13px;line-height:18px;color:#9AA3B5">{{ c.unlocks }}</span>
+              <span style="height:44px;border-radius:8px;border:1px solid {{ c.btnBorder }};background:{{ c.btnBg }};color:{{ c.btnFg }};font:500 14px Inter;display:flex;align-items:center;justify-content:center">{{ c.action }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:12px"><span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">8c</b> · estados da conexão ChatGPT</span>
+        <div style="width:600px;border:1px solid #262A35;border-radius:12px;background:#12141A;overflow:hidden">
+          <sc-for list="{{ chatgptStates }}" as="c" hint-placeholder-count="4">
+            <div style="display:flex;gap:14px;align-items:center;padding:14px 18px;border-bottom:1px solid #262A35">
+              <span style="width:120px;height:22px;padding:0 8px;border-radius:999px;border:1px solid {{ c.sBorder }};background:{{ c.sBg }};font:500 11px Inter;display:inline-flex;align-items:center;gap:6px;box-sizing:border-box;justify-content:flex-start"><i style="width:6px;height:6px;border-radius:99px;background:{{ c.sDot }};display:inline-block"></i>{{ c.state }}</span>
+              <span style="flex:1;font-size:13px;line-height:18px;color:#9AA3B5">{{ c.msg }}</span>
+              <span style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {{ c.btnBorder }};background:{{ c.btnBg }};color:{{ c.btnFg }};font:500 12px Inter;display:flex;align-items:center;white-space:nowrap">{{ c.action }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px"><span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">8d</b> · detalhes técnicos aberto</span>
+        <div style="width:600px;border:1px solid #262A35;border-radius:12px;background:#12141A;padding:16px 18px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box">
+          <span style="display:flex;gap:10px;align-items:center;font-size:14px"><i class="icon-chevron-down" style="font-size:15px;color:#9AA3B5"></i>Detalhes técnicos</span>
+          <div style="display:grid;grid-template-columns:200px 1fr;gap:6px 16px;font:12px 'JetBrains Mono';color:#9AA3B5;padding-left:25px"><span style="color:#7D869A">banco</span><span>configurado</span><span style="color:#7D869A">heartbeat do executor</span><span>a cada 90s · último 21:13</span><span style="color:#7D869A">imagem ChatGPT</span><span>aguardando homologação</span></div>
+          <span style="font-size:12px;color:#7D869A;padding-left:25px">Para suporte. Rótulos em PT-BR; códigos crus só aqui.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1L LANDING ============ -->
+<section id="1L" style="display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #262A35;padding-bottom:20px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:500 12px 'JetBrains Mono';color:#7D869A">1L</span><h2 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:32px">Landing pública (deslogado)</h2><span style="font:12px 'JetBrains Mono';color:#7D869A">app/(public)/page.tsx · components/landing/*</span><span style="font:500 11px 'JetBrains Mono';border:1px dashed #343947;border-radius:99px;padding:2px 8px;color:#9AA3B5">PROPOSTA</span></div>
+    <p style="margin:0;font-size:14px;line-height:22px;color:#9AA3B5;max-width:900px">Conceito da DESIGN-LANDING V2 mantido: take renderizado da árvore bioluminescente com scrub. CTA e promessa visíveis no primeiro frame, sem esperar rolagem. O poster atual (shader fractal) diverge da V2 — decidir com o Felipe; aqui fica o slot do frame 0.</p>
+  </div>
+  <div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">1La</b> · desktop · hero (frame 0)</span>
+      <div style="width:1440px;height:900px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;position:relative">
+        <dc-import name="LabIA Header" active="none" logged-out="{{ true }}" hint-size="100%,56px"></dc-import>
+        <div style="flex:1;position:relative;background:repeating-linear-gradient(135deg,#0E1015 0 10px,#0A0B0E 10px 20px)">
+          <span style="position:absolute;right:48px;top:24px;font:11px 'JetBrains Mono';color:#7D869A">take renderizado · frame 0 / poster (árvore bioluminescente — copa)</span>
+          <div style="position:absolute;left:96px;bottom:120px;max-width:640px;display:flex;flex-direction:column;gap:24px">
+            <span style="font:500 11px 'JetBrains Mono';letter-spacing:.1em;color:#9AA3B5">PRODUÇÃO DE CONTEÚDO COM IA · PAGUE POR USO</span>
+            <h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:72px;line-height:72px;letter-spacing:-0.035em;text-wrap:balance">Imagem e vídeo com o custo na cara.</h1>
+            <p style="margin:0;font-size:18px;line-height:28px;color:#9AA3B5;max-width:520px">Monte o fluxo, veja quanto custa em reais antes de rodar e quanto custou depois. Sem crédito opaco, sem plano caro.</p>
+            <div style="display:flex;gap:12px;align-items:center"><span style="height:48px;padding:0 20px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 15px Inter;display:flex;align-items:center">Pedir convite</span><span style="height:48px;padding:0 16px;border-radius:8px;color:#E9ECF2;font:500 15px Inter;display:flex;align-items:center">Já tenho conta</span></div>
+          </div>
+          <div style="position:absolute;right:96px;bottom:120px;display:flex;flex-direction:column;align-items:flex-end;gap:8px"><span style="height:32px;padding:0 12px;border-radius:999px;border:1px solid rgba(16,185,129,.28);background:rgba(10,11,14,.7);color:#3DDFA6;font:500 13px 'JetBrains Mono';display:inline-flex;align-items:center;gap:8px"><span style="color:#9AA3B5">esta página custou</span>R$12,40 ✓</span><span style="font-size:12px;color:#7D869A">gerada por um fluxo do LabIA</span></div>
+          <span style="position:absolute;left:50%;bottom:32px;transform:translateX(-50%);font:11px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A;display:flex;gap:8px;align-items:center"><i class="icon-arrow-down" style="font-size:13px"></i>role para descer pela árvore</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">1Lb</b> · celular</span>
+      <div style="width:375px;height:812px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <dc-import name="LabIA Header" mobile="{{ true }}" logged-out="{{ true }}" hint-size="100%,56px"></dc-import>
+        <div style="flex:1;position:relative;background:repeating-linear-gradient(135deg,#0E1015 0 10px,#0A0B0E 10px 20px)">
+          <span style="position:absolute;left:20px;top:20px;font:10px 'JetBrains Mono';color:#7D869A">frame 0 · set 720px</span>
+          <div style="position:absolute;left:20px;right:20px;bottom:40px;display:flex;flex-direction:column;gap:16px">
+            <h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:40px;line-height:42px;letter-spacing:-0.03em">Imagem e vídeo com o custo na cara.</h1>
+            <p style="margin:0;font-size:15px;line-height:23px;color:#9AA3B5">Veja quanto custa em reais antes de rodar.</p>
+            <span style="align-self:flex-start;height:28px;padding:0 10px;border-radius:999px;border:1px solid rgba(16,185,129,.28);background:rgba(10,11,14,.7);color:#3DDFA6;font:500 12px 'JetBrains Mono';display:inline-flex;align-items:center;gap:6px"><span style="color:#9AA3B5">esta página</span>R$12,40 ✓</span>
+            <span style="height:48px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 15px Inter;display:flex;align-items:center;justify-content:center">Pedir convite</span>
+            <span style="height:44px;border-radius:8px;color:#E9ECF2;font:500 15px Inter;display:flex;align-items:center;justify-content:center">Já tenho conta</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ B7 ACESSO ============ -->
+<section id="B7" style="display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #262A35;padding-bottom:20px">
+    <div style="display:flex;align-items:baseline;gap:16px"><span style="font:500 12px 'JetBrains Mono';color:#7D869A">B7</span><h2 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:32px">Acesso</h2><span style="font:12px 'JetBrains Mono';color:#7D869A">app/(auth)/* · modulos/10-contas (rascunho)</span><span style="font:500 11px 'JetBrains Mono';border:1px dashed #343947;border-radius:99px;padding:2px 8px;color:#9AA3B5">PROPOSTA · aguardando aceite</span></div>
+    <p style="margin:0;font-size:14px;line-height:22px;color:#9AA3B5;max-width:900px">Sóbrio: wordmark, um cartão, nada de ilustração. Mensagens genéricas onde a spec exige (bloqueio = mesma mensagem de senha errada; esqueci a senha = resposta sempre igual). Menu de perfil no <a href="LabIA Design System.dc.html">Design System</a>.</p>
+  </div>
+  <div style="display:flex;gap:48px;flex-wrap:wrap;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">B7a</b> · Entrar · desktop</span>
+      <div style="width:1440px;height:900px;background-color:#0A0B0E;background-image:radial-gradient(#1B1E27 1px,transparent 1px);background-size:16px 16px;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:grid;place-items:center;position:relative">
+        <span style="position:absolute;left:32px;top:24px;font-family:'Space Grotesk';font-weight:700;font-size:22px">Lab<span style="color:#3DDFA6">IA</span></span>
+        <div style="width:400px;background:#12141A;border:1px solid #262A35;border-radius:12px;padding:32px;display:flex;flex-direction:column;gap:18px">
+          <div style="display:flex;flex-direction:column;gap:6px"><h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:28px;letter-spacing:-0.02em">Entrar</h1><span style="font-size:14px;color:#9AA3B5">De volta à bancada.</span></div>
+          <span style="height:44px;border-radius:8px;border:1px solid #343947;background:#1A1D26;font:500 14px Inter;display:flex;align-items:center;justify-content:center;gap:10px"><span style="width:18px;height:18px;border-radius:99px;border:1px solid #9AA3B5;display:grid;place-items:center;font:600 10px Inter;color:#9AA3B5">G</span>Continuar com Google</span>
+          <div style="display:flex;align-items:center;gap:12px;font:11px 'JetBrains Mono';color:#7D869A"><span style="flex:1;height:1px;background:#262A35"></span>OU<span style="flex:1;height:1px;background:#262A35"></span></div>
+          <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">E-MAIL</span><span style="height:44px;border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:0 12px;display:flex;align-items:center;font-size:14px">felipe@labia.app</span></label>
+          <label style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;justify-content:space-between"><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">SENHA</span><a href="#" style="font-size:12px;color:#9AA3B5">Esqueci a senha</a></span><span style="height:44px;border:1px solid #343947;background:#1A1D26;border-radius:8px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;font-size:14px;box-shadow:0 0 0 1px #10B981,0 0 24px rgba(16,185,129,.12)">••••••••••<i class="icon-eye" style="font-size:16px;color:#9AA3B5"></i></span></label>
+          <span style="height:44px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 15px Inter;display:flex;align-items:center;justify-content:center">Entrar</span>
+          <span style="font-size:13px;color:#9AA3B5;text-align:center">Acesso só por convite. <a href="#">Tenho um convite</a></span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">B7b</b> · Entrar · celular · navegador interno</span>
+      <div style="width:375px;height:812px;background:#0A0B0E;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:56px;display:flex;align-items:center;padding:0 20px;font-family:'Space Grotesk';font-weight:700;font-size:20px;border-bottom:1px solid #262A35">Lab<span style="color:#3DDFA6">IA</span></div>
+        <div style="padding:20px;display:flex;flex-direction:column;gap:16px">
+          <div style="border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.1);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px"><span style="display:flex;gap:8px;align-items:center;font-size:14px;font-weight:600"><i class="icon-external-link" style="font-size:16px;color:#FBBF24"></i>Abra no navegador</span><span style="font-size:13px;line-height:19px;color:#E9ECF2">Você está no navegador do Instagram ou do X. O Google bloqueia login aqui.</span><span style="height:44px;border-radius:8px;border:1px solid #343947;background:#1A1D26;font:500 14px Inter;display:flex;align-items:center;justify-content:center;gap:8px"><i class="icon-copy" style="font-size:15px"></i>Copiar link</span></div>
+          <h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:28px">Entrar</h1>
+          <span style="height:48px;border-radius:8px;border:1px solid #262A35;background:#12141A;color:#5D6577;font:500 15px Inter;display:flex;align-items:center;justify-content:center">Continuar com Google</span>
+          <span style="height:48px;border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:0 12px;display:flex;align-items:center;font-size:15px;color:#7D869A">E-mail</span>
+          <span style="height:48px;border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:0 12px;display:flex;align-items:center;font-size:15px;color:#7D869A">Senha</span>
+          <span style="height:48px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 15px Inter;display:flex;align-items:center;justify-content:center">Entrar</span>
+          <a href="#" style="font-size:14px;text-align:center;color:#9AA3B5">Esqueci a senha</a>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">B7c</b> · Entrar · estados</span>
+      <div style="width:400px;display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ loginStates }}" as="l" hint-placeholder-count="4">
+          <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px">
+            <span style="font:500 10px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">{{ l.tag }}</span>
+            <div style="display:flex;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid {{ l.border }};background:{{ l.bg }};font-size:13px;line-height:18px"><i class="{{ l.icon }}" style="font-size:15px;color:{{ l.color }}"></i><span style="flex:1">{{ l.msg }}</span></div>
+            <sc-if value="{{ l.hasAction }}" hint-placeholder-val="{{ false }}"><span style="align-self:flex-start;height:32px;padding:0 10px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;font:500 12px Inter;display:flex;align-items:center">{{ l.action }}</span></sc-if>
+          </div>
+        </sc-for>
+        <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px"><span style="font:500 10px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">CARREGANDO</span><span style="height:44px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 15px Inter;display:flex;align-items:center;justify-content:center;gap:8px;opacity:.85"><i class="icon-loader-circle" style="font-size:16px"></i>Entrando…</span></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">B7d</b> · Criar conta (com convite) · <b style="color:#E9ECF2">B7e</b> · código</span>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="width:400px;background:#12141A;border:1px solid #262A35;border-radius:12px;padding:28px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box">
+          <span style="align-self:flex-start;height:24px;padding:0 9px;border-radius:999px;border:1px solid #262A35;font:500 12px Inter;color:#9AA3B5;display:inline-flex;align-items:center;gap:6px"><i class="icon-ticket" style="font-size:13px"></i>Convite de Felipe · vale até 9 out</span>
+          <h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:26px">Criar conta</h1>
+          <span style="height:44px;border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:0 12px;display:flex;align-items:center;font-size:14px">Diego Ramos</span>
+          <span style="height:44px;border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:0 12px;display:flex;align-items:center;font-size:14px">diego@hathi.co</span>
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="height:44px;border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:0 12px;display:flex;align-items:center;font-size:14px">•••••••</span><span style="font:11px 'JetBrains Mono';color:#9AA3B5">7 de 8–72 caracteres</span></div>
+          <span style="display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:19px;color:#9AA3B5"><span style="width:18px;height:18px;border-radius:4px;border:1px solid #343947;background:#1A1D26;flex-shrink:0;margin-top:1px"></span>Li e aceito os <a href="#">Termos</a> e a <a href="#">Política de Privacidade</a>.</span>
+          <span style="height:44px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 15px Inter;display:flex;align-items:center;justify-content:center;opacity:.5">Criar conta</span>
+        </div>
+        <div style="width:400px;background:#12141A;border:1px solid #262A35;border-radius:12px;padding:28px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box">
+          <i class="icon-mail-check" style="font-size:22px;color:#9AA3B5"></i>
+          <h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:26px">Confirme seu e-mail</h1>
+          <span style="font-size:14px;line-height:21px;color:#9AA3B5">Enviamos um link e um código para diego@hathi.co. Abriu o e-mail em outro aparelho? Digite o código.</span>
+          <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px"><sc-for list="{{ code }}" as="d" hint-placeholder-count="6"><span style="height:52px;border-radius:8px;border:1px solid {{ d.border }};background:#1A1D26;display:grid;place-items:center;font:600 22px 'JetBrains Mono';box-shadow:{{ d.shadow }}">{{ d.v }}</span></sc-for></div>
+          <span style="font-size:12px;color:#7D869A">Vale por 30 min. <a href="#" style="color:#9AA3B5">Reenviar</a></span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">B7f</b> · convite inválido / vencido / usado</span>
+      <div style="width:400px;display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ inviteStates }}" as="i" hint-placeholder-count="3">
+          <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:8px"><span style="display:flex;gap:8px;align-items:center;font-family:'Space Grotesk';font-weight:500;font-size:16px"><i class="{{ i.icon }}" style="font-size:16px;color:#9AA3B5"></i>{{ i.title }}</span><span style="font-size:13px;line-height:19px;color:#9AA3B5">{{ i.msg }}</span><a href="#" style="font-size:13px">{{ i.link }}</a></div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font:500 12px 'JetBrains Mono';color:#9AA3B5"><b style="color:#E9ECF2">B7g</b> · Só por convite · <b style="color:#E9ECF2">B7h</b> · Aceite de Termos</span>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="width:400px;background:#12141A;border:1px solid #262A35;border-radius:12px;padding:28px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box">
+          <i class="icon-lock-keyhole" style="font-size:22px;color:#9AA3B5"></i>
+          <h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:26px">Você precisa de um convite</h1>
+          <span style="font-size:14px;line-height:21px;color:#9AA3B5">Entramos com <span style="color:#E9ECF2">ana@gmail.com</span>, mas o LabIA está aberto só para convidados por enquanto. Se você recebeu um link, abra-o neste navegador.</span>
+          <span style="height:44px;border-radius:8px;border:1px solid #343947;background:#1A1D26;font:500 14px Inter;display:flex;align-items:center;justify-content:center">Usar outra conta</span>
+          <a href="#" style="font-size:13px;color:#9AA3B5;text-align:center">Acompanhe a abertura no X</a>
+        </div>
+        <div style="width:400px;background:#12141A;border:1px solid #262A35;border-radius:12px;padding:28px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box">
+          <h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:26px">Antes de começar</h1>
+          <span style="font-size:14px;line-height:21px;color:#9AA3B5">Primeiro acesso com Google. Confirme que leu os termos.</span>
+          <div style="border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;font-size:13px"><a href="#">Termos de Uso</a><a href="#">Política de Privacidade</a><span style="font:11px 'JetBrains Mono';color:#7D869A">versão 2026-10</span></div>
+          <span style="display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:19px"><span style="width:18px;height:18px;border-radius:4px;border:1px solid #10B981;background:#10B981;flex-shrink:0;display:grid;place-items:center;color:#0A0B0E"><i class="icon-check" style="font-size:12px"></i></span>Li e aceito.</span>
+          <span style="height:44px;border-radius:8px;background:#10B981;color:#0A0B0E;font:500 15px Inter;display:flex;align-items:center;justify-content:center">Continuar</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const ST = {
+      draft: { status: 'Rascunho', sDot: '#7D869A', sBorder: '#343947' },
+      progress: { status: 'Em andamento', sDot: '#38BDF8', sBorder: 'rgba(56,189,248,.3)' },
+      review: { status: 'Em revisão', sDot: '#FBBF24', sBorder: 'rgba(251,191,36,.4)' },
+      approved: { status: 'Aprovado', sDot: '#4ADE80', sBorder: 'rgba(74,222,128,.3)' },
+      archived: { status: 'Arquivado', sDot: '#343947', sBorder: '#262A35' },
+    };
+    const stripes = 'repeating-linear-gradient(135deg,#1A1D26 0 8px,#12141A 8px 16px)';
+    const projects = [
+      ['Bento · pote térmico', 'review', 'Vídeo · 9:16', 'R$4,87 ✓'],
+      ['Vega · teaser 30s', 'progress', 'Vídeo · 16:9', 'R$12,40 ✓'],
+      ['Monad · capas', 'approved', 'Imagem · 1:1', 'R$1,12 ✓'],
+      ['PagFinance · cartão novo', 'draft', 'Imagem · 9:16', 'A calcular'],
+      ['Felipe-Creator · bastidores', 'review', 'Vídeo · 9:16', 'R$3,86 ✓'],
+      ['Vega · produto em 5s', 'approved', 'Vídeo · 9:16', 'R$1,65 ✓'],
+      ['Bento · referência de luz', 'draft', 'Imagem · 1:1', 'R$0,00'],
+      ['Monad · lançamento jul', 'archived', 'Vídeo · 16:9', 'R$9,10 ✓'],
+    ].map(([name, st, meta, cost]) => ({ name, meta, short: meta.split(' · ')[1], cost, costColor: cost === 'A calcular' ? '#9AA3B5' : '#3DDFA6', ...ST[st], thumb: st === 'draft' ? '#12141A' : stripes, thumbLabel: st === 'draft' ? 'sem resultado' : meta.split(' · ')[1] }));
+    const tab = (label, n, on) => ({ label, n, border: on ? '#343947' : '#262A35', bg: on ? '#1A1D26' : 'transparent', fg: on ? '#E9ECF2' : '#9AA3B5' });
+    const statusTabs = [tab('Todos', 8, true), tab('Rascunho', 2), tab('Em andamento', 1), tab('Em revisão', 2), tab('Aprovado', 2), tab('Arquivado', 1)];
+    const sources = [
+      { role: 'IMAGEM-BASE · PRIMEIRO FRAME', file: 'pote-frente.jpg', hint: 'Usada em Animar imagem', thumb: stripes, thumbIcon: '', border: '#262A35', borderStyle: 'solid', action: 'Trocar' },
+      { role: 'REFERÊNCIA VISUAL · NÃO VIRA FRAME', file: 'luz-fim-de-tarde.png', hint: 'Orienta direção; seleção explícita', thumb: stripes, thumbIcon: '', border: '#262A35', borderStyle: 'solid', action: 'Trocar' },
+      { role: 'VÍDEO DE REFERÊNCIA', file: 'Arraste ou escolha um arquivo', hint: 'MP4 ou MOV · até 200 MB', thumb: '#1A1D26', thumbIcon: 'icon-upload', border: '#343947', borderStyle: 'dashed', action: 'Enviar' },
+    ];
+    const results = [
+      { name: 'Run 3', kind: 'vídeo · 5s', cost: 'R$1,87 ✓', meta: '2 out · Kling 2.5', chosen: true, border: '#343947' },
+      { name: 'Run 2', kind: 'vídeo · 5s', cost: 'R$1,87 ✓', meta: '1 out · Kling 2.5', chosen: false, border: '#262A35' },
+      { name: 'Imagem', kind: 'imagem', cost: 'R$0,14 ✓', meta: '1 out · FLUX Dev', chosen: false, border: '#262A35' },
+      { name: 'Run 1', kind: 'vídeo · 5s', cost: 'R$0,99 ✓', meta: '30 set · Wan 2.5', chosen: false, border: '#262A35' },
+    ];
+    const filters = [
+      { group: 'Projeto', value: 'Bento', border: '#343947', bg: '#1A1D26' },
+      { group: 'Tipo', value: 'Vídeos', border: '#343947', bg: '#1A1D26' },
+      { group: 'Modelo', value: 'Todos', border: '#262A35', bg: 'transparent' },
+      { group: 'Período', value: '30 dias', border: '#262A35', bg: 'transparent' },
+    ];
+    const assets = [
+      ['Kling 2.5 Turbo · fal.ai', 'R$1,87 ✓', 'vídeo', '720×1280', '2 out', true],
+      ['Kling 2.5 Turbo · fal.ai', 'R$1,87 ✓', 'vídeo', '720×1280', '1 out'],
+      ['FLUX Dev · fal.ai', 'R$0,14 ✓', 'imagem', '1024×1365', '1 out'],
+      ['Importado', 'R$0,00', 'imagem', '3024×4032', '30 set'],
+      ['Wan 2.5 · fal.ai', 'R$0,99 ✓', 'vídeo', '480×854', '30 set'],
+      ['Montagem local', 'R$0,00', 'vídeo', '720×1280', '29 set'],
+      ['FLUX Dev · fal.ai', 'R$0,14 ✓', 'imagem', '1024×1024', '28 set'],
+      ['Importado', 'R$0,00', 'vídeo', '1080×1920', '27 set'],
+    ].map(([model, cost, type, dim, date, sel]) => ({ model, cost, type, dim, date, project: 'Bento', border: sel ? '#10B981' : '#262A35', shadow: sel ? '0 0 0 1px #10B981' : 'none' }));
+    const opt = (label, on) => ({ label, border: on ? '#343947' : '#262A35', bg: on ? '#1A1D26' : 'transparent', fg: on ? '#E9ECF2' : '#9AA3B5' });
+    const sheetGroups = [
+      { name: 'PROJETO', opts: [opt('Todos'), opt('Bento', true), opt('Vega'), opt('Sem projeto')] },
+      { name: 'TIPO', opts: [opt('Tudo'), opt('Imagens'), opt('Vídeos', true)] },
+      { name: 'MODELO', opts: [opt('Todos', true), opt('Kling 2.5'), opt('FLUX Dev'), opt('Wan 2.5')] },
+      { name: 'PERÍODO', opts: [opt('Tudo'), opt('Hoje'), opt('7 dias'), opt('30 dias', true)] },
+    ];
+    const S = {
+      ok: { sDot: '#4ADE80', sBorder: 'rgba(74,222,128,.3)', sBg: 'rgba(74,222,128,.1)' },
+      off: { sDot: '#7D869A', sBorder: '#343947', sBg: 'transparent' },
+      warn: { sDot: '#FBBF24', sBorder: 'rgba(251,191,36,.4)', sBg: 'rgba(251,191,36,.1)' },
+      err: { sDot: '#FB7185', sBorder: 'rgba(251,113,133,.4)', sBg: 'rgba(251,113,133,.1)' },
+    };
+    const btnSec = { btnBorder: '#262A35', btnBg: '#1A1D26', btnFg: '#E9ECF2' };
+    const btnStrong = { btnBorder: '#343947', btnBg: '#1A1D26', btnFg: '#E9ECF2' };
+    const connections = [
+      { name: 'ChatGPT', icon: 'icon-message-circle', state: 'Conectado', ...S.ok, unlocks: 'Libera Gerar imagem via sua conta ChatGPT.', meta: 'felipe@labia.app · imagem ainda em homologação', action: 'Desconectar', ...btnSec },
+      { name: 'fal.ai', icon: 'icon-zap', state: 'Conectado', ...S.ok, unlocks: 'Libera imagem (FLUX) e vídeo (Kling, Wan, Veo). Cobrança por uso em R$.', meta: 'Chave do workspace', action: 'Gerenciar', ...btnSec },
+      { name: 'Executor local', icon: 'icon-server', state: 'Online', ...S.ok, unlocks: 'Roda as execuções da fila e a montagem de clipes.', meta: 'Visto às 21:13', action: 'Ver fila', ...btnSec },
+    ];
+    const chatgptStates = [
+      { state: 'Conectado', ...S.ok, msg: 'Pronto para Gerar imagem.', action: 'Desconectar', ...btnSec },
+      { state: 'Desconectado', ...S.off, msg: 'Conecte para usar sua conta ChatGPT nos nós de imagem.', action: 'Conectar', ...btnStrong },
+      { state: 'Expirado', ...S.warn, msg: 'O acesso venceu. Reconecte para continuar.', action: 'Reconectar', ...btnStrong },
+      { state: 'Erro', ...S.err, msg: 'Não conseguimos falar com a OpenAI.', action: 'Tentar de novo', ...btnSec },
+      { state: 'Offline', ...S.err, msg: 'Executor local sem sinal há 12 min. Execuções ficam na fila.', action: 'Como religar', ...btnSec },
+    ];
+    const loginStates = [
+      { tag: 'ERRO GENÉRICO / BLOQUEIO', icon: 'icon-circle-x', color: '#FB7185', border: 'rgba(251,113,133,.4)', bg: 'rgba(251,113,133,.1)', msg: 'E-mail ou senha incorretos. Muitas tentativas bloqueiam por 15 min.', hasAction: false, action: '' },
+      { tag: 'CONTA NÃO CONFIRMADA', icon: 'icon-mail-warning', color: '#FBBF24', border: 'rgba(251,191,36,.4)', bg: 'rgba(251,191,36,.1)', msg: 'Confirme seu e-mail antes de entrar.', hasAction: true, action: 'Reenviar confirmação' },
+      { tag: 'ESQUECI A SENHA · RESPOSTA ÚNICA', icon: 'icon-info', color: '#38BDF8', border: '#262A35', bg: '#1A1D26', msg: 'Se houver uma conta com este e-mail, enviamos um link para redefinir a senha.', hasAction: false, action: '' },
+    ];
+    const inviteStates = [
+      { icon: 'icon-link-2-off', title: 'Convite inválido', msg: 'Este link não é um convite do LabIA. Confira se copiou inteiro.', link: 'Já tenho conta' },
+      { icon: 'icon-clock', title: 'Convite vencido', msg: 'Convites valem 7 dias. Peça um novo a quem te convidou.', link: 'Já tenho conta' },
+      { icon: 'icon-check-check', title: 'Convite já usado', msg: 'Este convite já criou uma conta. Se foi você, é só entrar.', link: 'Entrar' },
+    ];
+    const code = ['4', '8', '1', '', '', ''].map((v, i) => ({ v, border: i === 3 ? '#343947' : '#262A35', shadow: i === 3 ? '0 0 0 1px #10B981' : 'none' }));
+    return {
+      projects, projects5: projects.slice(0, 5), statusTabs, three: [1, 2, 3], four: [1, 2, 3, 4], sources, results, results2: results.slice(0, 2),
+      filters, assets, assets6: assets.slice(0, 6), sheetGroups, connections, chatgptStates, loginStates, inviteStates, code,
+    };
+  }
+}
+</script>
+</body>
+</html>

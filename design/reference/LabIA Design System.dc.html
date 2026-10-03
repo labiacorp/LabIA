@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/lucide-static@0.469.0/font/lucide.css">
+<style>
+html{background:#0A0B0E}body{margin:0;background:#0A0B0E;color:#E9ECF2;font-family:Inter,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#E9ECF2;text-decoration:underline;text-underline-offset:3px}a:hover{color:#FFFFFF}
+@keyframes labpulse{0%,100%{box-shadow:0 0 0 1px #10B981,0 0 0 0 rgba(16,185,129,.12)}50%{box-shadow:0 0 0 1px #10B981,0 0 28px 4px rgba(16,185,129,.18)}}
+@keyframes labshimmer{from{background-position:-200% 0}to{background-position:200% 0}}
+</style>
+</helmet>
+
+<div style="display:flex;flex-direction:column;gap:96px;padding:72px;max-width:1600px;box-sizing:border-box">
+
+<header style="display:flex;flex-direction:column;gap:16px;max-width:960px">
+  <div style="display:flex;gap:12px;align-items:center">
+    <span style="font-family:'Space Grotesk';font-weight:700;font-size:28px;letter-spacing:-0.02em">Lab<span style="color:#3DDFA6">IA</span></span>
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#9AA3B5;border:1px dashed #343947;border-radius:999px;padding:4px 10px">proposta · v2 · 2026-10-02</span>
+  </div>
+  <h1 style="margin:0;font-family:'Space Grotesk';font-weight:700;font-size:56px;line-height:60px;letter-spacing:-0.03em">Design System — laboratório noturno</h1>
+  <p style="margin:0;font-size:16px;line-height:24px;color:#9AA3B5;max-width:720px;text-wrap:pretty">Tokens, regra do verde, escala tipográfica e inventário de componentes. Nada aqui vira código sem ok do Felipe. Código correspondente em <a href="handoff/globals.css">handoff/globals.css</a>, <a href="handoff/tailwind.config.ts">tailwind.config.ts</a> e <a href="handoff/MAPA-DE-APLICACAO.md">MAPA-DE-APLICACAO.md</a>. Telas em <a href="LabIA Telas.dc.html">LabIA Telas</a>.</p>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;font-family:'JetBrains Mono';font-size:12px;color:#9AA3B5">
+    <span style="display:flex;gap:8px;align-items:center"><i style="width:8px;height:8px;border-radius:2px;background:#343947;display:inline-block"></i>MANTIDO</span>
+    <span style="display:flex;gap:8px;align-items:center"><i style="width:8px;height:8px;border-radius:2px;background:#FBBF24;display:inline-block"></i>ALTERADO</span>
+    <span style="display:flex;gap:8px;align-items:center"><i style="width:8px;height:8px;border-radius:2px;background:#38BDF8;display:inline-block"></i>NOVO</span>
+  </div>
+</header>
+
+<!-- 01 TOKENS -->
+<section style="display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;align-items:baseline;gap:16px;border-bottom:1px solid #262A35;padding-bottom:16px">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;color:#7D869A">01</span>
+    <h2 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:32px;letter-spacing:-0.02em">Tokens de cor</h2>
+  </div>
+  <sc-for list="{{ tokenGroups }}" as="g" hint-placeholder-count="5">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7D869A">{{ g.name }}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+        <sc-for list="{{ g.items }}" as="t" hint-placeholder-count="6">
+          <div style="display:flex;flex-direction:column;background:#12141A;border:1px solid #262A35;border-radius:12px;overflow:hidden">
+            <div style="height:64px;background:{{ t.hex }};border-bottom:1px solid #262A35"></div>
+            <div style="display:flex;flex-direction:column;gap:6px;padding:12px">
+              <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+                <span style="font-family:'JetBrains Mono';font-size:12px;color:#E9ECF2">{{ t.name }}</span>
+                <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.06em;color:{{ t.statusColor }}">{{ t.status }}</span>
+              </div>
+              <span style="font-family:'JetBrains Mono';font-size:12px;color:#9AA3B5">{{ t.value }}</span>
+              <span style="font-size:12px;line-height:16px;color:#7D869A;text-wrap:pretty">{{ t.note }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-for>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px">
+    <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px">
+      <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7D869A">Contraste do muted · ALTERADO</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:#12141A;border:1px solid #262A35;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:4px"><span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;color:#5D6577">ANTES #5D6577</span><span style="font-size:12px;color:#5D6577">Dica sobre surface-1</span><span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA3B5">~3,1:1 ✕</span></div>
+        <div style="background:#12141A;border:1px solid #262A35;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:4px"><span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;color:#7D869A">DEPOIS #7D869A</span><span style="font-size:12px;color:#7D869A">Dica sobre surface-1</span><span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA3B5">~5,0:1 ✓</span></div>
+        <div style="background:#1A1D26;border:1px solid #262A35;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:4px"><span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;color:#5D6577">ANTES</span><span style="font-size:12px;color:#5D6577">Dica sobre surface-2</span><span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA3B5">~2,9:1 ✕</span></div>
+        <div style="background:#1A1D26;border:1px solid #262A35;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:4px"><span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;color:#7D869A">DEPOIS</span><span style="font-size:12px;color:#7D869A">Dica sobre surface-2</span><span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA3B5">~4,6:1 ✓</span></div>
+      </div>
+      <p style="margin:0;font-size:12px;line-height:18px;color:#9AA3B5">O antigo valor vira <span style="font-family:'JetBrains Mono'">--lab-text-disabled</span>: só para controles desabilitados, nunca informação.</p>
+    </div>
+    <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px">
+      <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7D869A">Camadas · NOVO</div>
+      <sc-for list="{{ zLayers }}" as="z" hint-placeholder-count="7">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #262A35;padding-bottom:8px">
+          <span style="font-size:14px;color:#E9ECF2">{{ z.label }}</span>
+          <span style="font-family:'JetBrains Mono';font-size:12px;color:#9AA3B5">{{ z.value }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px">
+      <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7D869A">Espaço, larguras, movimento · NOVO</div>
+      <div style="display:flex;align-items:flex-end;gap:10px;height:72px">
+        <sc-for list="{{ spaces }}" as="s" hint-placeholder-count="8">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div style="width:{{ s.px }};height:{{ s.px }};background:#343947;border-radius:2px"></div><span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA3B5">{{ s.n }}</span></div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-family:'JetBrains Mono';font-size:12px;color:#9AA3B5">
+        <span>max-w-form 640 · max-w-content 1152 · max-w-wide 1440</span>
+        <span>header 56 · toolbar 48 · página px-5 (celular) / px-8 (≥1024)</span>
+        <span>micro 120ms · painel 200ms · pulso 1600ms · ease (.2,0,0,1)</span>
+        <span>prefers-reduced-motion: pulso e shimmer desligados</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 VERDE -->
+<section style="display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;align-items:baseline;gap:16px;border-bottom:1px solid #262A35;padding-bottom:16px">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;color:#7D869A">02</span>
+    <h2 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:32px;letter-spacing:-0.02em">O que pode ser verde</h2>
+    <span style="font-size:14px;color:#9AA3B5">Se a tela está verde demais, está errada.</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px">
+    <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;overflow:hidden">
+      <div style="padding:14px 20px;border-bottom:1px solid #262A35;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;color:#3DDFA6">SIM — reagente</div>
+      <sc-for list="{{ greenYes }}" as="r" hint-placeholder-count="6">
+        <div style="display:grid;grid-template-columns:1fr 160px 150px;gap:12px;align-items:center;padding:12px 20px;border-bottom:1px solid #262A35">
+          <span style="font-size:14px">{{ r.what }}</span>
+          <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA3B5">{{ r.token }}</span>
+          <span style="font-size:12px;color:#7D869A">{{ r.how }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;overflow:hidden">
+      <div style="padding:14px 20px;border-bottom:1px solid #262A35;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;color:#9AA3B5">NÃO — usar neutro</div>
+      <sc-for list="{{ greenNo }}" as="r" hint-placeholder-count="8">
+        <div style="display:grid;grid-template-columns:1fr 200px;gap:12px;align-items:center;padding:12px 20px;border-bottom:1px solid #262A35">
+          <span style="font-size:14px">{{ r.what }}</span>
+          <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA3B5">{{ r.use }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<!-- 03 TIPO -->
+<section style="display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;align-items:baseline;gap:16px;border-bottom:1px solid #262A35;padding-bottom:16px">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;color:#7D869A">03</span>
+    <h2 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:32px;letter-spacing:-0.02em">Escala tipográfica · NOVO</h2>
+    <span style="font-size:14px;color:#9AA3B5">Substitui text-[10px], text-[11px] e trackings soltos.</span>
+  </div>
+  <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;overflow:hidden">
+    <sc-for list="{{ typeScale }}" as="ty" hint-placeholder-count="10">
+      <div style="display:grid;grid-template-columns:140px 260px 1fr;gap:24px;align-items:center;padding:16px 24px;border-bottom:1px solid #262A35">
+        <span style="font-family:'JetBrains Mono';font-size:12px;color:#E9ECF2">{{ ty.name }}</span>
+        <span style="font-family:'JetBrains Mono';font-size:11px;line-height:16px;color:#9AA3B5">{{ ty.spec }}</span>
+        <span style="font-family:{{ ty.family }};font-size:{{ ty.size }};line-height:{{ ty.lh }};font-weight:{{ ty.weight }};letter-spacing:{{ ty.track }};text-transform:{{ ty.tt }};color:{{ ty.color }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ ty.sample }}</span>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<!-- 04 COMPONENTES -->
+<section style="display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;align-items:baseline;gap:16px;border-bottom:1px solid #262A35;padding-bottom:16px">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;color:#7D869A">04</span>
+    <h2 style="margin:0;font-family:'Space Grotesk';font-weight:500;font-size:32px;letter-spacing:-0.02em">Componentes</h2>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:16px">
+    <!-- Button -->
+    <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;justify-content:space-between"><span style="font-family:'Space Grotesk';font-weight:500;font-size:18px">Button</span><span style="font-family:'JetBrains Mono';font-size:11px;color:#7D869A">components/ui/button.tsx</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button style="height:36px;padding:0 12px;border-radius:8px;border:0;background:#10B981;color:#0A0B0E;font:500 14px Inter;display:flex;gap:8px;align-items:center"><i class="icon-play" style="font-size:16px"></i>Executar</button>
+        <button style="height:36px;padding:0 12px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;color:#E9ECF2;font:500 14px Inter">Salvar</button>
+        <button style="height:36px;padding:0 12px;border-radius:8px;border:0;background:transparent;color:#9AA3B5;font:500 14px Inter">Cancelar</button>
+        <button style="height:36px;padding:0 12px;border-radius:8px;border:1px solid rgba(251,113,133,.4);background:rgba(251,113,133,.1);color:#FB7185;font:500 14px Inter">Desconectar</button>
+        <button style="height:36px;padding:0;border:0;background:transparent;color:#E9ECF2;font:500 14px Inter;text-decoration:underline;text-underline-offset:4px">Abrir Projeto</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button style="height:32px;padding:0 10px;border-radius:8px;border:0;background:#10B981;color:#0A0B0E;font:500 12px Inter">sm 32</button>
+        <button style="height:36px;padding:0 12px;border-radius:8px;border:0;background:#10B981;color:#0A0B0E;font:500 14px Inter">md 36</button>
+        <button style="height:44px;padding:0 16px;border-radius:8px;border:0;background:#10B981;color:#0A0B0E;font:500 14px Inter">lg 44 · celular</button>
+        <button style="width:36px;height:36px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;color:#9AA3B5;display:grid;place-items:center"><i class="icon-ellipsis" style="font-size:16px"></i></button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button style="height:36px;padding:0 12px;border-radius:8px;border:0;background:#10B981;color:#0A0B0E;font:500 14px Inter;box-shadow:0 0 0 1px #3DDFA6,0 0 24px rgba(16,185,129,.25)">foco</button>
+        <button style="height:36px;padding:0 12px;border-radius:8px;border:0;background:#10B981;color:#0A0B0E;font:500 14px Inter;opacity:.5">desabilitado</button>
+        <button style="height:36px;padding:0 12px;border-radius:8px;border:0;background:#10B981;color:#0A0B0E;font:500 14px Inter;display:flex;gap:8px;align-items:center;opacity:.85"><i class="icon-loader-circle" style="font-size:16px"></i>Executando…</button>
+      </div>
+      <p style="margin:0;font-size:12px;line-height:18px;color:#7D869A">Um único primário por área. <span style="font-family:'JetBrains Mono'">default</span> renomeado para <span style="font-family:'JetBrains Mono'">primary</span>; perigo agora é contorno (fundo vermelho sólido só no hover).</p>
+    </div>
+
+    <!-- Cost chip -->
+    <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;justify-content:space-between"><span style="font-family:'Space Grotesk';font-weight:500;font-size:18px">Chip de custo</span><span style="font-family:'JetBrains Mono';font-size:11px;color:#7D869A">ui/cost-chip.tsx · NOVO</span></div>
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:12px 20px;align-items:center">
+        <span style="height:24px;padding:0 8px;border-radius:999px;border:1px solid rgba(16,185,129,.28);background:rgba(16,185,129,.12);color:#3DDFA6;font:500 12px 'JetBrains Mono';display:inline-flex;align-items:center;justify-self:start">~R$0,43</span><span style="font-size:13px;color:#9AA3B5">Estimado — antes de rodar</span>
+        <span style="height:24px;padding:0 8px;border-radius:999px;border:1px solid rgba(16,185,129,.28);background:rgba(16,185,129,.12);color:#3DDFA6;font:500 12px 'JetBrains Mono';display:inline-flex;align-items:center;gap:4px;justify-self:start">R$0,41 ✓</span><span style="font-size:13px;color:#9AA3B5">Real — depois de rodar</span>
+        <span style="height:24px;padding:0 8px;border-radius:999px;border:1px solid rgba(16,185,129,.28);background:rgba(16,185,129,.12);color:#3DDFA6;font:500 12px 'JetBrains Mono';display:inline-flex;align-items:center;justify-self:start">R$0,00</span><span style="font-size:13px;color:#9AA3B5">Importação / montagem local (custo conhecido)</span>
+        <span style="height:24px;padding:0 8px;border-radius:999px;border:1px dashed #343947;color:#9AA3B5;font:500 12px 'JetBrains Mono';display:inline-flex;align-items:center;justify-self:start">A calcular</span><span style="font-size:13px;color:#9AA3B5">Desconhecido — nunca R$0</span>
+        <span style="height:24px;padding:0 8px;border-radius:999px;border:1px solid #262A35;background:#1A1D26;color:#7D869A;font:500 12px 'JetBrains Mono';display:inline-flex;align-items:center;gap:6px;justify-self:start"><i class="icon-cloud-off" style="font-size:12px"></i>indisponível</span><span style="font-size:13px;color:#9AA3B5">Falha ao ler — nunca R$0</span>
+        <span style="height:28px;padding:0 10px;border-radius:999px;border:1px solid rgba(16,185,129,.28);background:rgba(16,185,129,.12);color:#3DDFA6;font:500 12px 'JetBrains Mono';display:inline-flex;align-items:center;gap:6px;justify-self:start"><span style="color:#7D869A">mês</span>R$42,18</span><span style="font-size:13px;color:#9AA3B5">Header · com prefixo</span>
+      </div>
+    </div>
+
+    <!-- Badge -->
+    <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;justify-content:space-between"><span style="font-family:'Space Grotesk';font-weight:500;font-size:18px">Badge / Status</span><span style="font-family:'JetBrains Mono';font-size:11px;color:#7D869A">ui/badge.tsx</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <sc-for list="{{ statuses }}" as="st" hint-placeholder-count="8">
+          <span style="height:24px;padding:0 8px;border-radius:999px;border:1px solid {{ st.border }};background:{{ st.bg }};color:{{ st.fg }};font:500 12px Inter;display:inline-flex;align-items:center;gap:6px"><i style="width:6px;height:6px;border-radius:99px;background:{{ st.dot }};display:inline-block"></i>{{ st.label }}</span>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span style="height:22px;padding:0 8px;border-radius:999px;border:1px solid #262A35;background:#12141A;color:#9AA3B5;font:500 11px 'JetBrains Mono';letter-spacing:.08em;display:inline-flex;align-items:center">FLUX</span>
+        <span style="height:22px;padding:0 8px;border-radius:999px;border:1px solid #262A35;background:#12141A;color:#9AA3B5;font:500 11px 'JetBrains Mono';letter-spacing:.08em;display:inline-flex;align-items:center">KLING 2.5</span>
+        <span style="height:22px;padding:0 8px;border-radius:999px;border:1px solid #262A35;background:#12141A;color:#9AA3B5;font:500 11px 'JetBrains Mono';letter-spacing:.08em;display:inline-flex;align-items:center">9:16</span>
+        <span style="height:22px;padding:0 8px;border-radius:999px;border:1px dashed #343947;color:#9AA3B5;font:500 11px 'JetBrains Mono';letter-spacing:.08em;display:inline-flex;align-items:center">PROPOSTA</span>
+      </div>
+      <p style="margin:0;font-size:12px;line-height:18px;color:#7D869A">Status usa ponto colorido + texto neutro. "Pronto" é success (#4ADE80), não reagente.</p>
+    </div>
+
+    <!-- Fields -->
+    <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;justify-content:space-between"><span style="font-family:'Space Grotesk';font-weight:500;font-size:18px">Input · Select · Textarea</span><span style="font-family:'JetBrains Mono';font-size:11px;color:#7D869A">ui/field.tsx · NOVO</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;text-transform:uppercase;color:#7D869A">Nome do Projeto</span><span style="height:36px;border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:0 12px;display:flex;align-items:center;font-size:14px;color:#7D869A">Ex.: Bento · lançamento</span></label>
+        <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;text-transform:uppercase;color:#7D869A">Foco</span><span style="height:36px;border:1px solid #343947;background:#1A1D26;border-radius:8px;padding:0 12px;display:flex;align-items:center;font-size:14px;box-shadow:0 0 0 1px #10B981,0 0 24px rgba(16,185,129,.12)">Bento · lançamento</span></label>
+        <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;text-transform:uppercase;color:#7D869A">Erro</span><span style="height:36px;border:1px solid #FB7185;background:#1A1D26;border-radius:8px;padding:0 12px;display:flex;align-items:center;font-size:14px"></span><span style="font-size:12px;color:#FB7185">Dê um nome ao Projeto.</span></label>
+        <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;text-transform:uppercase;color:#5D6577">Desabilitado</span><span style="height:36px;border:1px solid #262A35;background:#12141A;border-radius:8px;padding:0 12px;display:flex;align-items:center;font-size:14px;color:#5D6577">9:16</span></label>
+        <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;text-transform:uppercase;color:#7D869A">Modelo</span><span style="height:36px;border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:0 10px 0 12px;display:flex;align-items:center;justify-content:space-between;font-size:14px">Kling 2.5 Turbo<span style="display:flex;gap:8px;align-items:center;font:500 12px 'JetBrains Mono';color:#9AA3B5">~R$1,93/5s<i class="icon-chevron-down" style="font-size:14px"></i></span></span></label>
+        <label style="display:flex;flex-direction:column;gap:6px;grid-column:span 2"><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;text-transform:uppercase;color:#7D869A">Movimento</span><span style="min-height:72px;border:1px solid #262A35;background:#1A1D26;border-radius:8px;padding:10px 12px;font:400 12px/20px 'JetBrains Mono';color:#E9ECF2">câmera desce devagar, luz lateral fria, produto gira 15°</span></label>
+      </div>
+      <p style="margin:0;font-size:12px;line-height:18px;color:#7D869A">Preço no select vem em R$ (mono, cinza). Verde só no chip do nó.</p>
+    </div>
+  </div>
+
+  <!-- Cards -->
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7D869A">Cards — fluxo · projeto · asset</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+      <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="aspect-ratio:16/9;background:repeating-linear-gradient(135deg,#1A1D26 0 8px,#12141A 8px 16px);display:grid;place-items:center;font:11px 'JetBrains Mono';color:#7D869A;position:relative">último resultado<span style="position:absolute;top:10px;left:10px;height:22px;padding:0 8px;border-radius:999px;border:1px solid rgba(74,222,128,.3);background:rgba(10,11,14,.8);color:#E9ECF2;font:500 12px Inter;display:inline-flex;align-items:center;gap:6px"><i style="width:6px;height:6px;border-radius:99px;background:#4ADE80;display:inline-block"></i>Pronto</span></div>
+        <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+          <span style="font-family:'Space Grotesk';font-weight:500;font-size:16px;line-height:22px">Bento · Flow principal — reel produto 6s</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-size:12px;color:#9AA3B5;display:flex;gap:6px;align-items:center"><i style="width:6px;height:6px;border-radius:2px;background:#38BDF8;display:inline-block"></i>Bento · há 2 h</span><span style="height:22px;padding:0 8px;border-radius:999px;border:1px solid rgba(16,185,129,.28);background:rgba(16,185,129,.12);color:#3DDFA6;font:500 11px 'JetBrains Mono';display:inline-flex;align-items:center">R$1,62 ✓</span></div>
+        </div>
+      </div>
+      <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:grid;grid-template-columns:96px 1fr">
+        <div style="background:repeating-linear-gradient(135deg,#1A1D26 0 8px,#12141A 8px 16px);display:grid;place-items:center;font:10px 'JetBrains Mono';color:#7D869A">9:16</div>
+        <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;gap:8px"><span style="font-family:'Space Grotesk';font-weight:500;font-size:16px">Bento · lançamento</span><span style="height:22px;padding:0 8px;border-radius:999px;border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.1);font:500 12px Inter;display:inline-flex;align-items:center;gap:6px"><i style="width:6px;height:6px;border-radius:99px;background:#FBBF24;display:inline-block"></i>Em revisão</span></div>
+          <span style="font-size:13px;line-height:18px;color:#9AA3B5">Reel do pote térmico girando no balcão.</span>
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:12px 'JetBrains Mono';color:#9AA3B5">Vídeo · 9:16 · 5s</span><span style="font:500 12px 'JetBrains Mono';color:#3DDFA6">R$4,87 ✓</span></div>
+        </div>
+      </div>
+      <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="aspect-ratio:1;background:repeating-linear-gradient(135deg,#1A1D26 0 8px,#12141A 8px 16px);display:grid;place-items:center;font:11px 'JetBrains Mono';color:#7D869A;position:relative">asset<span style="position:absolute;bottom:10px;right:10px;font:11px 'JetBrains Mono';color:#9AA3B5;background:rgba(10,11,14,.8);padding:2px 6px;border-radius:4px">1024×1024</span></div>
+        <div style="padding:12px 14px;display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between"><span style="font-size:14px;font-weight:500">FLUX Dev · fal.ai</span><span style="font:500 12px 'JetBrains Mono';color:#3DDFA6">R$0,14 ✓</span></div>
+          <span style="font-size:12px;color:#9AA3B5">Bento · 28 set</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Node states -->
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7D869A">Nó do canvas — 6 estados</span><span style="font-family:'JetBrains Mono';font-size:11px;color:#7D869A">nodes/lab-node-shell.tsx · NOVO</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(288px,1fr));gap:32px;padding:32px;border-radius:12px;border:1px solid #262A35;background-color:#0A0B0E;background-image:radial-gradient(#242833 1px,transparent 1px);background-size:16px 16px">
+      <sc-for list="{{ nodeStates }}" as="n" hint-placeholder-count="6">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#9AA3B5">{{ n.stateLabel }}</span>
+          <div style="position:relative;width:288px;border-radius:12px;border:1px {{ n.borderStyle }} {{ n.border }};background:#1A1D26;box-shadow:{{ n.shadow }};animation:{{ n.anim }}">
+            <div style="height:2px;background:{{ n.accent }};border-radius:12px 12px 0 0"></div>
+            <div style="display:flex;justify-content:space-between;gap:10px;padding:12px 12px 0;opacity:{{ n.bodyOpacity }}">
+              <div style="display:flex;gap:8px;align-items:center;min-width:0">
+                <span style="width:32px;height:32px;border-radius:8px;border:1px solid #262A35;background:#12141A;display:grid;place-items:center;color:{{ n.accent }}"><i class="{{ n.icon }}" style="font-size:16px"></i></span>
+                <span style="display:flex;flex-direction:column;min-width:0"><span style="font-family:'Space Grotesk';font-weight:500;font-size:14px">{{ n.title }}</span><span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;text-transform:uppercase;color:#7D869A">{{ n.kind }}</span></span>
+              </div>
+              <span style="height:20px;padding:0 7px;border-radius:999px;border:1px {{ n.chipBorderStyle }} {{ n.chipBorder }};background:{{ n.chipBg }};color:{{ n.chipFg }};font:500 11px 'JetBrains Mono';display:inline-flex;align-items:center;white-space:nowrap">{{ n.cost }}</span>
+            </div>
+            <div style="padding:12px;display:flex;flex-direction:column;gap:10px">
+              <sc-if value="{{ n.running }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;gap:8px;align-items:center;font:12px 'JetBrains Mono';color:#9AA3B5"><span style="flex:1;height:4px;border-radius:99px;background:#12141A;overflow:hidden"><span style="display:block;height:100%;background:linear-gradient(90deg,transparent,#10B981,transparent);background-size:200% 100%;animation:labshimmer 1.6s linear infinite"></span></span>Gerando · 00:42</div>
+              </sc-if>
+              <sc-if value="{{ n.blocked }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;gap:8px;align-items:center;font-size:12px;color:#9AA3B5"><i class="icon-lock" style="font-size:13px"></i>Aguardando: conecte uma imagem-base</div>
+              </sc-if>
+              <div style="aspect-ratio:16/9;border-radius:8px;border:1px {{ n.mediaBorder }} #262A35;background:{{ n.media }};display:grid;place-items:center;font:11px 'JetBrains Mono';color:#7D869A">{{ n.mediaLabel }}</div>
+              <div style="display:flex;gap:6px;font:11px 'JetBrains Mono';color:#9AA3B5"><span style="border:1px solid #262A35;border-radius:999px;padding:2px 7px">KLING 2.5</span><span style="border:1px solid #262A35;border-radius:999px;padding:2px 7px">5s</span><span style="border:1px solid #262A35;border-radius:999px;padding:2px 7px">9:16</span></div>
+              <sc-if value="{{ n.error }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;gap:8px;align-items:flex-start;border:1px solid rgba(251,113,133,.4);background:rgba(251,113,133,.1);border-radius:8px;padding:8px;font-size:12px;line-height:16px">
+                  <i class="icon-triangle-alert" style="font-size:14px;color:#FB7185"></i>
+                  <span style="flex:1">O modelo recusou a imagem (rosto detectado). Nada foi cobrado.</span>
+                </div>
+                <button style="align-self:flex-start;height:32px;padding:0 10px;border-radius:8px;border:1px solid #262A35;background:#12141A;color:#E9ECF2;font:500 12px Inter;display:flex;gap:6px;align-items:center"><i class="icon-rotate-ccw" style="font-size:13px"></i>Tentar de novo</button>
+              </sc-if>
+            </div>
+            <span style="position:absolute;left:-8px;top:50%;width:16px;height:16px;margin-top:-8px;border-radius:99px;border:3px solid #0A0B0E;background:{{ n.portIn }};box-sizing:border-box"></span>
+            <span style="position:absolute;right:-8px;top:50%;width:16px;height:16px;margin-top:-8px;border-radius:99px;border:3px solid #0A0B0E;background:{{ n.portOut }};box-sizing:border-box"></span>
+          </div>
+          <span style="font-size:12px;line-height:16px;color:#7D869A;max-width:288px">{{ n.note }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px;align-items:start">
+    <!-- Menu Criar -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7D869A">Menu Criar · contexto por grupo</div>
+      <div style="width:340px;background:#12141A;border-radius:12px;box-shadow:0 0 0 1px #343947,0 16px 40px rgba(0,0,0,.55);overflow:hidden">
+        <div style="padding:10px;border-bottom:1px solid #262A35"><div style="height:36px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;display:flex;align-items:center;gap:8px;padding:0 10px;font-size:14px;color:#7D869A"><i class="icon-search" style="font-size:15px"></i>Buscar nó…</div></div>
+        <sc-for list="{{ menuGroups }}" as="mg" hint-placeholder-count="4">
+          <div style="padding:8px 6px;border-bottom:1px solid #262A35">
+            <div style="display:flex;gap:8px;align-items:center;padding:4px 8px;font:500 11px 'JetBrains Mono';letter-spacing:.08em;text-transform:uppercase;color:#9AA3B5"><i style="width:8px;height:8px;border-radius:2px;background:{{ mg.color }};display:inline-block"></i>{{ mg.name }}</div>
+            <sc-for list="{{ mg.items }}" as="mi" hint-placeholder-count="2">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;background:{{ mi.bg }}">
+                <span style="display:flex;gap:10px;align-items:center;font-size:14px;color:{{ mi.fg }}"><i class="{{ mi.icon }}" style="font-size:15px;color:{{ mg.color }}"></i>{{ mi.name }}</span>
+                <span style="font:500 11px 'JetBrains Mono';color:{{ mi.costColor }}">{{ mi.cost }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7D869A">Modal de custo · base mantida, lista por nó</div>
+      <div style="padding:32px;background:rgba(10,11,14,.8);border-radius:12px;border:1px solid #262A35">
+        <div style="max-width:480px;background:#12141A;border-radius:12px;box-shadow:0 0 0 1px #343947,0 24px 64px rgba(0,0,0,.65);padding:20px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;gap:12px">
+            <span style="width:40px;height:40px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;display:grid;place-items:center;color:#9AA3B5;flex-shrink:0"><i class="icon-receipt" style="font-size:18px"></i></span>
+            <div><div style="font-family:'Space Grotesk';font-weight:500;font-size:18px">Confirmar custo do fluxo</div><div style="font-size:14px;line-height:20px;color:#9AA3B5;margin-top:4px">Estimativa antes de rodar. Confirmar gera gasto real na fal.ai.</div></div>
+          </div>
+          <div style="border:1px solid rgba(16,185,129,.28);background:rgba(16,185,129,.12);border-radius:8px;padding:12px 16px"><div style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;color:#9AA3B5">CUSTO ESTIMADO TOTAL</div><div style="font:600 28px/32px 'JetBrains Mono';color:#3DDFA6;margin-top:4px">~R$2,07</div></div>
+          <div style="border:1px solid #262A35;border-radius:8px;background:#1A1D26">
+            <sc-for list="{{ modalItems }}" as="m" hint-placeholder-count="3">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #262A35">
+                <div style="display:flex;gap:10px;align-items:center"><i style="width:3px;height:28px;border-radius:2px;background:{{ m.color }};display:inline-block"></i><span style="display:flex;flex-direction:column"><span style="font-size:14px;font-weight:500">{{ m.label }}</span><span style="font:11px 'JetBrains Mono';color:#7D869A">{{ m.kind }}</span></span></div>
+                <span style="font:500 14px 'JetBrains Mono';color:{{ m.costColor }}">{{ m.cost }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:8px"><button style="height:36px;padding:0 12px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;color:#E9ECF2;font:500 14px Inter">Cancelar</button><button style="height:36px;padding:0 12px;border-radius:8px;border:0;background:#10B981;color:#0A0B0E;font:500 14px Inter">Confirmar e executar</button></div>
+        </div>
+      </div>
+      <span style="font-size:12px;color:#7D869A">Tipo do nó em PT-BR (não <span style="font-family:'JetBrains Mono'">video-generation</span>). Todos os nós pagos entram, não só vídeo.</span>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px;align-items:start">
+    <!-- Toasts / alerts -->
+    <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:10px">
+      <span style="font-family:'Space Grotesk';font-weight:500;font-size:18px">Toast · Alerta</span>
+      <sc-for list="{{ alerts }}" as="al" hint-placeholder-count="4">
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:8px;border:1px solid {{ al.border }};background:{{ al.bg }}">
+          <i class="{{ al.icon }}" style="font-size:16px;color:{{ al.color }};margin-top:1px"></i>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:500">{{ al.title }}</span><span style="font-size:13px;line-height:18px;color:#9AA3B5">{{ al.body }}</span></div>
+          <span style="font:500 12px 'JetBrains Mono';color:{{ al.metaColor }}">{{ al.meta }}</span>
+        </div>
+      </sc-for>
+      <span style="font-size:12px;color:#7D869A">Toast: canto inferior direito (celular: topo), z-60, 5s, Esc fecha.</span>
+    </div>
+
+    <!-- Empty / loading / error -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="background:#12141A;border:1px dashed #343947;border-radius:12px;padding:28px;display:flex;flex-direction:column;gap:14px;align-items:flex-start">
+        <span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">ESTADO VAZIO · sempre com receita concreta</span>
+        <span style="font-family:'Space Grotesk';font-weight:500;font-size:20px">Nenhum fluxo ainda</span>
+        <span style="font-size:14px;line-height:20px;color:#9AA3B5;max-width:380px">Comece pela receita mais usada: uma imagem do produto vira um vídeo curto de 5s.</span>
+        <div style="display:flex;gap:8px;align-items:center"><button style="height:36px;padding:0 12px;border-radius:8px;border:0;background:#10B981;color:#0A0B0E;font:500 14px Inter">Imagem-base → Vídeo curto</button><span style="height:24px;padding:0 8px;border-radius:999px;border:1px solid rgba(16,185,129,.28);background:rgba(16,185,129,.12);color:#3DDFA6;font:500 12px 'JetBrains Mono';display:inline-flex;align-items:center">~R$1,93</span></div>
+      </div>
+      <div style="background:#12141A;border:1px solid #262A35;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:10px">
+        <span style="font:500 11px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">SKELETON · shimmer 1,6s</span>
+        <div style="display:grid;grid-template-columns:96px 1fr;gap:12px">
+          <div style="height:96px;border-radius:8px;background:linear-gradient(90deg,#1A1D26 0%,#232733 50%,#1A1D26 100%);background-size:200% 100%;animation:labshimmer 1.6s linear infinite"></div>
+          <div style="display:flex;flex-direction:column;gap:8px;padding-top:4px"><div style="height:14px;width:70%;border-radius:4px;background:#1A1D26"></div><div style="height:12px;width:45%;border-radius:4px;background:#1A1D26"></div><div style="height:20px;width:64px;border-radius:99px;background:#1A1D26;margin-top:auto"></div></div>
+        </div>
+      </div>
+      <div style="background:#12141A;border:1px solid rgba(251,113,133,.4);border-radius:12px;padding:20px;display:flex;gap:14px;align-items:flex-start">
+        <i class="icon-database-zap" style="font-size:20px;color:#FB7185"></i>
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px"><span style="font-family:'Space Grotesk';font-weight:500;font-size:16px">Não foi possível carregar seus fluxos</span><span style="font-size:13px;line-height:18px;color:#9AA3B5">O banco não respondeu. Seus dados estão salvos — isto não é uma lista vazia.</span></div>
+        <button style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #262A35;background:#1A1D26;color:#E9ECF2;font:500 12px Inter;display:flex;gap:6px;align-items:center"><i class="icon-rotate-ccw" style="font-size:13px"></i>Tentar de novo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header + profile -->
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7D869A">Header · desktop · menu de perfil (proposta 10-contas)</span><span style="font-family:'JetBrains Mono';font-size:11px;color:#7D869A">app/app-shell.tsx · app/profile-menu.tsx</span></div>
+    <div style="border:1px solid #262A35;border-radius:12px;overflow:hidden;background:#0A0B0E;padding-bottom:300px;position:relative">
+      <div style="height:56px;background:#12141A;border-bottom:1px solid #262A35;display:flex;align-items:center;gap:32px;padding:0 24px">
+        <span style="font-family:'Space Grotesk';font-weight:700;font-size:20px;letter-spacing:-0.02em">Lab<span style="color:#3DDFA6">IA</span></span>
+        <nav style="display:flex;gap:4px">
+          <span style="height:32px;padding:0 12px;border-radius:8px;background:#1A1D26;display:flex;align-items:center;font-size:14px;font-weight:500">Projetos</span>
+          <span style="height:32px;padding:0 12px;border-radius:8px;display:flex;align-items:center;font-size:14px;color:#9AA3B5">Fluxos</span>
+          <span style="height:32px;padding:0 12px;border-radius:8px;display:flex;align-items:center;font-size:14px;color:#9AA3B5">Biblioteca</span>
+        </nav>
+        <div style="flex:1"></div>
+        <span style="height:28px;padding:0 10px;border-radius:999px;border:1px solid rgba(16,185,129,.28);background:rgba(16,185,129,.12);color:#3DDFA6;font:500 12px 'JetBrains Mono';display:inline-flex;align-items:center;gap:6px"><span style="color:#7D869A">mês</span>R$42,18</span>
+        <button style="height:36px;padding:0 12px;border-radius:8px;border:1px solid #343947;background:#1A1D26;color:#E9ECF2;font:500 14px Inter;display:flex;gap:6px;align-items:center"><i class="icon-plus" style="font-size:15px"></i>Criar</button>
+        <span style="width:32px;height:32px;border-radius:99px;background:#262A35;display:grid;place-items:center;font:600 12px 'Space Grotesk';box-shadow:0 0 0 2px #12141A,0 0 0 3px #343947">FZ</span>
+      </div>
+      <div style="position:absolute;right:16px;top:64px;width:280px;background:#12141A;border-radius:12px;box-shadow:0 0 0 1px #343947,0 16px 40px rgba(0,0,0,.55);overflow:hidden">
+        <div style="padding:14px;border-bottom:1px solid #262A35;display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:500">Felipe Zilli</span><span style="font-size:12px;color:#9AA3B5">felipe@labia.app</span></div>
+        <div style="padding:6px;border-bottom:1px solid #262A35">
+          <div style="padding:6px 8px;font:500 11px 'JetBrains Mono';letter-spacing:.08em;color:#7D869A">WORKSPACE</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:#1A1D26;font-size:14px">felipe-labia<i class="icon-check" style="font-size:14px;color:#9AA3B5"></i></div>
+          <div style="padding:8px;font-size:14px;color:#9AA3B5">diego-studio</div>
+        </div>
+        <div style="padding:6px;display:flex;flex-direction:column">
+          <span style="display:flex;gap:10px;align-items:center;padding:8px;font-size:14px;color:#E9ECF2"><i class="icon-user" style="font-size:15px;color:#9AA3B5"></i>Conta</span>
+          <span style="display:flex;gap:10px;align-items:center;padding:8px;font-size:14px;color:#E9ECF2"><i class="icon-plug" style="font-size:15px;color:#9AA3B5"></i>Conexões<span style="margin-left:auto;font:10px 'JetBrains Mono';letter-spacing:.06em;color:#9AA3B5;border:1px dashed #343947;border-radius:99px;padding:1px 6px">PROPOSTA</span></span>
+          <span style="display:flex;gap:10px;align-items:center;padding:8px;font-size:14px;color:#9AA3B5"><i class="icon-flask-conical" style="font-size:15px"></i>Em breve: Copy, Calendário</span>
+          <span style="display:flex;gap:10px;align-items:center;padding:8px;font-size:14px;color:#E9ECF2;border-top:1px solid #262A35;margin-top:4px"><i class="icon-log-out" style="font-size:15px;color:#9AA3B5"></i>Sair</span>
+        </div>
+      </div>
+      <div style="position:absolute;left:24px;top:84px;display:flex;flex-direction:column;gap:12px;max-width:520px">
+        <span style="font-size:13px;line-height:20px;color:#9AA3B5">Criar sai do conteúdo e entra no header (secundário com borda forte — o verde fica para Executar). "Em breve" e Conexões vão para o menu de perfil. Custo com falha:</span>
+        <span style="align-self:flex-start;height:28px;padding:0 10px;border-radius:999px;border:1px solid #262A35;background:#1A1D26;color:#7D869A;font:500 12px 'JetBrains Mono';display:inline-flex;align-items:center;gap:6px"><span>mês</span><i class="icon-cloud-off" style="font-size:12px"></i>indisponível</span>
+        <span style="font-size:13px;color:#9AA3B5">Deslogado: avatar vira botão <span style="font-family:'JetBrains Mono'">Entrar</span> (ghost) → /entrar.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const M = '#9AA3B5', A = '#FBBF24', N = '#38BDF8';
+    const t = (name, hex, status, note, value) => ({ name, hex, value: value || hex, status, note, statusColor: status === 'MANTIDO' ? '#7D869A' : status === 'NOVO' ? N : A });
+    const tokenGroups = [
+      { name: 'Base', items: [
+        t('--lab-bg', '#0A0B0E', 'MANTIDO', 'Página e canvas'),
+        t('--lab-surface-1', '#12141A', 'MANTIDO', 'Painéis, header, cards'),
+        t('--lab-surface-2', '#1A1D26', 'MANTIDO', 'Nós, inputs, popovers'),
+        t('--lab-border', '#262A35', 'MANTIDO', 'Linhas finas'),
+        t('--lab-border-strong', '#343947', 'MANTIDO', 'Hover, arestas, porta ociosa'),
+        t('--lab-text', '#E9ECF2', 'MANTIDO', 'Texto principal'),
+        t('--lab-text-dim', '#9AA3B5', 'MANTIDO', 'Texto secundário'),
+        t('--lab-text-muted', '#7D869A', 'ALTERADO', '#5D6577 → #7D869A · AA ≥ 4,5:1'),
+        t('--lab-text-disabled', '#5D6577', 'NOVO', 'Só controles desabilitados'),
+      ]},
+      { name: 'Reagente', items: [
+        t('--lab-reagent', '#10B981', 'MANTIDO', 'Fundo do CTA/Executar, foco, porta ativa'),
+        t('--lab-reagent-bright', '#3DDFA6', 'MANTIDO', 'Números de custo, "IA" — nunca fundo'),
+        t('--lab-reagent-dim', 'rgba(16,185,129,.12)', 'MANTIDO', 'Fundo do chip de custo'),
+        t('--lab-reagent-line', 'rgba(16,185,129,.28)', 'NOVO', 'Borda do chip de custo'),
+        t('--lab-on-reagent', '#0A0B0E', 'NOVO', 'Texto sobre reagente'),
+      ]},
+      { name: 'Semânticas + fundos tênues', items: [
+        t('--lab-success', '#4ADE80', 'MANTIDO', 'Pronto, Conectado'),
+        t('--lab-warning', '#FBBF24', 'MANTIDO', 'Em revisão, Expirado'),
+        t('--lab-danger', '#FB7185', 'MANTIDO', 'Erro'),
+        t('--lab-info', '#38BDF8', 'MANTIDO', 'Rodando, contexto Projeto'),
+        t('--lab-*-dim', 'rgba(251,113,133,.10)', 'NOVO', 'success/warning/danger/info a 10%', '4 tokens · 10%'),
+        t('--lab-danger-line', 'rgba(251,113,133,.40)', 'NOVO', 'Borda de erro (+ warning-line)'),
+        t('--lab-scrim', 'rgba(10,11,14,.80)', 'NOVO', 'Fundo de modal e sheet'),
+      ]},
+      { name: 'Nó e contexto', items: [
+        t('--lab-node-image · ctx-create', '#8B7CFF', 'MANTIDO', 'Imagem · grupo Criar (alias NOVO)'),
+        t('--lab-node-video', '#4DD8FF', 'MANTIDO', 'Vídeo'),
+        t('--lab-node-copy · ctx-post', '#FFC46B', 'MANTIDO', 'Copy · grupo Pós-produção (alias NOVO)'),
+        t('--lab-node-design · ctx-direction', '#FF7AC6', 'MANTIDO', 'Design · grupo Direção (alias NOVO)'),
+        t('--lab-ctx-project', '#38BDF8', 'NOVO', 'Grupo Projeto (= info)'),
+        t('--lab-node-publish', '#5EE38B', 'MANTIDO', 'Publicação'),
+        t('--lab-node-utility', '#9AA3B5', 'MANTIDO', 'Nota, Saída'),
+      ]},
+      { name: 'Canvas', items: [
+        t('--lab-canvas-dot', '#242833', 'ALTERADO', '#1B1E27 → #242833 · grade invisível'),
+        t('--lab-edge', '#343947', 'MANTIDO', 'Aresta'),
+        t('--lab-edge-invalid', '#FB7185', 'NOVO', 'Aresta recusada, tracejada'),
+        t('--lab-phase-band', 'rgba(233,236,242,.018)', 'NOVO', 'Bandas de fase'),
+        t('--lab-canvas-mask', 'rgba(10,11,14,.72)', 'MANTIDO', 'Máscara do minimapa'),
+      ]},
+    ];
+    const zLayers = [
+      { label: 'canvas', value: 'z-canvas · 0' }, { label: 'controles do canvas', value: 'z-canvas-ui · 10' },
+      { label: 'landing sticky', value: 'z-landing · 30' }, { label: 'menus / popovers', value: 'z-menu · 35' },
+      { label: 'header', value: 'z-header · 40' }, { label: 'modal / sheet', value: 'z-modal · 50' }, { label: 'toast', value: 'z-toast · 60' },
+    ];
+    const spaces = [4, 8, 12, 16, 24, 32, 48, 64].map(n => ({ n, px: Math.min(n, 64) + 'px' }));
+    const greenYes = [
+      { what: 'Números de custo (chip, total, modal)', token: 'reagent-bright', how: 'texto mono' },
+      { what: 'Botão Executar / CTA primário (1 por área)', token: 'reagent', how: 'fundo + texto escuro' },
+      { what: 'Foco de teclado e nó selecionado', token: 'reagent', how: 'anel 1px + glow' },
+      { what: 'Nó rodando', token: 'reagent', how: 'borda + pulso' },
+      { what: 'Porta ativa (hover/conectando)', token: 'reagent-bright', how: 'preenchimento' },
+      { what: '"IA" no wordmark', token: 'reagent-bright', how: 'texto' },
+    ];
+    const greenNo = [
+      { what: 'Ícone de card (Fluxo, Projeto)', use: 'text-dim / acento de contexto' },
+      { what: 'Link comum ("Abrir Projeto →")', use: 'text + sublinhado' },
+      { what: 'Filtro ativo', use: 'surface-2 + border-strong' },
+      { what: 'Metadado (duração 5s, formato)', use: 'text-dim mono' },
+      { what: 'Status Pronto / Conectado', use: 'success (#4ADE80) só no ponto' },
+      { what: 'Botão Criar no header', use: 'secondary com border-strong' },
+      { what: 'Eyebrow / rótulo técnico', use: 'text-muted mono' },
+      { what: 'Hover do CTA', use: 'reagent/90 — nunca bright como fundo' },
+    ];
+    const SG = "'Space Grotesk'", IN = 'Inter', JB = "'JetBrains Mono'";
+    const ty = (name, spec, family, size, lh, weight, track, tt, sample, color) => ({ name, spec, family, size, lh, weight, track, tt, sample, color: color || '#E9ECF2' });
+    const typeScale = [
+      ty('display', 'Space Grotesk 700 · 64/64 · -0.03em · landing', SG, '64px', '64px', 700, '-0.03em', 'none', 'Custo na cara.'),
+      ty('h1-lg', 'Space Grotesk 700 · 40/48 · -0.02em', SG, '40px', '48px', 700, '-0.02em', 'none', 'O que você quer criar?'),
+      ty('h1', 'Space Grotesk 700 · 32/40 · -0.02em', SG, '32px', '40px', 700, '-0.02em', 'none', 'Bento · lançamento'),
+      ty('h2', 'Space Grotesk 500 · 24/32 · -0.01em', SG, '24px', '32px', 500, '-0.01em', 'none', 'Fontes e referências'),
+      ty('h3', 'Space Grotesk 500 · 18/24', SG, '18px', '24px', 500, '0', 'none', 'Confirmar custo do fluxo'),
+      ty('body', 'Inter 400 · 16/24', IN, '16px', '24px', 400, '0', 'none', 'Uma imagem do produto vira um vídeo curto de 5s.'),
+      ty('body-sm', 'Inter 400/500 · 14/20 · padrão de UI', IN, '14px', '20px', 400, '0', 'none', 'Conecte uma imagem-base para animar.'),
+      ty('caption', 'Inter 400 · 12/16', IN, '12px', '16px', 400, '0', 'none', 'Bento · há 2 h · 9:16', '#9AA3B5'),
+      ty('eyebrow', 'JetBrains Mono 500 · 11/16 · +0.08em · CAIXA ALTA', JB, '11px', '16px', 500, '0.08em', 'uppercase', 'animar imagem · modelo', '#7D869A'),
+      ty('mono / prompt', 'JetBrains Mono 400 · 12/20', JB, '12px', '20px', 400, '0', 'none', 'câmera desce devagar, luz lateral fria', '#E9ECF2'),
+      ty('cost-lg', 'JetBrains Mono 600 · 28/32', JB, '28px', '32px', 600, '0', 'none', '~R$2,07', '#3DDFA6'),
+    ];
+    const statuses = [
+      { label: 'Rascunho', dot: '#7D869A', border: '#262A35', bg: 'transparent', fg: '#9AA3B5' },
+      { label: 'Em andamento', dot: '#38BDF8', border: 'rgba(56,189,248,.3)', bg: 'rgba(56,189,248,.1)', fg: '#E9ECF2' },
+      { label: 'Rodando', dot: '#38BDF8', border: 'rgba(56,189,248,.3)', bg: 'rgba(56,189,248,.1)', fg: '#E9ECF2' },
+      { label: 'Em revisão', dot: '#FBBF24', border: 'rgba(251,191,36,.4)', bg: 'rgba(251,191,36,.1)', fg: '#E9ECF2' },
+      { label: 'Aprovado', dot: '#4ADE80', border: 'rgba(74,222,128,.3)', bg: 'rgba(74,222,128,.1)', fg: '#E9ECF2' },
+      { label: 'Pronto', dot: '#4ADE80', border: 'rgba(74,222,128,.3)', bg: 'rgba(74,222,128,.1)', fg: '#E9ECF2' },
+      { label: 'Erro', dot: '#FB7185', border: 'rgba(251,113,133,.4)', bg: 'rgba(251,113,133,.1)', fg: '#E9ECF2' },
+      { label: 'Arquivado', dot: '#343947', border: '#262A35', bg: 'transparent', fg: '#7D869A' },
+    ];
+    const stripes = 'repeating-linear-gradient(135deg,#1A1D26 0 8px,#12141A 8px 16px)';
+    const chipOn = { chipBorder: 'rgba(16,185,129,.28)', chipBorderStyle: 'solid', chipBg: 'rgba(16,185,129,.12)', chipFg: '#3DDFA6' };
+    const base = { accent: '#4DD8FF', icon: 'icon-clapperboard', title: 'Pote girando', kind: 'animar imagem', borderStyle: 'solid', shadow: 'none', anim: 'none', bodyOpacity: 1, media: '#12141A', mediaBorder: 'dashed', mediaLabel: 'resultado aparece aqui', portIn: '#343947', portOut: '#343947', running: false, blocked: false, error: false, ...chipOn };
+    const nodeStates = [
+      { ...base, stateLabel: 'Ocioso', border: '#262A35', cost: '~R$1,93', note: 'Borda padrão. Porta neutra (verde só ao conectar).' },
+      { ...base, stateLabel: 'Selecionado', border: '#10B981', shadow: '0 0 0 1px #10B981,0 0 24px rgba(16,185,129,.12)', cost: '~R$1,93', portOut: '#3DDFA6', note: 'Seleção = foco: anel reagente.' },
+      { ...base, stateLabel: 'Rodando', border: '#10B981', anim: 'labpulse 1.6s ease-in-out infinite', cost: '~R$1,93', running: true, mediaLabel: 'gerando…', note: 'Pulso 1600ms + barra e cronômetro. Arestas de entrada animam no tom do tipo.' },
+      { ...base, stateLabel: 'Pronto', border: '#343947', cost: 'R$1,87 ✓', media: stripes, mediaBorder: 'solid', mediaLabel: 'miniatura do vídeo · 5s', note: 'Custo real ✓ + miniatura. Borda forte, sem verde.' },
+      { ...base, stateLabel: 'Erro', border: '#FB7185', shadow: '0 0 0 1px #FB7185,0 0 24px rgba(251,113,133,.1)', cost: 'R$0,00 ✓', error: true, note: 'Mensagem curta em PT-BR + Tentar de novo. Custo real informado.' },
+      { ...base, stateLabel: 'Bloqueado / aguardando', border: '#343947', borderStyle: 'dashed', bodyOpacity: 0.72, cost: 'A calcular', chipBorder: '#343947', chipBorderStyle: 'dashed', chipBg: 'transparent', chipFg: '#9AA3B5', blocked: true, mediaLabel: 'sem entrada', note: 'Tracejado + motivo. Custo desconhecido = A calcular.' },
+    ];
+    const it = (name, icon, cost, sel) => ({ name, icon, cost, bg: sel ? '#1A1D26' : 'transparent', fg: '#E9ECF2', costColor: cost === 'A calcular' || cost === 'indisponível' ? '#9AA3B5' : '#3DDFA6' });
+    const menuGroups = [
+      { name: 'Projeto', color: '#38BDF8', items: [it('Imagem-base do Projeto', 'icon-image', 'R$0,00'), it('Referência visual', 'icon-images', 'R$0,00')] },
+      { name: 'Criar', color: '#8B7CFF', items: [it('Prompt', 'icon-message-square-text', 'R$0,00'), it('Gerar imagem', 'icon-wand-sparkles', '~R$0,14', true), it('Animar imagem', 'icon-clapperboard', '~R$1,93')] },
+      { name: 'Pós-produção', color: '#FFC46B', items: [it('Continuar clipe', 'icon-fast-forward', '~R$1,93'), it('Juntar clipes', 'icon-film', 'R$0,00')] },
+      { name: 'Direção', color: '#FF7AC6', items: [{ name: 'Production Director · indisponível', icon: 'icon-compass', cost: 'A calcular', bg: 'transparent', fg: '#7D869A', costColor: '#9AA3B5' }] },
+    ];
+    const modalItems = [
+      { label: 'Gerar imagem · pote no balcão', kind: 'Gerar imagem · FLUX Dev', cost: '~R$0,14', color: '#8B7CFF', costColor: '#3DDFA6' },
+      { label: 'Pote girando', kind: 'Animar imagem · Kling 2.5 · 5s', cost: '~R$1,93', color: '#4DD8FF', costColor: '#3DDFA6' },
+      { label: 'Imagem-base do Projeto', kind: 'Entrada do Projeto', cost: 'R$0,00', color: '#38BDF8', costColor: '#3DDFA6' },
+    ];
+    const alerts = [
+      { icon: 'icon-circle-check', color: '#4ADE80', border: '#262A35', bg: '#1A1D26', title: 'Fluxo concluído', body: '3 nós prontos. Resultado salvo no Projeto Bento.', meta: 'R$2,01 ✓', metaColor: '#3DDFA6' },
+      { icon: 'icon-triangle-alert', color: '#FBBF24', border: 'rgba(251,191,36,.4)', bg: 'rgba(251,191,36,.1)', title: 'Conexão ChatGPT expirou', body: 'Reconecte para usar Gerar imagem via ChatGPT.', meta: '', metaColor: '#9AA3B5' },
+      { icon: 'icon-circle-x', color: '#FB7185', border: 'rgba(251,113,133,.4)', bg: 'rgba(251,113,133,.1)', title: 'Não foi possível salvar', body: 'Suas alterações continuam aqui. Tentaremos de novo em 10s.', meta: '', metaColor: '#9AA3B5' },
+      { icon: 'icon-info', color: '#38BDF8', border: '#262A35', bg: '#1A1D26', title: 'Executor local offline', body: 'Execuções ficam na fila até o executor voltar.', meta: '', metaColor: '#9AA3B5' },
+    ];
+    return { tokenGroups, zLayers, spaces, greenYes, greenNo, typeScale, statuses, nodeStates, menuGroups, modalItems, alerts };
+  }
+}
+</script>
+</body>
+</html>
