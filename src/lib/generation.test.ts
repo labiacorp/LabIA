@@ -123,3 +123,111 @@ describe.skipIf(!process.env.DATABASE_URL)("character kit money path", () => {
     expect(step.status).toBe("RUNNING"); // untouched by the other user's poll
   });
 });
+
+// Content uses the same ledger path; only the target and reference change.
+describe.skipIf(!process.env.DATABASE_URL)("content scene money path", () => {
+  beforeAll(() => {
+    vi.stubEnv("FAL_MOCK", "1");
+    vi.stubEnv("FAL_MOCK_DELAY_MS", "0");
+    vi.stubEnv("USD_BRL_RATE", "5.4");
+  });
+  afterAll(async () => {
+    await prisma.user.deleteMany({ where: { id: { in: created } } });
+    vi.unstubAllEnvs();
+  });
+
+  async function contentSeed(balance = 10, withFront = true) {
+    const who = await seed(balance);
+    const content = await prisma.content.create({ data: {
+      influencerId: who.influencerId, title: "Scene QA", idea: "A creator holding a product", aspectRatio: "9:16",
+      steps: { create: [{ kind: "SCRIPT", position: 0 }, { kind: "IMAGE", position: 1 }] },
+    } });
+    if (withFront) {
+      const step = await prisma.step.create({ data: { influencerId: who.influencerId, kind: "CHARACTER", role: "FRONT", status: "DONE", position: 0 } });
+      await prisma.asset.create({ data: { userId: who.userId, influencerId: who.influencerId, stepId: step.id, role: "FRONT", kind: "IMAGE", url: "/mock/portrait.svg" } });
+    }
+    return { ...who, contentId: content.id };
+  }
+  const runScene = async (who: Awaited<ReturnType<typeof contentSeed>>, overrides: Partial<{ intentId: string; prompt: string; expectedBrl: number }> = {}) => {
+    const { startContentImage, sceneQuote } = await import("./content-generation");
+    return startContentImage({ ...who, intentId: randomUUID(), prompt: "A creator holding a product", expectedBrl: sceneQuote().totalBrl, ...overrides });
+  };
+  const image = (contentId: string) => prisma.step.findFirstOrThrow({ where: { contentId, kind: "IMAGE" }, include: { assets: true } });
+
+  it("runs the existing IMAGE step from FRONT, links its asset to content and preserves the face", async () => {
+    const who = await contentSeed();
+    const influencer = await prisma.influencer.findUniqueOrThrow({ where: { id: who.influencerId } });
+    await runScene(who);
+    const running = await image(who.contentId);
+    expect(running).toMatchObject({ kind: "IMAGE", role: null, position: 1, status: "RUNNING", influencerId: who.influencerId });
+    expect(running.input).toMatchObject({ image_urls: ["/mock/portrait.svg"], aspect_ratio: "9:16", resolution: "1K" });
+    expect(running.model).toBe("fal-ai/nano-banana-2/edit");
+    await Promise.all([1, 2, 3].map(() => collectRunning(who.userId, who.influencerId)));
+    const done = await image(who.contentId);
+    expect(done.status).toBe("DONE");
+    expect(done.assets).toHaveLength(1);
+    expect(done.assets[0]).toMatchObject({ userId: who.userId, contentId: who.contentId, influencerId: who.influencerId, role: null });
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.432, 4);
+    expect((await prisma.influencer.findUniqueOrThrow({ where: { id: who.influencerId } })).faceAssetId).toBe(influencer.faceAssetId);
+    expect((await prisma.content.findUniqueOrThrow({ where: { id: who.contentId } })).status).toBe("IN_PROGRESS");
+  });
+
+  it("refuses a scene without a completed front portrait", async () => {
+    const who = await contentSeed(10, false);
+    await expect(runScene(who)).rejects.toThrow(/retrato de frente/);
+    expect((await image(who.contentId)).status).toBe("PENDING");
+    expect(await getBalanceBrl(who.userId)).toBe(10);
+  });
+
+  it("never charges or submits twice for the same step, including different intents", async () => {
+    const who = await contentSeed();
+    const intentId = randomUUID();
+    const results = await Promise.all([runScene(who, { intentId }), runScene(who, { intentId }), runScene(who)]);
+    expect(results.reduce((sum, result) => sum + result.started, 0)).toBe(1);
+    expect(await prisma.ledgerEntry.count({ where: { userId: who.userId, reason: "SPEND" } })).toBe(1);
+    await collectRunning(who.userId, who.influencerId);
+    expect((await runScene(who)).started).toBe(0);
+  });
+
+  it("serializes different content spends on the same user balance", async () => {
+    const who = await contentSeed(0.6);
+    const another = await prisma.content.create({ data: { influencerId: who.influencerId, title: "Other", steps: { create: { kind: "IMAGE", position: 1 } } } });
+    const results = await Promise.allSettled([runScene(who), runScene({ ...who, contentId: another.id })]);
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(0.6 - 0.432, 4);
+  });
+
+  it("refuses changed prices and insufficient funds without updating the placeholder", async () => {
+    const who = await contentSeed(0.1);
+    await expect(runScene(who, { expectedBrl: 0.01 })).rejects.toThrow(/preço mudou/);
+    await expect(runScene(who)).rejects.toThrow(/Saldo insuficiente/);
+    expect((await image(who.contentId)).status).toBe("PENDING");
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(0.1, 4);
+  });
+
+  it("refunds a failed scene exactly once", async () => {
+    const who = await contentSeed();
+    await runScene(who, { prompt: "[mock-fail]" });
+    for (let attempt = 0; attempt < 3; attempt++) await collectRunning(who.userId, who.influencerId);
+    await Promise.all([collectRunning(who.userId, who.influencerId), collectRunning(who.userId, who.influencerId)]);
+    expect((await image(who.contentId)).status).toBe("FAILED");
+    expect(await getBalanceBrl(who.userId)).toBe(10);
+    expect(await prisma.ledgerEntry.count({ where: { userId: who.userId, reason: "REFUND" } })).toBe(1);
+  });
+
+  it("keeps an ambiguous scene reservation and never resubmits", async () => {
+    const who = await contentSeed();
+    await runScene(who, { prompt: "[mock-submit-error]" });
+    expect((await image(who.contentId)).submissionState).toBe("submission_unknown");
+    expect((await runScene(who)).started).toBe(0);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.432, 4);
+  });
+
+  it("refuses another user's content before charging or submitting", async () => {
+    const owner = await contentSeed();
+    const other = await contentSeed();
+    await expect(runScene({ ...owner, userId: other.userId })).rejects.toThrow(/Conteúdo não encontrado/);
+    expect(await getBalanceBrl(other.userId)).toBe(10);
+    expect((await image(owner.contentId)).status).toBe("PENDING");
+  });
+});

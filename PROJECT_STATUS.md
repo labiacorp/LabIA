@@ -30,13 +30,13 @@ Character kit = step 1 sheet (nano-banana-2, 2K, 3:2) then step 2 portraits fron
 
 ## Data (`prisma/schema.prisma`)
 
-User, Influencer (with `visualSignature`), Content, Step (`kind CHARACTER` belongs to an influencer; `operationKey`, `submissionState`), Asset (`role` SHEET/FRONT/PROFILE/DETAIL), LedgerEntry, RateLimitEvent. Balance = sum of `LedgerEntry.deltaBrl`; top-ups are manual: `npx tsx scripts/ledger.ts topup <email> <brl>`.
+User, Influencer (with `visualSignature`), Content, Step (`kind CHARACTER` belongs to an influencer; content IMAGE uses the existing contentId relation; `operationKey`, `submissionState`), Asset (`role` SHEET/FRONT/PROFILE/DETAIL), LedgerEntry, RateLimitEvent. Balance = sum of `LedgerEntry.deltaBrl`; top-ups are manual: `npx tsx scripts/ledger.ts topup <email> <brl>`.
 
 ## Not built yet
 
 - A real generation has never run from v2 (only the fake provider). First one needs the R$ estimate shown and the owner's ok; `FAL_KEY` is set locally and on Vercel; fal media URLs are stored as returned (copy to Vercel Blob later; the `/edit` price is assumed equal to the base model until confirmed).
 - Audio upload, voice and lip sync, the 3x5s video chain, final assembly (V1 has `video-extend`, `video-assembly`, audio upload to port).
-- Content steps (script, image, video) are only displayed, not runnable. The content page shows the estimate of a 15s reel without voice (one 1K scene image + three 5s Kling blocks, `src/lib/content-plan.ts`, about R$ 5.89 at 5.21); the script step has no model or price yet.
+- Content IMAGE is runnable from the latest completed FRONT portrait (nano-banana-2/edit, 1K, content aspect ratio). The existing step is reserved and submitted once, with a scene prompt, cost approval, balance check, polling, preview and content-linked library asset. Each content step runs once; retry/regeneration UI is not built yet. Script and video steps are still placeholders. The content page shows the estimate of a 15s reel without voice (one 1K scene image + three 5s Kling blocks, `src/lib/content-plan.ts`, about R$ 5.89 at 5.21); the script step has no model or price yet.
 - Canvas (planned as a second view of the same steps), library filters, MCP, payments, terms and privacy text, CI, Vercel env for v2.
 
 ## Environment
@@ -45,4 +45,4 @@ Listed in `.env.example`. `DIRECT_URL` (unpooled) is used by Prisma migrations, 
 
 ## Run and check
 
-`npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (18 tests; the money-path ones run against the database with their own seeded user, deleted afterwards), `npm run build`.
+`npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (27 tests; the money-path ones run against the database with their own seeded user, deleted afterwards), `npm run build`.

@@ -4,7 +4,7 @@ import { getProvider } from "@/lib/provider";
 import { prisma } from "@/lib/prisma";
 import type { GenParams, GenerationResult } from "@/lib/providers/model-provider";
 
-// Money path for character-kit steps. Design ported from the V1 coordinator:
+// Money path shared by character-kit and content steps. Design ported from the V1 coordinator:
 //  - one operationKey per intent, so a double submit never charges or sends twice;
 //  - submission state: not_submitted -> submitting -> submitted | submission_unknown;
 //  - an ambiguous submit is NEVER resent automatically (the reservation stays until someone reconciles).
@@ -12,7 +12,7 @@ import type { GenParams, GenerationResult } from "@/lib/providers/model-provider
 
 export class UserError extends Error {}
 
-export type PlanItem = { role: AssetRole; model: string; params: GenParams };
+export type PlanItem = { role: AssetRole | null; model: string; params: GenParams };
 export type Quote = { items: (PlanItem & { costBrl: number })[]; totalBrl: number };
 
 const round4 = (value: number) => Math.round(value * 10000) / 10000;
@@ -26,7 +26,7 @@ export function quote(plan: PlanItem[]): Quote {
 
 type Created = { id: string; model: string; params: GenParams };
 
-export async function startPlan(input: { userId: string; influencerId: string; intentId: string; plan: PlanItem[]; expectedBrl: number }) {
+export async function startPlan(input: { userId: string; influencerId: string; contentId?: string; intentId: string; plan: PlanItem[]; expectedBrl: number }) {
   const provider = getProvider(); // fails before any debit when fal is not configured
   const priced = quote(input.plan);
   if (Math.abs(priced.totalBrl - input.expectedBrl) > 0.005) {
@@ -38,7 +38,16 @@ export async function startPlan(input: { userId: string; influencerId: string; i
     created = await prisma.$transaction(async (tx) => {
       // Serialize spends per user so two requests cannot both pass the balance check.
       await tx.$queryRaw`SELECT id FROM users WHERE id = ${input.userId} FOR UPDATE`;
-      const keys = priced.items.map((item) => `${input.intentId}:${item.role}`);
+      const owned = await tx.influencer.findFirst({ where: { id: input.influencerId, userId: input.userId } });
+      if (!owned) throw new UserError("Influencer não encontrado.");
+      const content = input.contentId ? await tx.content.findFirst({ where: { id: input.contentId, influencerId: owned.id } }) : null;
+      if (input.contentId && !content) throw new UserError("Conteúdo não encontrado.");
+      if (content && (priced.items.length !== 1 || priced.items[0].role !== null)) throw new UserError("Etapa inválida.");
+      const target = content ? await tx.step.findFirst({ where: { contentId: content.id, kind: "IMAGE" } }) : null;
+      if (content && !target) throw new UserError("Etapa não encontrada.");
+      // Each content step runs once. A second tab or a different intent cannot overwrite a live/completed job.
+      if (target && target.status !== "PENDING" && target.status !== "QUOTED") return [];
+      const keys = priced.items.map((item) => `${input.intentId}:${item.role ?? "IMAGE"}`);
       if ((await tx.step.count({ where: { operationKey: { in: keys } } })) > 0) return []; // same intent again: nothing to do
       const { _sum } = await tx.ledgerEntry.aggregate({ where: { userId: input.userId }, _sum: { deltaBrl: true } });
       const balance = Number(_sum.deltaBrl?.toString() ?? 0);
@@ -47,23 +56,25 @@ export async function startPlan(input: { userId: string; influencerId: string; i
       }
       const rows: Created[] = [];
       for (const [index, item] of priced.items.entries()) {
-        const step = await tx.step.create({
-          data: {
+        const data = {
             influencerId: input.influencerId,
-            kind: "CHARACTER",
+            kind: content ? "IMAGE" as const : "CHARACTER" as const,
             role: item.role,
             position: index,
-            status: "RUNNING",
+            status: "RUNNING" as const,
             provider: provider.id,
             model: item.model,
             input: item.params as Prisma.InputJsonValue,
-            operationKey: `${input.intentId}:${item.role}`,
+            operationKey: keys[index],
             estimatedCostBrl: item.costBrl,
-          },
-        });
+          };
+        const step = target
+          ? await tx.step.update({ where: { id: target.id }, data: { ...data, position: target.position } })
+          : await tx.step.create({ data });
         await tx.ledgerEntry.create({ data: { userId: input.userId, deltaBrl: -item.costBrl, reason: "SPEND", stepId: step.id, note: `Reserva: ${item.role}` } });
         rows.push({ id: step.id, model: item.model, params: item.params });
       }
+      if (content && rows.length) await tx.content.update({ where: { id: content.id }, data: { status: "IN_PROGRESS" } });
       return rows;
     });
   } catch (error) {
@@ -115,7 +126,7 @@ async function complete(step: RunningStep, result: GenerationResult) {
     let faceAssetId: string | null = null;
     for (const image of result.images) {
       const asset = await tx.asset.create({
-        data: { userId: owner.userId, influencerId: step.influencerId, stepId: step.id, kind: "IMAGE", role: step.role, url: image.url, width: image.width, height: image.height },
+        data: { userId: owner.userId, influencerId: step.influencerId, contentId: step.contentId, stepId: step.id, kind: "IMAGE", role: step.role, url: image.url, width: image.width, height: image.height },
       });
       if (step.role === "FRONT") faceAssetId = asset.id;
     }
@@ -132,7 +143,8 @@ export async function collectRunning(userId: string, influencerId: string) {
   const owned = await prisma.influencer.findFirst({ where: { id: influencerId, userId }, select: { id: true } });
   if (!owned) return { running: 0 };
   const provider = getProvider();
-  const steps = await prisma.step.findMany({ where: { influencerId, kind: "CHARACTER", status: "RUNNING", submissionState: "submitted", falRequestId: { not: null } } });
+  const scope = { OR: [{ influencerId }, { content: { influencerId } }] };
+  const steps = await prisma.step.findMany({ where: { ...scope, status: "RUNNING", submissionState: "submitted", falRequestId: { not: null } } });
 
   await Promise.all(steps.map(async (step) => {
     const params = step.input as GenParams;
@@ -145,10 +157,10 @@ export async function collectRunning(userId: string, influencerId: string) {
       const message = error instanceof Error ? error.message : String(error);
       const previous = Number(/^poll:(\d+):/.exec(step.error ?? "")?.[1] ?? 0);
       if (previous + 1 >= MAX_POLL_ERRORS) await refund(step, `A geração falhou: ${message}`);
-      else await prisma.step.update({ where: { id: step.id }, data: { error: `poll:${previous + 1}:${message}` } });
+      else await prisma.step.updateMany({ where: { id: step.id, status: "RUNNING", error: step.error }, data: { error: `poll:${previous + 1}:${message}` } });
     }
   }));
 
-  const running = await prisma.step.count({ where: { influencerId, kind: "CHARACTER", status: "RUNNING" } });
+  const running = await prisma.step.count({ where: { ...scope, status: "RUNNING" } });
   return { running };
 }
