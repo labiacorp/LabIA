@@ -28,3 +28,6 @@ Thumbs.db
 # Prisma 7 generated client
 /src/generated/
 next-env.d.ts
+
+# Agent handoff reports
+.handoff/
