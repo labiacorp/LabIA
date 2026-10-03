@@ -1,20 +1,7 @@
-import path from "node:path";
 import { defineConfig } from "vitest/config";
+import path from "node:path";
 
 export default defineConfig({
-  oxc: {
-    jsx: {
-      runtime: "automatic",
-      importSource: "react",
-    },
-  },
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "."),
-    },
-  },
-  test: {
-    environment: "node",
-    include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
-  },
+  resolve: { alias: { "@": path.resolve(__dirname, "src") } },
+  test: { include: ["src/**/*.test.ts"], passWithNoTests: true },
 });

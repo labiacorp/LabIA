@@ -1,6 +1,6 @@
 # LabIA
 
-Pay-per-use AI image and video generation on a flow canvas (Next.js 15, Supabase, Prisma, fal.ai). Owner: Felipe Zilli. Diego: market and distribution.
+Content pipeline for AI influencers, pay-per-use, with the cost shown before and after every generation (Next.js 16, Neon, Prisma 7, Auth.js, fal.ai). First product of a larger all-in-one; the goal now is to validate niche and business model. Owner: Felipe Zilli. Diego: market and distribution.
 
 This file is identical to `AGENTS.md` (read by Codex). Edit one, mirror the other.
 

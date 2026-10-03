@@ -1,11 +1,7 @@
 {
   "version": "0.0.1",
   "configurations": [
-    {
-      "name": "labia-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 3000
-    }
+    { "name": "labia-dev", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev"], "port": 3000 },
+    { "name": "design-proposal", "runtimeExecutable": "python3", "runtimeArgs": ["-m", "http.server", "4100", "--directory", "Proposta LabIA com Design System"], "port": 4100 }
   ]
 }

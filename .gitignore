@@ -6,16 +6,11 @@ node_modules/
 out/
 tsconfig.tsbuildinfo
 
-# Prisma
-prisma/dev.db
-prisma/dev.db-journal
 
 # env
 .env*
 !.env.example
 
-# LabIA local provider sessions (OAuth/config managed by the local executor)
-.labia/
 
 # logs
 npm-debug.log*
@@ -29,3 +24,7 @@ Thumbs.db
 .obsidian/
 
 .vercel
+
+# Prisma 7 generated client
+/src/generated/
+next-env.d.ts

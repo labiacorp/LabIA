@@ -1,0 +1,110 @@
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
+/* LabIA — tokens v2 (Claude Design, 2026-10-02), aplicados na v2 do app.
+   Legenda: MANTIDO · ALTERADO (antes → depois · motivo) · NOVO */
+
+:root {
+  /* Base — MANTIDO */
+  --lab-bg: #0A0B0E;                 /* MANTIDO */
+  --lab-surface-1: #12141A;          /* MANTIDO */
+  --lab-surface-2: #1A1D26;          /* MANTIDO */
+  --lab-border: #262A35;             /* MANTIDO */
+  --lab-border-strong: #343947;      /* MANTIDO */
+  --lab-text: #E9ECF2;               /* MANTIDO */
+  --lab-text-dim: #9AA3B5;           /* MANTIDO */
+  --lab-text-muted: #7D869A;         /* ALTERADO #5D6577 → #7D869A · contraste 3,1:1 → ~5,0:1 (surface-1) / ~4,6:1 (surface-2), WCAG AA */
+  --lab-text-disabled: #5D6577;      /* NOVO · o antigo muted vira só "desabilitado" (nunca texto informativo) */
+
+  /* Reagente — MANTIDO (regra de raridade: ver tabela "o que pode ser verde") */
+  --lab-reagent: #10B981;            /* MANTIDO · fundo de CTA primário/Executar, foco, porta ativa */
+  --lab-reagent-bright: #3DDFA6;     /* MANTIDO · números de custo, "IA" do wordmark — nunca fundo */
+  --lab-reagent-dim: rgba(16, 185, 129, 0.12); /* MANTIDO · fundo do chip de custo */
+  --lab-reagent-line: rgba(16, 185, 129, 0.28); /* NOVO · borda do chip de custo (substitui border-lab-reagent/20 solto) */
+  --lab-on-reagent: #0A0B0E;         /* NOVO · texto sobre reagente (era regra só documentada) */
+
+  /* Semânticas — MANTIDO + fundos tênues NOVOS */
+  --lab-success: #4ADE80;            /* MANTIDO */
+  --lab-warning: #FBBF24;            /* MANTIDO */
+  --lab-danger: #FB7185;             /* MANTIDO */
+  --lab-info: #38BDF8;               /* MANTIDO */
+  --lab-success-dim: rgba(74, 222, 128, 0.10);  /* NOVO */
+  --lab-warning-dim: rgba(251, 191, 36, 0.10);  /* NOVO */
+  --lab-danger-dim: rgba(251, 113, 133, 0.10);  /* NOVO */
+  --lab-info-dim: rgba(56, 189, 248, 0.10);     /* NOVO */
+  --lab-danger-line: rgba(251, 113, 133, 0.40); /* NOVO · substitui border-lab-danger/40 */
+  --lab-warning-line: rgba(251, 191, 36, 0.40); /* NOVO */
+
+  /* Acento por tipo de nó — MANTIDO */
+  --lab-node-image: #8B7CFF;
+  --lab-node-video: #4DD8FF;
+  --lab-node-copy: #FFC46B;
+  --lab-node-design: #FF7AC6;
+  --lab-node-publish: #5EE38B;
+  --lab-node-utility: #9AA3B5;
+
+  /* Contexto de produção — NOVO (aliases; paleta já documentada no DS 2026-09-14) */
+  --lab-ctx-create: var(--lab-node-image);
+  --lab-ctx-project: var(--lab-info);
+  --lab-ctx-post: var(--lab-node-copy);
+  --lab-ctx-direction: var(--lab-node-design);
+
+  /* Canvas */
+  --lab-canvas-dot: #242833;         /* ALTERADO #1B1E27 → #242833 · grade "quase invisível" (auditoria item 4) */
+  --lab-canvas-mask: rgba(10, 11, 14, 0.72); /* MANTIDO */
+  --lab-edge: #343947;               /* MANTIDO */
+  --lab-edge-invalid: var(--lab-danger); /* NOVO · aresta recusada (tracejada) */
+  --lab-phase-band: rgba(233, 236, 242, 0.018); /* NOVO · bandas de fase (Briefing…Aprendizado) */
+
+  /* Estados do nó — NOVO */
+  --lab-node-border-idle: var(--lab-border);
+  --lab-node-border-selected: var(--lab-reagent);    /* seleção = foco (verde permitido) */
+  --lab-node-border-running: var(--lab-reagent);     /* + pulso lab-pulse */
+  --lab-node-border-ready: var(--lab-border-strong);
+  --lab-node-border-error: var(--lab-danger);
+  --lab-node-border-blocked: var(--lab-border-strong); /* tracejada, corpo a 72% */
+
+  /* Camadas e elevação — NOVO */
+  --lab-scrim: rgba(10, 11, 14, 0.80);
+  --lab-shadow-popover: 0 0 0 1px var(--lab-border-strong), 0 16px 40px rgba(0, 0, 0, 0.55);
+  --lab-shadow-modal: 0 0 0 1px var(--lab-border-strong), 0 24px 64px rgba(0, 0, 0, 0.65);
+
+  /* Movimento — NOVO */
+  --lab-dur-micro: 120ms;
+  --lab-dur-panel: 200ms;
+  --lab-dur-pulse: 1600ms;
+  --lab-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Larguras — NOVO */
+  --lab-w-form: 40rem;
+  --lab-w-content: 72rem;  /* = max-w-6xl atual */
+  --lab-w-wide: 90rem;
+}
+
+@layer base {
+  * { @apply border-lab-border; }
+  html { color-scheme: dark; }
+  body { @apply min-h-screen bg-lab-bg font-sans text-lab-text antialiased; }
+  button, input, textarea, select { font: inherit; }
+}
+
+@layer components {
+  .lab-wordmark { @apply font-display text-xl font-bold tracking-tight; }
+  .lab-wordmark span { color: var(--lab-reagent-bright); }
+  .lab-status-dot { @apply inline-block size-1.5 rounded-full; }
+  .lab-hit-target { @apply min-h-11 min-w-11; } /* NOVO · classe usada em /criar e inexistente */
+  .lab-ghost-input { @apply h-8 rounded-control border border-transparent bg-transparent px-2 font-display text-sm font-medium text-lab-text transition-colors; }
+  .lab-ghost-input:hover { @apply border-lab-border bg-lab-surface-2; }
+  .lab-ghost-input:focus { @apply border-lab-border-strong bg-lab-surface-2 outline-none; }
+  .lab-placeholder-media { background: repeating-linear-gradient(135deg, var(--lab-surface-2) 0 8px, var(--lab-surface-1) 8px 16px); }
+}
+
+@keyframes lab-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px var(--lab-reagent), 0 0 0 0 var(--lab-reagent-dim); }
+  50% { box-shadow: 0 0 0 1px var(--lab-reagent), 0 0 24px 2px var(--lab-reagent-dim); }
+}
+@keyframes lab-shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
