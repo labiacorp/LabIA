@@ -13,3 +13,4 @@ This file is identical to `AGENTS.md` (read by Codex). Edit one, mirror the othe
 - Show the estimated cost before and the real cost after every AI generation.
 - Never commit secrets. Keys live in `.env.local`; `.env.example` lists the required ones.
 - Commit with explicit paths, never `git add -A`.
+- Current state of the app: `PROJECT_STATUS.md` (update it in the same commit as the change).
