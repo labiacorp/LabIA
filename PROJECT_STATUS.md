@@ -46,3 +46,24 @@ Listed in `.env.example`. `DIRECT_URL` (unpooled) is used by Prisma migrations, 
 ## Run and check
 
 `npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (27 tests; the money-path ones run against the database with their own seeded user, deleted afterwards), `npm run build`.
+
+## Working agreement (DRAFT: pending approval by Diego and Felipe)
+
+Two founders, each with their own coding agent (Claude Code or Codex), work on this repo at different times. Until both approve this section, treat it as a proposal and ask the founder before relying on it; once approved, remove "DRAFT" and move the rules into `AGENTS.md`/`CLAUDE.md`.
+
+Rules proposed:
+1. One task = one GitHub issue (with an owner) = one branch (`diego/<task>` or `felipe/<task>`) = one pull request. Branches live 1 to 3 days. Nobody pushes to `main` directly.
+2. Each founder owns an area of the code (suggested below) so that two people do not edit the same file.
+3. Shared files need a heads-up to the other founder before editing: `prisma/schema.prisma`, `package.json`, `AGENTS.md`, `CLAUDE.md`, `PROJECT_STATUS.md`.
+4. Money-moving code (`src/lib/generation.ts`, ledger, `schema.prisma`) needs the other founder's approval plus an audit by Claude.
+5. Nothing reaches `main` without a Vercel preview and green checks (typecheck, lint, tests, build). CI does not exist yet and has to be written.
+6. One Neon branch per person for development; production only changes by deploy.
+7. The repository is the memory: rules in `AGENTS.md`, state here, decisions in ai-memory (`default/LabIA`).
+
+Suggested territories (to confirm): Felipe = canvas, video nodes and assembly, providers and models (he built V1). Diego = content pipeline, character onboarding, screens, copy, access and login. Double key = database, balance and billing.
+
+Routine proposed: a two-line daily status ("working on X, touching Y"); a board with Todo / Doing / Review / Done (at most 2 in Doing per person); a 30 minute weekly sync; the author opens the PR and the other founder approves (never self-approve).
+
+Agent behaviour proposed: update from `main` before starting; stay inside the agreed area and ask before leaving it; never resolve a conflict silently (stop and report); run the checks; state in the PR what was done, how it was verified and what was not.
+
+Open decisions: territories OK? New company repo or the current one, and a new Vercel project for V2? Who approves what and who presses the final merge? Board tool? Channel for the daily status?
