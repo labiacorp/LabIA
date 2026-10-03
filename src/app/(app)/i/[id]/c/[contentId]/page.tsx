@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { Badge, stepStatus } from "@/components/ui/badge";
 import { CostChip } from "@/components/ui/cost-chip";
+import { estimateReel } from "@/lib/content-plan";
 import { PIPELINE } from "@/lib/pipeline";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/session";
@@ -20,9 +21,9 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
 
   const { steps } = content;
   const total = (pick: (step: (typeof steps)[number]) => { toString(): string } | null) => steps.reduce((sum, step) => sum + Number(pick(step)?.toString() ?? 0), 0);
-  const estimated = total((step) => step.estimatedCostBrl);
+  const reel = estimateReel();
+  const estimated = steps.some((step) => step.estimatedCostBrl) ? total((step) => step.estimatedCostBrl) : reel.totalBrl;
   const spent = total((step) => step.actualCostBrl);
-  const hasQuote = steps.some((step) => step.estimatedCostBrl);
 
   return (
     <div className="grid gap-6">
@@ -31,7 +32,7 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
         <h1 className="mt-2 font-display text-h1">{content.title}</h1>
         {content.idea ? <p className="mt-1.5 max-w-form text-body-sm text-lab-text-dim">{content.idea}</p> : null}
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <CostChip state={hasQuote ? "estimated" : "pending"} value={hasQuote ? estimated : undefined} prefix="estimado" />
+          <CostChip state="estimated" value={estimated} prefix="reel de 15s (sem voz)" />
           <CostChip state="actual" value={spent} prefix="gasto" />
         </div>
       </div>
@@ -48,7 +49,13 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
               </div>
               <div className="flex shrink-0 flex-col items-end gap-2">
                 <Badge variant={variant} dot>{label}</Badge>
-                <CostChip size="sm" state={step.actualCostBrl ? "actual" : step.estimatedCostBrl ? "estimated" : "pending"} value={Number((step.actualCostBrl ?? step.estimatedCostBrl)?.toString() ?? NaN)} />
+                {(() => {
+                  const planned = reel.perStep[step.kind];
+                  if (step.actualCostBrl) return <CostChip size="sm" state="actual" value={Number(step.actualCostBrl.toString())} />;
+                  if (step.estimatedCostBrl) return <CostChip size="sm" state="estimated" value={Number(step.estimatedCostBrl.toString())} />;
+                  if (planned === 0) return <CostChip size="sm" state="free" value={0} />;
+                  return <CostChip size="sm" state={planned == null ? "pending" : "estimated"} value={planned ?? undefined} />;
+                })()}
               </div>
             </li>
           );

@@ -36,7 +36,7 @@ User, Influencer (with `visualSignature`), Content, Step (`kind CHARACTER` belon
 
 - A real generation has never run from v2 (only the fake provider). First one needs the R$ estimate shown and the owner's ok; `FAL_KEY` is set locally and on Vercel; fal media URLs are stored as returned (copy to Vercel Blob later; the `/edit` price is assumed equal to the base model until confirmed).
 - Audio upload, voice and lip sync, the 3x5s video chain, final assembly (V1 has `video-extend`, `video-assembly`, audio upload to port).
-- Content steps (script, image, video) are only displayed, not runnable.
+- Content steps (script, image, video) are only displayed, not runnable. The content page shows the estimate of a 15s reel without voice (one 1K scene image + three 5s Kling blocks, `src/lib/content-plan.ts`, about R$ 5.89 at 5.21); the script step has no model or price yet.
 - Canvas (planned as a second view of the same steps), library filters, MCP, payments, terms and privacy text, CI, Vercel env for v2.
 
 ## Environment
