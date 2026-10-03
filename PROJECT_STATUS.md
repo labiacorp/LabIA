@@ -32,12 +32,28 @@ Character kit = step 1 sheet (nano-banana-2, 2K, 3:2) then step 2 portraits fron
 
 User, Influencer (with `visualSignature`), Content, Step (`kind CHARACTER` belongs to an influencer; content IMAGE uses the existing contentId relation; `operationKey`, `submissionState`), Asset (`role` SHEET/FRONT/PROFILE/DETAIL), LedgerEntry, RateLimitEvent. Balance = sum of `LedgerEntry.deltaBrl`; top-ups are manual: `npx tsx scripts/ledger.ts topup <email> <brl>`.
 
-## Not built yet
+## Roadmap to a finished V2
 
-- A real generation has never run from v2 (only the fake provider). First one needs the R$ estimate shown and the owner's ok; `FAL_KEY` is set locally and on Vercel; fal media URLs are stored as returned (copy to Vercel Blob later; the `/edit` price is assumed equal to the base model until confirmed).
-- Audio upload, voice and lip sync (V1 audio upload remains to port; model choice and Blob token are pending).
-- Content IMAGE is runnable from the latest completed FRONT portrait (nano-banana-2/edit, 1K, content aspect ratio). The existing step is reserved and submitted once, with a scene prompt, cost approval, balance check, polling, preview and content-linked library asset. Each content step runs once; retry/regeneration UI is not built yet. SCRIPT is still a placeholder. VIDEO reserves three 5s Kling blocks and advances a persisted chain: generation -> fal FFmpeg metadata with extract_frames -> continuation from end_frame_url. Actual cost uses each measured duration and V1 pricing (including the 5s minimum). ASSEMBLY queues fal merge-videos with the persisted clip order and moves the content to REVIEW. Metadata and merge are listed at $0/compute second in official fal docs (2026-10-03); no real calls have verified their outputs or invoice. The content page shows the estimate of a 15s reel without voice (one 1K scene image + three 5s Kling blocks, `src/lib/content-plan.ts`, about R$ 5.89 at 5.21); the script step has no model or price yet.
-- Canvas (planned as a second view of the same steps), library filters, MCP, payments, terms and privacy text, CI, Vercel env for v2.
+Goal: a platform that is feature-complete, deployed and ready for the founders to test real models by hand. Building and testing here never runs a real generation (use `FAL_MOCK=1`). Do not polish visuals: Claude Design will redo the identity (tokens live in `tailwind.config.ts`, `src/app/globals.css`, `src/components/ui`), so the reskin must stay a token change.
+
+### Done
+- Foundation: Next 16, Prisma 7 on Neon, Auth.js with Google, access code gate, Claude Design tokens and `ui` components.
+- Character kit: sheet then front/profile/detail portraits (quoted in R$, idempotent, balance reserved under a row lock, refunds, ambiguous submit never resent, manual reconciliation via `scripts/ledger.ts`).
+- Content pipeline: scene IMAGE from the FRONT portrait; VIDEO = three chained 5s Kling blocks (last frame via fal FFmpeg, measured duration cost); ASSEMBLY via fal merge-videos; content moves to REVIEW. All verified only with the fake provider (41 tests, desktop and 390px).
+- Reel estimate on the content page (about R$ 5.89 without voice at 5.21).
+
+### To do (in blocks; each block is small, committed, and updates this file)
+1. **Go live.** New Vercel project for V2 (not the V1 project), env vars, production Neon branch, Google OAuth client, domain, access code, CI on GitHub (typecheck, lint, tests, build; none exists yet). Needs the founders: accounts, OAuth client, domain.
+2. **Files that last.** Copy generated media from fal URLs to Vercel Blob; uploads (base photo, audio, an existing character sheet), ported from V1 `app/api/assets/upload` with its tests. Needs the founders: `BLOB_READ_WRITE_TOKEN` in `.env.local` and on Vercel.
+3. **Voice and lip sync.** Research is in `docs/video-and-voice-research.md` (LatentSync after assembly recommended for cost; PixVerse and Sync Lipsync 2 are alternatives). Needs the founders: lip sync option, uploaded audio vs generated voice.
+4. **Complete the pipeline.** Real SCRIPT step (needs the founders: user-written vs AI-written, and the model), retry/regeneration of any step, reuse clips of a failed chain, download the final video, archive/delete content and influencers.
+5. **Management screens.** Library with filters (V1 has them), balance and top-up screen (today a script), per-user spend limit, cost-per-piece report (the metric the founders will measure).
+6. **Canvas** as a second view of the same steps (port V1 pieces: typed handles, invalid-edge hint, palette by area).
+7. **Finish.** Terms and privacy pages, error/loading/empty states, mobile pass, optional MCP.
+
+Not now: payments, self-service signup, locale currency, auto-posting, Cloudflare.
+
+Unverified until the founders run real generations by hand: real fal outputs and invoices (`/edit` price is assumed equal to the base model; FFmpeg metadata/merge are listed at $0), face continuity across clips, and fal media URL lifetime.
 
 ## Environment
 
