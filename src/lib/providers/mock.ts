@@ -1,4 +1,6 @@
 import { FalProvider } from "./fal";
+import { ffmpegResult, MERGE_MODEL, METADATA_MODEL } from "./ffmpeg";
+import { findFalVideoModel } from "./fal-models";
 import type { CostEstimate, GenParams, GenerationResult, JobHandle, ModelInfo, ModelKind, ModelProvider } from "./model-provider";
 
 // Dev/test only (FAL_MOCK=1, never in production): no network, no spend. Prices come from the real catalog.
@@ -32,6 +34,21 @@ export class MockProvider implements ModelProvider {
     const startedAt = Number(handle.id.split("-")[1]);
     if (!skipDelay && Date.now() - startedAt < delayMs()) return { state: "pending" };
     if (String(params.prompt).includes("[mock-fail]")) throw new Error("mock: o fal recusou o conteúdo");
+    if (handle.model === METADATA_MODEL) {
+      if (process.env.FAL_MOCK_METADATA_FAIL === "1") throw new Error("mock: metadata unavailable");
+      return { state: "done", result: ffmpegResult(handle.model, handle.id, { media: {
+        duration: Number(process.env.FAL_MOCK_VIDEO_DURATION ?? 5), end_frame_url: `/mock/portrait.svg?frame=${handle.id}`,
+      } }) };
+    }
+    if (handle.model === MERGE_MODEL) return { state: "done", result: ffmpegResult(handle.model, handle.id, { video: { url: "/mock/reel.mp4" } }) };
+    if (findFalVideoModel(handle.model)) {
+      const duration = Number(process.env.FAL_MOCK_VIDEO_DURATION ?? 5);
+      return { state: "done", result: {
+        provider: this.id, model: handle.model, requestId: handle.id, images: [],
+        videos: [{ url: `/mock/clip.mp4?job=${handle.id}`, contentType: "video/mp4", durationSeconds: duration }],
+        cost: this.estimateCost(handle.model, { ...params, duration }), raw: {},
+      } };
+    }
     const sheet = params.aspect_ratio === "3:2";
     return {
       state: "done",

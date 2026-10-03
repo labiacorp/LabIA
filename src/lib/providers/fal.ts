@@ -1,4 +1,5 @@
 import { fal } from "@fal-ai/client";
+import { ffmpegCost, ffmpegInput, ffmpegResult, isFfmpeg } from "./ffmpeg";
 
 import {
   DEFAULT_USD_BRL_RATE,
@@ -659,6 +660,7 @@ export class FalProvider implements ModelProvider {
   }
 
   estimateCost(model: string, params: GenParams): CostEstimate {
+    if (isFfmpeg(model)) return ffmpegCost();
     const videoModel = findFalVideoModel(model);
 
     if (videoModel) {
@@ -754,12 +756,12 @@ export class FalProvider implements ModelProvider {
       throw new Error("FAL_KEY nao configurada. Defina a chave da fal.ai antes de gerar.");
     }
 
-    const resolvedModel = findFalVideoModel(model)
+    const resolvedModel = isFfmpeg(model) ? model : findFalVideoModel(model)
       ? getVideoEndpoint(model, params).endpoint
       : resolveFalImageModelId(model);
     const webhookUrl = getStringParam(params, "webhookUrl");
     const response = await fal.queue.submit(resolvedModel as never, {
-      input: findFalVideoModel(resolvedModel)
+      input: isFfmpeg(resolvedModel) ? ffmpegInput(resolvedModel, params) : findFalVideoModel(resolvedModel)
         ? normalizeFalVideoInput(resolvedModel, params)
         : normalizeFalInput(resolvedModel, params),
       webhookUrl,
@@ -791,6 +793,7 @@ export class FalProvider implements ModelProvider {
     const result = await fal.queue.result(handle.model as never, {
       requestId: handle.id,
     });
+    if (isFfmpeg(handle.model)) return ffmpegResult(handle.model, result.requestId, result.data);
     const videoModel = findFalVideoModel(handle.model);
 
     if (videoModel) {

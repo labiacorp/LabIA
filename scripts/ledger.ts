@@ -1,7 +1,7 @@
 // Manual ledger operations (top-ups are manual until payments exist).
 //   npx tsx scripts/ledger.ts balance <email>
 //   npx tsx scripts/ledger.ts topup <email> <brl> [note]
-//   npx tsx scripts/ledger.ts refund <stepId>      reconcile a step stuck in submission_unknown
+//   npx tsx scripts/ledger.ts refund <stepId> [verifiedActualBrl]   reconcile an uncertain submission/duration; video requires the actual cost
 import { config } from "dotenv";
 
 config({ path: ".env.local" });
@@ -23,12 +23,12 @@ async function main() {
   } else if (command === "refund") {
     const step = await prisma.step.findUnique({ where: { id: arg ?? "" }, include: { influencer: true } });
     if (!step?.influencer) throw new Error("Step not found.");
-    if (step.submissionState !== "submission_unknown") throw new Error(`Refusing: step is ${step.submissionState}, not submission_unknown.`);
-    if (await prisma.ledgerEntry.count({ where: { stepId: step.id, reason: "REFUND" } })) throw new Error("Already refunded.");
-    await prisma.ledgerEntry.create({ data: { userId: step.influencer.userId, deltaBrl: step.estimatedCostBrl ?? 0, reason: "REFUND", stepId: step.id, note: "Manual reconciliation" } });
-    console.log(`Refunded R$ ${step.estimatedCostBrl} for step ${step.id}.`);
+    const { reconcileReservation } = await import("../src/lib/generation");
+    if (step.kind === "VIDEO" && amount === undefined) throw new Error("Video reconciliation requires the TOTAL actual cost in BRL, verified in the provider dashboard.");
+    const result = await reconcileReservation(step.influencer.userId, step.id, Number(amount ?? 0));
+    console.log(`Reconciled step ${step.id}: actual R$ ${result.actualBrl.toFixed(4)}, adjustment R$ ${result.adjustmentBrl.toFixed(4)}.`);
   } else {
-    console.log("usage: balance <email> | topup <email> <brl> [note] | refund <stepId>");
+    console.log("usage: balance <email> | topup <email> <brl> [note] | refund <stepId> [verifiedActualBrl]");
   }
   await prisma.$disconnect();
 }
