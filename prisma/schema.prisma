@@ -1,0 +1,400 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum AssetType {
+  IMAGE @map("image")
+  VIDEO @map("video")
+  AUDIO @map("audio")
+
+  @@map("asset_type")
+}
+
+enum AssetOrigin {
+  GENERATED @map("generated")
+  UPLOADED  @map("uploaded")
+
+  @@map("asset_origin")
+}
+
+enum ProjectType {
+  IMAGE @map("image")
+  VIDEO @map("video")
+
+  @@map("project_type")
+}
+
+enum ProjectStatus {
+  DRAFT       @map("draft")
+  IN_PROGRESS @map("in_progress")
+  REVIEW      @map("review")
+  APPROVED    @map("approved")
+  ARCHIVED    @map("archived")
+
+  @@map("project_status")
+}
+
+enum GenerationStatus {
+  QUEUED  @map("queued")
+  RUNNING @map("running")
+  DONE    @map("done")
+  FAILED  @map("failed")
+
+  @@map("generation_status")
+}
+
+model Workspace {
+  id                  String               @id @default(cuid())
+  name                String
+  slug                String               @unique
+  brands              Brand[]
+  flows               Flow[]
+  projects            Project[]
+  flowRuns            FlowRun[]
+  providerConnections ProviderConnection[]
+  executorPairings    ExecutorPairing[]
+  members             WorkspaceMember[]
+  invites             Invite[]
+  // Gasto com as chaves do Felipe (fal.ai). Workspace criado por convite nasce sem;
+  // o admin libera. Sem gasto, o fluxo cota mas só executa o que é local e grátis.
+  spendEnabled        Boolean              @default(false) @map("spend_enabled")
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+
+  @@map("workspaces")
+}
+
+enum WorkspaceRole {
+  OWNER  @map("owner")
+  MEMBER @map("member")
+
+  @@map("workspace_role")
+}
+
+// Acesso ao workspace. Ter conta no Supabase Auth não dá acesso a nada;
+// ser membro dá (modulos/10-contas). userId é o id de auth.users (sem FK:
+// o schema auth é do Supabase).
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  workspaceId String        @map("workspace_id")
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String        @map("user_id") @db.Uuid
+  role        WorkspaceRole @default(MEMBER)
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@map("workspace_members")
+}
+
+// Convite de uso único (10-contas A2). Só o hash do token fica no banco; o token
+// puro aparece uma vez, no link. Sem workspaceId, o cadastro cria um workspace novo
+// (owner); com workspaceId, entra como member. Revogar = apagar a linha.
+model Invite {
+  id          String     @id @default(cuid())
+  tokenHash   String     @unique @map("token_hash")
+  workspaceId String?    @map("workspace_id")
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  email       String?
+  createdBy   String     @map("created_by") @db.Uuid
+  expiresAt   DateTime   @map("expires_at")
+  usedAt      DateTime?  @map("used_at")
+  usedBy      String?    @map("used_by") @db.Uuid
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  @@map("invites")
+}
+
+// Aceite de Termos e Privacidade. O nome fica no user_metadata do Supabase.
+model Profile {
+  userId            String   @id @map("user_id") @db.Uuid
+  consentAcceptedAt DateTime @map("consent_accepted_at")
+  consentVersion    String   @map("consent_version")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@map("profiles")
+}
+
+// Uma linha por tentativa permitida (ou falha de login): a janela é contada em SQL
+// (lib/auth/rate-limit.ts). Sem Redis: o volume é pequeno e o banco já existe.
+model RateLimitEvent {
+  id        BigInt   @id @default(autoincrement())
+  key       String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([key, createdAt])
+  @@map("rate_limit_events")
+}
+
+model Brand {
+  id          String    @id @default(cuid())
+  workspaceId String    @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  flows       Flow[]
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([workspaceId])
+  @@map("brands")
+}
+
+model Flow {
+  id                 String    @id @default(cuid())
+  workspaceId        String    @map("workspace_id")
+  workspace          Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  brandId            String?   @map("brand_id")
+  brand              Brand?    @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  projectId          String?   @map("project_id")
+  project            Project?  @relation("ProjectFlows", fields: [projectId], references: [id], onDelete: SetNull)
+  primaryForProjects Project[] @relation("ProjectPrimaryFlow")
+  name               String
+  isTemplate         Boolean   @default(false) @map("is_template")
+  graph              Json
+  runs               FlowRun[]
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  @@index([workspaceId, updatedAt])
+  @@index([brandId])
+  @@index([workspaceId, projectId])
+  @@map("flows")
+}
+
+model Project {
+  id              String        @id @default(cuid())
+  workspaceId     String        @map("workspace_id")
+  workspace       Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name            String
+  type            ProjectType
+  objective       String
+  aspectRatio     String        @map("aspect_ratio")
+  status          ProjectStatus @default(DRAFT)
+  durationSeconds Int?          @map("duration_seconds")
+  primaryFlowId   String?       @unique @map("primary_flow_id")
+  primaryFlow     Flow?         @relation("ProjectPrimaryFlow", fields: [primaryFlowId], references: [id], onDelete: SetNull)
+  flows           Flow[]        @relation("ProjectFlows")
+  assets          Asset[]
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  @@index([workspaceId, updatedAt])
+  @@index([workspaceId, status])
+  @@map("projects")
+}
+
+model Generation {
+  id               String           @id @default(cuid())
+  workspaceId      String           @map("workspace_id")
+  brandId          String?          @map("brand_id")
+  provider         String
+  connectionId     String?          @map("connection_id")
+  model            String
+  prompt           String
+  params           Json
+  status           GenerationStatus @default(QUEUED)
+  operationKey     String           @unique @map("operation_key")
+  submissionState  String           @default("not_submitted") @map("submission_state")
+  billingMode      String           @default("api") @map("billing_mode")
+  currency         String           @default("BRL")
+  estimatedCostUsd Decimal          @map("estimated_cost_usd") @db.Decimal(12, 6)
+  estimatedCostBrl Decimal          @map("estimated_cost_brl") @db.Decimal(12, 4)
+  actualCostUsd    Decimal?         @map("actual_cost_usd") @db.Decimal(12, 6)
+  actualCostBrl    Decimal?         @map("actual_cost_brl") @db.Decimal(12, 4)
+  queueJobId       String?          @map("queue_job_id")
+  providerJobId    String?          @map("provider_job_id")
+  flowRunId        String?          @map("flow_run_id")
+  flowNodeId       String?          @map("flow_node_id")
+  errorMessage     String?          @map("error_message")
+  result           Json?
+  assets           Asset[]
+  queuedAt         DateTime         @default(now()) @map("queued_at")
+  startedAt        DateTime?        @map("started_at")
+  completedAt      DateTime?        @map("completed_at")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  @@index([workspaceId, createdAt])
+  @@index([brandId])
+  @@index([status])
+  @@index([provider, model])
+  @@map("generations")
+}
+
+model Asset {
+  id            String      @id @default(cuid())
+  workspaceId   String      @map("workspace_id")
+  projectId     String?     @map("project_id")
+  project       Project?    @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  brandId       String?     @map("brand_id")
+  generationId  String?     @map("generation_id")
+  outputIndex   Int         @map("output_index")
+  assetKey      String      @unique @map("asset_key")
+  generation    Generation? @relation(fields: [generationId], references: [id], onDelete: SetNull)
+  type          AssetType
+  origin        AssetOrigin
+  url           String
+  storageBucket String      @map("storage_bucket")
+  storagePath   String      @map("storage_path")
+  contentType   String?     @map("content_type")
+  width         Int?
+  height        Int?
+  sizeBytes     Int?        @map("size_bytes")
+  prompt        String?
+  provider      String?
+  model         String?
+  tags          Json?
+  metadata      Json?
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  @@unique([generationId, outputIndex])
+  @@index([workspaceId, createdAt])
+  @@index([brandId])
+  @@index([generationId])
+  @@index([workspaceId, projectId, createdAt])
+  @@map("assets")
+}
+
+model ExecutionConfirmation {
+  id           String    @id
+  ownerId      String    @map("owner_id")
+  workspaceId  String    @map("workspace_id")
+  flowId       String    @map("flow_id")
+  snapshotHash String    @map("snapshot_hash")
+  expiresAt    DateTime  @map("expires_at")
+  consumedAt   DateTime? @map("consumed_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@index([ownerId, workspaceId, flowId, expiresAt])
+  @@map("execution_confirmations")
+}
+
+model FlowRun {
+  id                    String        @id @default(cuid())
+  workspaceId           String        @map("workspace_id")
+  workspace             Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  flowId                String        @map("flow_id")
+  flow                  Flow          @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  status                String        @default("queued")
+  graph                 Json
+  nodeOrder             Json          @map("node_order")
+  targetNodeId          String?       @map("target_node_id")
+  totalEstimatedCostUsd Decimal       @default(0) @map("total_estimated_cost_usd") @db.Decimal(12, 6)
+  totalEstimatedCostBrl Decimal       @default(0) @map("total_estimated_cost_brl") @db.Decimal(12, 6)
+  totalActualCostUsd    Decimal       @default(0) @map("total_actual_cost_usd") @db.Decimal(12, 6)
+  totalActualCostBrl    Decimal       @default(0) @map("total_actual_cost_brl") @db.Decimal(12, 6)
+  outputs               Json?
+  error                 String?
+  startedAt             DateTime?     @map("started_at")
+  completedAt           DateTime?     @map("completed_at")
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+  nodes                 FlowRunNode[]
+
+  @@index([workspaceId, status])
+  @@index([flowId, createdAt])
+  @@map("flow_runs")
+}
+
+model FlowRunNode {
+  id                String    @id @default(cuid())
+  flowRunId         String    @map("flow_run_id")
+  flowRun           FlowRun   @relation(fields: [flowRunId], references: [id], onDelete: Cascade)
+  nodeId            String    @map("node_id")
+  type              String
+  sequence          Int
+  status            String    @default("waiting")
+  dependencyNodeIds Json      @map("dependency_node_ids")
+  params            Json?
+  inputs            Json?
+  outputs           Json?
+  error             String?
+  pgBossJobId       String?   @map("pg_boss_job_id")
+  estimatedCostUsd  Decimal   @default(0) @map("estimated_cost_usd") @db.Decimal(12, 6)
+  estimatedCostBrl  Decimal   @default(0) @map("estimated_cost_brl") @db.Decimal(12, 6)
+  actualCostUsd     Decimal   @default(0) @map("actual_cost_usd") @db.Decimal(12, 6)
+  actualCostBrl     Decimal   @default(0) @map("actual_cost_brl") @db.Decimal(12, 6)
+  startedAt         DateTime? @map("started_at")
+  completedAt       DateTime? @map("completed_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  @@unique([flowRunId, nodeId])
+  @@index([flowRunId, status])
+  @@map("flow_run_nodes")
+}
+
+model ProviderConnection {
+  id                         String               @id @default(cuid())
+  workspaceId                String               @map("workspace_id")
+  workspace                  Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  ownerId                    String               @map("owner_id")
+  provider                   String
+  label                      String
+  authMethod                 String               @map("auth_method")
+  sessionRef                 String               @unique @map("session_ref")
+  authStatus                 String               @default("disconnected") @map("auth_status")
+  executorStatus             String               @default("offline") @map("executor_status")
+  generationValidationStatus String               @default("unvalidated") @map("generation_validation_status")
+  accountLabel               String?              @map("account_label")
+  planType                   String?              @map("plan_type")
+  loginId                    String?              @map("login_id")
+  loginExpiresAt             DateTime?            @map("login_expires_at")
+  connectedAt                DateTime?            @map("connected_at")
+  disconnectedAt             DateTime?            @map("disconnected_at")
+  lastCheckedAt              DateTime?            @map("last_checked_at")
+  lastErrorCode              String?              @map("last_error_code")
+  lastErrorMessage           String?              @map("last_error_message")
+  capabilities               ProviderCapability[]
+  createdAt                  DateTime             @default(now()) @map("created_at")
+  updatedAt                  DateTime             @updatedAt @map("updated_at")
+
+  @@index([workspaceId, ownerId])
+  @@index([provider, authStatus])
+  @@map("provider_connections")
+}
+
+model ProviderCapability {
+  id           String             @id @default(cuid())
+  connectionId String             @map("connection_id")
+  connection   ProviderConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  key          String
+  status       String             @default("unverified")
+  evidence     String?
+  verifiedAt   DateTime?          @map("verified_at")
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+
+  @@unique([connectionId, key])
+  @@index([key, status])
+  @@map("provider_capabilities")
+}
+
+model ExecutorPairing {
+  id              String    @id @default(cuid())
+  workspaceId     String    @map("workspace_id")
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  ownerId         String    @map("owner_id")
+  label           String
+  secretHash      String    @map("secret_hash")
+  status          String    @default("active")
+  executorVersion String?   @map("executor_version")
+  state           String    @default("offline")
+  lastSeenAt      DateTime? @map("last_seen_at")
+  lastSequence    BigInt    @default(0) @map("last_sequence")
+  snapshot        Json?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@index([workspaceId, ownerId])
+  @@index([status, lastSeenAt])
+  @@map("executor_pairings")
+}

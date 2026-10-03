@@ -1,0 +1,11 @@
+<!-- 10-contas. Em produção, colar este conteúdo em Authentication → Emails → Reset password. -->
+<div style="font-family: Inter, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #12141a;">
+  <p style="font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: #10b981; margin: 0;">LabIA</p>
+  <h1 style="font-size: 22px; margin: 8px 0 16px;">Redefina sua senha</h1>
+  <p style="font-size: 15px; line-height: 1.6;">Recebemos um pedido para criar uma nova senha. Clique no botão para escolher a nova senha:</p>
+  <p style="margin: 24px 0;">
+    <a href="{{ .SiteURL }}/redefinir-senha/confirmar?token_hash={{ .TokenHash }}"
+       style="background: #10b981; color: #0a0b0e; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Criar nova senha</a>
+  </p>
+  <p style="font-size: 13px; color: #5d6577;">O link vale 30 minutos e só funciona uma vez. Se você não pediu isso, ignore este e-mail: sua senha continua a mesma.</p>
+</div>

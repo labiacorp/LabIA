@@ -1,0 +1,31 @@
+# dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+tsconfig.tsbuildinfo
+
+# Prisma
+prisma/dev.db
+prisma/dev.db-journal
+
+# env
+.env*
+!.env.example
+
+# LabIA local provider sessions (OAuth/config managed by the local executor)
+.labia/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS/editor state
+.DS_Store
+Thumbs.db
+.obsidian/
+
+.vercel

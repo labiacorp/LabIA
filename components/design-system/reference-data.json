@@ -1,0 +1,928 @@
+{
+  "tokenGroups": [
+    {
+      "name": "Base",
+      "items": [
+        {
+          "name": "--lab-bg",
+          "hex": "#0A0B0E",
+          "value": "#0A0B0E",
+          "status": "MANTIDO",
+          "note": "Página e canvas",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-surface-1",
+          "hex": "#12141A",
+          "value": "#12141A",
+          "status": "MANTIDO",
+          "note": "Painéis, header, cards",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-surface-2",
+          "hex": "#1A1D26",
+          "value": "#1A1D26",
+          "status": "MANTIDO",
+          "note": "Nós, inputs, popovers",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-border",
+          "hex": "#262A35",
+          "value": "#262A35",
+          "status": "MANTIDO",
+          "note": "Linhas finas",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-border-strong",
+          "hex": "#343947",
+          "value": "#343947",
+          "status": "MANTIDO",
+          "note": "Hover, arestas, porta ociosa",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-text",
+          "hex": "#E9ECF2",
+          "value": "#E9ECF2",
+          "status": "MANTIDO",
+          "note": "Texto principal",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-text-dim",
+          "hex": "#9AA3B5",
+          "value": "#9AA3B5",
+          "status": "MANTIDO",
+          "note": "Texto secundário",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-text-muted",
+          "hex": "#7D869A",
+          "value": "#7D869A",
+          "status": "ALTERADO",
+          "note": "#5D6577 → #7D869A · AA ≥ 4,5:1",
+          "statusColor": "#FBBF24"
+        },
+        {
+          "name": "--lab-text-disabled",
+          "hex": "#5D6577",
+          "value": "#5D6577",
+          "status": "NOVO",
+          "note": "Só controles desabilitados",
+          "statusColor": "#38BDF8"
+        }
+      ]
+    },
+    {
+      "name": "Reagente",
+      "items": [
+        {
+          "name": "--lab-reagent",
+          "hex": "#10B981",
+          "value": "#10B981",
+          "status": "MANTIDO",
+          "note": "Fundo do CTA/Executar, foco, porta ativa",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-reagent-bright",
+          "hex": "#3DDFA6",
+          "value": "#3DDFA6",
+          "status": "MANTIDO",
+          "note": "Números de custo, \"IA\" · nunca fundo",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-reagent-dim",
+          "hex": "rgba(16,185,129,.12)",
+          "value": "rgba(16,185,129,.12)",
+          "status": "MANTIDO",
+          "note": "Fundo do chip de custo",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-reagent-line",
+          "hex": "rgba(16,185,129,.28)",
+          "value": "rgba(16,185,129,.28)",
+          "status": "NOVO",
+          "note": "Borda do chip de custo",
+          "statusColor": "#38BDF8"
+        },
+        {
+          "name": "--lab-on-reagent",
+          "hex": "#0A0B0E",
+          "value": "#0A0B0E",
+          "status": "NOVO",
+          "note": "Texto sobre reagente",
+          "statusColor": "#38BDF8"
+        }
+      ]
+    },
+    {
+      "name": "Semânticas + fundos tênues",
+      "items": [
+        {
+          "name": "--lab-success",
+          "hex": "#4ADE80",
+          "value": "#4ADE80",
+          "status": "MANTIDO",
+          "note": "Pronto, Conectado",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-warning",
+          "hex": "#FBBF24",
+          "value": "#FBBF24",
+          "status": "MANTIDO",
+          "note": "Em revisão, Expirado",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-danger",
+          "hex": "#FB7185",
+          "value": "#FB7185",
+          "status": "MANTIDO",
+          "note": "Erro",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-info",
+          "hex": "#38BDF8",
+          "value": "#38BDF8",
+          "status": "MANTIDO",
+          "note": "Rodando, contexto Projeto",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-*-dim",
+          "hex": "rgba(251,113,133,.10)",
+          "value": "4 tokens · 10%",
+          "status": "NOVO",
+          "note": "success/warning/danger/info a 10%",
+          "statusColor": "#38BDF8"
+        },
+        {
+          "name": "--lab-danger-line",
+          "hex": "rgba(251,113,133,.40)",
+          "value": "rgba(251,113,133,.40)",
+          "status": "NOVO",
+          "note": "Borda de erro (+ warning-line)",
+          "statusColor": "#38BDF8"
+        },
+        {
+          "name": "--lab-scrim",
+          "hex": "rgba(10,11,14,.80)",
+          "value": "rgba(10,11,14,.80)",
+          "status": "NOVO",
+          "note": "Fundo de modal e sheet",
+          "statusColor": "#38BDF8"
+        }
+      ]
+    },
+    {
+      "name": "Nó e contexto",
+      "items": [
+        {
+          "name": "--lab-node-image · ctx-create",
+          "hex": "#8B7CFF",
+          "value": "#8B7CFF",
+          "status": "MANTIDO",
+          "note": "Imagem · grupo Criar (alias NOVO)",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-node-video",
+          "hex": "#4DD8FF",
+          "value": "#4DD8FF",
+          "status": "MANTIDO",
+          "note": "Vídeo",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-node-copy · ctx-post",
+          "hex": "#FFC46B",
+          "value": "#FFC46B",
+          "status": "MANTIDO",
+          "note": "Copy · grupo Pós-produção (alias NOVO)",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-node-design · ctx-direction",
+          "hex": "#FF7AC6",
+          "value": "#FF7AC6",
+          "status": "MANTIDO",
+          "note": "Design · grupo Direção (alias NOVO)",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-ctx-project",
+          "hex": "#38BDF8",
+          "value": "#38BDF8",
+          "status": "NOVO",
+          "note": "Grupo Projeto (= info)",
+          "statusColor": "#38BDF8"
+        },
+        {
+          "name": "--lab-node-publish",
+          "hex": "#5EE38B",
+          "value": "#5EE38B",
+          "status": "MANTIDO",
+          "note": "Publicação",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-node-utility",
+          "hex": "#9AA3B5",
+          "value": "#9AA3B5",
+          "status": "MANTIDO",
+          "note": "Nota, Saída",
+          "statusColor": "#7D869A"
+        }
+      ]
+    },
+    {
+      "name": "Canvas",
+      "items": [
+        {
+          "name": "--lab-canvas-dot",
+          "hex": "#242833",
+          "value": "#242833",
+          "status": "ALTERADO",
+          "note": "#1B1E27 → #242833 · grade invisível",
+          "statusColor": "#FBBF24"
+        },
+        {
+          "name": "--lab-edge",
+          "hex": "#343947",
+          "value": "#343947",
+          "status": "MANTIDO",
+          "note": "Aresta",
+          "statusColor": "#7D869A"
+        },
+        {
+          "name": "--lab-edge-invalid",
+          "hex": "#FB7185",
+          "value": "#FB7185",
+          "status": "NOVO",
+          "note": "Aresta recusada, tracejada",
+          "statusColor": "#38BDF8"
+        },
+        {
+          "name": "--lab-phase-band",
+          "hex": "rgba(233,236,242,.018)",
+          "value": "rgba(233,236,242,.018)",
+          "status": "NOVO",
+          "note": "Bandas de fase",
+          "statusColor": "#38BDF8"
+        },
+        {
+          "name": "--lab-canvas-mask",
+          "hex": "rgba(10,11,14,.72)",
+          "value": "rgba(10,11,14,.72)",
+          "status": "MANTIDO",
+          "note": "Máscara do minimapa",
+          "statusColor": "#7D869A"
+        }
+      ]
+    }
+  ],
+  "zLayers": [
+    {
+      "label": "canvas",
+      "value": "z-canvas · 0"
+    },
+    {
+      "label": "controles do canvas",
+      "value": "z-canvas-ui · 10"
+    },
+    {
+      "label": "landing sticky",
+      "value": "z-landing · 30"
+    },
+    {
+      "label": "menus / popovers",
+      "value": "z-menu · 35"
+    },
+    {
+      "label": "header",
+      "value": "z-header · 40"
+    },
+    {
+      "label": "modal / sheet",
+      "value": "z-modal · 50"
+    },
+    {
+      "label": "toast",
+      "value": "z-toast · 60"
+    }
+  ],
+  "spaces": [
+    {
+      "n": 4,
+      "px": "4px"
+    },
+    {
+      "n": 8,
+      "px": "8px"
+    },
+    {
+      "n": 12,
+      "px": "12px"
+    },
+    {
+      "n": 16,
+      "px": "16px"
+    },
+    {
+      "n": 24,
+      "px": "24px"
+    },
+    {
+      "n": 32,
+      "px": "32px"
+    },
+    {
+      "n": 48,
+      "px": "48px"
+    },
+    {
+      "n": 64,
+      "px": "64px"
+    }
+  ],
+  "greenYes": [
+    {
+      "what": "Números de custo (chip, total, modal)",
+      "token": "reagent-bright",
+      "how": "texto mono"
+    },
+    {
+      "what": "Botão Executar / CTA primário (1 por área)",
+      "token": "reagent",
+      "how": "fundo + texto escuro"
+    },
+    {
+      "what": "Foco de teclado e nó selecionado",
+      "token": "reagent",
+      "how": "anel 1px + glow"
+    },
+    {
+      "what": "Nó rodando",
+      "token": "reagent",
+      "how": "borda + pulso"
+    },
+    {
+      "what": "Porta ativa (hover/conectando)",
+      "token": "reagent-bright",
+      "how": "preenchimento"
+    },
+    {
+      "what": "\"IA\" no wordmark",
+      "token": "reagent-bright",
+      "how": "texto"
+    }
+  ],
+  "greenNo": [
+    {
+      "what": "Ícone de card (Fluxo, Projeto)",
+      "use": "text-dim / acento de contexto"
+    },
+    {
+      "what": "Link comum (\"Abrir Projeto →\")",
+      "use": "text + sublinhado"
+    },
+    {
+      "what": "Filtro ativo",
+      "use": "surface-2 + border-strong"
+    },
+    {
+      "what": "Metadado (duração 5s, formato)",
+      "use": "text-dim mono"
+    },
+    {
+      "what": "Status Pronto / Conectado",
+      "use": "success (#4ADE80) só no ponto"
+    },
+    {
+      "what": "Botão Criar no header",
+      "use": "secondary com border-strong"
+    },
+    {
+      "what": "Eyebrow / rótulo técnico",
+      "use": "text-muted mono"
+    },
+    {
+      "what": "Hover do CTA",
+      "use": "reagent/90 · nunca bright como fundo"
+    }
+  ],
+  "typeScale": [
+    {
+      "name": "display",
+      "spec": "Space Grotesk 700 · 64/64 · -0.03em · landing",
+      "family": "'Space Grotesk'",
+      "size": "64px",
+      "lh": "64px",
+      "weight": 700,
+      "track": "-0.03em",
+      "tt": "none",
+      "sample": "Custo na cara.",
+      "color": "#E9ECF2"
+    },
+    {
+      "name": "h1-lg",
+      "spec": "Space Grotesk 700 · 40/48 · -0.02em",
+      "family": "'Space Grotesk'",
+      "size": "40px",
+      "lh": "48px",
+      "weight": 700,
+      "track": "-0.02em",
+      "tt": "none",
+      "sample": "O que você quer criar?",
+      "color": "#E9ECF2"
+    },
+    {
+      "name": "h1",
+      "spec": "Space Grotesk 700 · 32/40 · -0.02em",
+      "family": "'Space Grotesk'",
+      "size": "32px",
+      "lh": "40px",
+      "weight": 700,
+      "track": "-0.02em",
+      "tt": "none",
+      "sample": "Bento · lançamento",
+      "color": "#E9ECF2"
+    },
+    {
+      "name": "h2",
+      "spec": "Space Grotesk 500 · 24/32 · -0.01em",
+      "family": "'Space Grotesk'",
+      "size": "24px",
+      "lh": "32px",
+      "weight": 500,
+      "track": "-0.01em",
+      "tt": "none",
+      "sample": "Fontes e referências",
+      "color": "#E9ECF2"
+    },
+    {
+      "name": "h3",
+      "spec": "Space Grotesk 500 · 18/24",
+      "family": "'Space Grotesk'",
+      "size": "18px",
+      "lh": "24px",
+      "weight": 500,
+      "track": "0",
+      "tt": "none",
+      "sample": "Confirmar custo do fluxo",
+      "color": "#E9ECF2"
+    },
+    {
+      "name": "body",
+      "spec": "Inter 400 · 16/24",
+      "family": "Inter",
+      "size": "16px",
+      "lh": "24px",
+      "weight": 400,
+      "track": "0",
+      "tt": "none",
+      "sample": "Uma imagem do produto vira um vídeo curto de 5s.",
+      "color": "#E9ECF2"
+    },
+    {
+      "name": "body-sm",
+      "spec": "Inter 400/500 · 14/20 · padrão de UI",
+      "family": "Inter",
+      "size": "14px",
+      "lh": "20px",
+      "weight": 400,
+      "track": "0",
+      "tt": "none",
+      "sample": "Conecte uma imagem-base para animar.",
+      "color": "#E9ECF2"
+    },
+    {
+      "name": "caption",
+      "spec": "Inter 400 · 12/16",
+      "family": "Inter",
+      "size": "12px",
+      "lh": "16px",
+      "weight": 400,
+      "track": "0",
+      "tt": "none",
+      "sample": "Bento · há 2 h · 9:16",
+      "color": "#9AA3B5"
+    },
+    {
+      "name": "eyebrow",
+      "spec": "JetBrains Mono 500 · 11/16 · +0.08em · CAIXA ALTA",
+      "family": "'JetBrains Mono'",
+      "size": "11px",
+      "lh": "16px",
+      "weight": 500,
+      "track": "0.08em",
+      "tt": "uppercase",
+      "sample": "animar imagem · modelo",
+      "color": "#7D869A"
+    },
+    {
+      "name": "mono / prompt",
+      "spec": "JetBrains Mono 400 · 12/20",
+      "family": "'JetBrains Mono'",
+      "size": "12px",
+      "lh": "20px",
+      "weight": 400,
+      "track": "0",
+      "tt": "none",
+      "sample": "câmera desce devagar, luz lateral fria",
+      "color": "#E9ECF2"
+    },
+    {
+      "name": "cost-lg",
+      "spec": "JetBrains Mono 600 · 28/32",
+      "family": "'JetBrains Mono'",
+      "size": "28px",
+      "lh": "32px",
+      "weight": 600,
+      "track": "0",
+      "tt": "none",
+      "sample": "~R$2,07",
+      "color": "#3DDFA6"
+    }
+  ],
+  "statuses": [
+    {
+      "label": "Rascunho",
+      "dot": "#7D869A",
+      "border": "#262A35",
+      "bg": "transparent",
+      "fg": "#9AA3B5"
+    },
+    {
+      "label": "Em andamento",
+      "dot": "#38BDF8",
+      "border": "rgba(56,189,248,.3)",
+      "bg": "rgba(56,189,248,.1)",
+      "fg": "#E9ECF2"
+    },
+    {
+      "label": "Rodando",
+      "dot": "#38BDF8",
+      "border": "rgba(56,189,248,.3)",
+      "bg": "rgba(56,189,248,.1)",
+      "fg": "#E9ECF2"
+    },
+    {
+      "label": "Em revisão",
+      "dot": "#FBBF24",
+      "border": "rgba(251,191,36,.4)",
+      "bg": "rgba(251,191,36,.1)",
+      "fg": "#E9ECF2"
+    },
+    {
+      "label": "Aprovado",
+      "dot": "#4ADE80",
+      "border": "rgba(74,222,128,.3)",
+      "bg": "rgba(74,222,128,.1)",
+      "fg": "#E9ECF2"
+    },
+    {
+      "label": "Pronto",
+      "dot": "#4ADE80",
+      "border": "rgba(74,222,128,.3)",
+      "bg": "rgba(74,222,128,.1)",
+      "fg": "#E9ECF2"
+    },
+    {
+      "label": "Erro",
+      "dot": "#FB7185",
+      "border": "rgba(251,113,133,.4)",
+      "bg": "rgba(251,113,133,.1)",
+      "fg": "#E9ECF2"
+    },
+    {
+      "label": "Arquivado",
+      "dot": "#343947",
+      "border": "#262A35",
+      "bg": "transparent",
+      "fg": "#7D869A"
+    }
+  ],
+  "nodeStates": [
+    {
+      "accent": "#4DD8FF",
+      "icon": "icon-clapperboard",
+      "title": "Pote girando",
+      "kind": "animar imagem",
+      "borderStyle": "solid",
+      "shadow": "none",
+      "anim": "none",
+      "bodyOpacity": 1,
+      "media": "#12141A",
+      "mediaBorder": "dashed",
+      "mediaLabel": "resultado aparece aqui",
+      "portIn": "#343947",
+      "portOut": "#343947",
+      "running": false,
+      "blocked": false,
+      "error": false,
+      "chipBorder": "rgba(16,185,129,.28)",
+      "chipBorderStyle": "solid",
+      "chipBg": "rgba(16,185,129,.12)",
+      "chipFg": "#3DDFA6",
+      "stateLabel": "Ocioso",
+      "border": "#262A35",
+      "cost": "~R$1,93",
+      "note": "Borda padrão. Porta neutra (verde só ao conectar)."
+    },
+    {
+      "accent": "#4DD8FF",
+      "icon": "icon-clapperboard",
+      "title": "Pote girando",
+      "kind": "animar imagem",
+      "borderStyle": "solid",
+      "shadow": "0 0 0 1px #10B981,0 0 24px rgba(16,185,129,.12)",
+      "anim": "none",
+      "bodyOpacity": 1,
+      "media": "#12141A",
+      "mediaBorder": "dashed",
+      "mediaLabel": "resultado aparece aqui",
+      "portIn": "#343947",
+      "portOut": "#3DDFA6",
+      "running": false,
+      "blocked": false,
+      "error": false,
+      "chipBorder": "rgba(16,185,129,.28)",
+      "chipBorderStyle": "solid",
+      "chipBg": "rgba(16,185,129,.12)",
+      "chipFg": "#3DDFA6",
+      "stateLabel": "Selecionado",
+      "border": "#10B981",
+      "cost": "~R$1,93",
+      "note": "Seleção = foco: anel reagente."
+    },
+    {
+      "accent": "#4DD8FF",
+      "icon": "icon-clapperboard",
+      "title": "Pote girando",
+      "kind": "animar imagem",
+      "borderStyle": "solid",
+      "shadow": "none",
+      "anim": "labpulse 1.6s ease-in-out infinite",
+      "bodyOpacity": 1,
+      "media": "#12141A",
+      "mediaBorder": "dashed",
+      "mediaLabel": "gerando…",
+      "portIn": "#343947",
+      "portOut": "#343947",
+      "running": true,
+      "blocked": false,
+      "error": false,
+      "chipBorder": "rgba(16,185,129,.28)",
+      "chipBorderStyle": "solid",
+      "chipBg": "rgba(16,185,129,.12)",
+      "chipFg": "#3DDFA6",
+      "stateLabel": "Rodando",
+      "border": "#10B981",
+      "cost": "~R$1,93",
+      "note": "Pulso 1600ms + barra e cronômetro. Arestas de entrada animam no tom do tipo."
+    },
+    {
+      "accent": "#4DD8FF",
+      "icon": "icon-clapperboard",
+      "title": "Pote girando",
+      "kind": "animar imagem",
+      "borderStyle": "solid",
+      "shadow": "none",
+      "anim": "none",
+      "bodyOpacity": 1,
+      "media": "repeating-linear-gradient(135deg,#1A1D26 0 8px,#12141A 8px 16px)",
+      "mediaBorder": "solid",
+      "mediaLabel": "miniatura do vídeo · 5s",
+      "portIn": "#343947",
+      "portOut": "#343947",
+      "running": false,
+      "blocked": false,
+      "error": false,
+      "chipBorder": "rgba(16,185,129,.28)",
+      "chipBorderStyle": "solid",
+      "chipBg": "rgba(16,185,129,.12)",
+      "chipFg": "#3DDFA6",
+      "stateLabel": "Pronto",
+      "border": "#343947",
+      "cost": "R$1,87 ✓",
+      "note": "Custo real ✓ + miniatura. Borda forte, sem verde."
+    },
+    {
+      "accent": "#4DD8FF",
+      "icon": "icon-clapperboard",
+      "title": "Pote girando",
+      "kind": "animar imagem",
+      "borderStyle": "solid",
+      "shadow": "0 0 0 1px #FB7185,0 0 24px rgba(251,113,133,.1)",
+      "anim": "none",
+      "bodyOpacity": 1,
+      "media": "#12141A",
+      "mediaBorder": "dashed",
+      "mediaLabel": "resultado aparece aqui",
+      "portIn": "#343947",
+      "portOut": "#343947",
+      "running": false,
+      "blocked": false,
+      "error": true,
+      "chipBorder": "rgba(16,185,129,.28)",
+      "chipBorderStyle": "solid",
+      "chipBg": "rgba(16,185,129,.12)",
+      "chipFg": "#3DDFA6",
+      "stateLabel": "Erro",
+      "border": "#FB7185",
+      "cost": "R$0,00 ✓",
+      "note": "Mensagem curta em PT-BR + Tentar de novo. Custo real informado."
+    },
+    {
+      "accent": "#4DD8FF",
+      "icon": "icon-clapperboard",
+      "title": "Pote girando",
+      "kind": "animar imagem",
+      "borderStyle": "dashed",
+      "shadow": "none",
+      "anim": "none",
+      "bodyOpacity": 0.72,
+      "media": "#12141A",
+      "mediaBorder": "dashed",
+      "mediaLabel": "sem entrada",
+      "portIn": "#343947",
+      "portOut": "#343947",
+      "running": false,
+      "blocked": true,
+      "error": false,
+      "chipBorder": "#343947",
+      "chipBorderStyle": "dashed",
+      "chipBg": "transparent",
+      "chipFg": "#9AA3B5",
+      "stateLabel": "Bloqueado / aguardando",
+      "border": "#343947",
+      "cost": "A calcular",
+      "note": "Tracejado + motivo. Custo desconhecido = A calcular."
+    }
+  ],
+  "menuGroups": [
+    {
+      "name": "Projeto",
+      "color": "#38BDF8",
+      "items": [
+        {
+          "name": "Imagem-base do Projeto",
+          "icon": "icon-image",
+          "cost": "R$0,00",
+          "bg": "transparent",
+          "fg": "#E9ECF2",
+          "costColor": "#3DDFA6"
+        },
+        {
+          "name": "Referência visual",
+          "icon": "icon-images",
+          "cost": "R$0,00",
+          "bg": "transparent",
+          "fg": "#E9ECF2",
+          "costColor": "#3DDFA6"
+        }
+      ]
+    },
+    {
+      "name": "Criar",
+      "color": "#8B7CFF",
+      "items": [
+        {
+          "name": "Prompt",
+          "icon": "icon-message-square-text",
+          "cost": "R$0,00",
+          "bg": "transparent",
+          "fg": "#E9ECF2",
+          "costColor": "#3DDFA6"
+        },
+        {
+          "name": "Gerar imagem",
+          "icon": "icon-wand-sparkles",
+          "cost": "~R$0,14",
+          "bg": "#1A1D26",
+          "fg": "#E9ECF2",
+          "costColor": "#3DDFA6"
+        },
+        {
+          "name": "Animar imagem",
+          "icon": "icon-clapperboard",
+          "cost": "~R$1,93",
+          "bg": "transparent",
+          "fg": "#E9ECF2",
+          "costColor": "#3DDFA6"
+        }
+      ]
+    },
+    {
+      "name": "Pós-produção",
+      "color": "#FFC46B",
+      "items": [
+        {
+          "name": "Continuar clipe",
+          "icon": "icon-fast-forward",
+          "cost": "~R$1,93",
+          "bg": "transparent",
+          "fg": "#E9ECF2",
+          "costColor": "#3DDFA6"
+        },
+        {
+          "name": "Juntar clipes",
+          "icon": "icon-film",
+          "cost": "R$0,00",
+          "bg": "transparent",
+          "fg": "#E9ECF2",
+          "costColor": "#3DDFA6"
+        }
+      ]
+    },
+    {
+      "name": "Direção",
+      "color": "#FF7AC6",
+      "items": [
+        {
+          "name": "Production Director · indisponível",
+          "icon": "icon-compass",
+          "cost": "A calcular",
+          "bg": "transparent",
+          "fg": "#7D869A",
+          "costColor": "#9AA3B5"
+        }
+      ]
+    }
+  ],
+  "modalItems": [
+    {
+      "label": "Gerar imagem · pote no balcão",
+      "kind": "Gerar imagem · FLUX Dev",
+      "cost": "~R$0,14",
+      "color": "#8B7CFF",
+      "costColor": "#3DDFA6"
+    },
+    {
+      "label": "Pote girando",
+      "kind": "Animar imagem · Kling 2.5 · 5s",
+      "cost": "~R$1,93",
+      "color": "#4DD8FF",
+      "costColor": "#3DDFA6"
+    },
+    {
+      "label": "Imagem-base do Projeto",
+      "kind": "Entrada do Projeto",
+      "cost": "R$0,00",
+      "color": "#38BDF8",
+      "costColor": "#3DDFA6"
+    }
+  ],
+  "alerts": [
+    {
+      "icon": "icon-circle-check",
+      "color": "#4ADE80",
+      "border": "#262A35",
+      "bg": "#1A1D26",
+      "title": "Fluxo concluído",
+      "body": "3 nós prontos. Resultado salvo no Projeto Bento.",
+      "meta": "R$2,01 ✓",
+      "metaColor": "#3DDFA6"
+    },
+    {
+      "icon": "icon-triangle-alert",
+      "color": "#FBBF24",
+      "border": "rgba(251,191,36,.4)",
+      "bg": "rgba(251,191,36,.1)",
+      "title": "Conexão ChatGPT expirou",
+      "body": "Reconecte para usar Gerar imagem via ChatGPT.",
+      "meta": "",
+      "metaColor": "#9AA3B5"
+    },
+    {
+      "icon": "icon-circle-x",
+      "color": "#FB7185",
+      "border": "rgba(251,113,133,.4)",
+      "bg": "rgba(251,113,133,.1)",
+      "title": "Não foi possível salvar",
+      "body": "Suas alterações continuam aqui. Tentaremos de novo em 10s.",
+      "meta": "",
+      "metaColor": "#9AA3B5"
+    },
+    {
+      "icon": "icon-info",
+      "color": "#38BDF8",
+      "border": "#262A35",
+      "bg": "#1A1D26",
+      "title": "Executor local offline",
+      "body": "Execuções ficam na fila até o executor voltar.",
+      "meta": "",
+      "metaColor": "#9AA3B5"
+    }
+  ]
+}
