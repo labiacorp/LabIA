@@ -16,6 +16,7 @@ enum ContentStatus {
 }
 
 enum StepKind {
+  CHARACTER
   SCRIPT
   IMAGE
   VIDEO
@@ -38,6 +39,14 @@ enum AssetKind {
   AUDIO
 }
 
+// What a generated image is for in the character kit.
+enum AssetRole {
+  SHEET
+  FRONT
+  PROFILE
+  DETAIL
+}
+
 enum LedgerReason {
   TOPUP
   SPEND
@@ -45,11 +54,11 @@ enum LedgerReason {
 }
 
 model User {
-  id          String       @id @default(cuid())
-  email       String       @unique
+  id          String        @id @default(cuid())
+  email       String        @unique
   name        String?
   image       String?
-  createdAt   DateTime     @default(now()) @map("created_at")
+  createdAt   DateTime      @default(now()) @map("created_at")
   influencers Influencer[]
   assets      Asset[]
   ledger      LedgerEntry[]
@@ -59,18 +68,21 @@ model User {
 
 // The recurring character: face reference, niche and tone. Every Content belongs to one.
 model Influencer {
-  id          String    @id @default(cuid())
-  userId      String    @map("user_id")
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String
-  niche       String
-  tone        String
-  persona     String    @default("")
-  faceAssetId String?   @map("face_asset_id")
-  contents    Content[]
-  assets      Asset[]
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  niche           String
+  tone            String
+  persona         String    @default("")
+  // What the character always looks like (hair, accessories, outfit). Feeds every prompt.
+  visualSignature String    @default("") @map("visual_signature")
+  faceAssetId     String?   @map("face_asset_id")
+  contents        Content[]
+  steps           Step[]
+  assets          Asset[]
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   @@index([userId, updatedAt])
   @@map("influencers")
@@ -96,25 +108,35 @@ model Content {
 
 // One paid or free action in the pipeline. Cost is quoted before and recorded after.
 model Step {
-  id               String     @id @default(cuid())
-  contentId        String     @map("content_id")
-  content          Content    @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  id               String        @id @default(cuid())
+  // Content steps have a content; character-kit steps (kind CHARACTER) have an influencer instead.
+  contentId        String?       @map("content_id")
+  content          Content?      @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  influencerId     String?       @map("influencer_id")
+  influencer       Influencer?   @relation(fields: [influencerId], references: [id], onDelete: Cascade)
   kind             StepKind
+  role             AssetRole?
   position         Int
-  status           StepStatus @default(PENDING)
+  status           StepStatus    @default(PENDING)
+  provider         String        @default("fal")
+  // Idempotency: one operation key per intent, so a double submit never charges or sends twice.
+  operationKey     String?       @unique @map("operation_key")
+  // not_submitted -> submitting -> submitted | submission_unknown (never resent automatically).
+  submissionState  String        @default("not_submitted") @map("submission_state")
   model            String?
-  input            Json       @default("{}")
-  falRequestId     String?    @unique @map("fal_request_id")
-  estimatedCostBrl Decimal?   @map("estimated_cost_brl") @db.Decimal(12, 4)
-  actualCostBrl    Decimal?   @map("actual_cost_brl") @db.Decimal(12, 4)
+  input            Json          @default("{}")
+  falRequestId     String?       @unique @map("fal_request_id")
+  estimatedCostBrl Decimal?      @map("estimated_cost_brl") @db.Decimal(12, 4)
+  actualCostBrl    Decimal?      @map("actual_cost_brl") @db.Decimal(12, 4)
   error            String?
   assets           Asset[]
   ledger           LedgerEntry[]
-  createdAt        DateTime   @default(now()) @map("created_at")
-  startedAt        DateTime?  @map("started_at")
-  completedAt      DateTime?  @map("completed_at")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  startedAt        DateTime?     @map("started_at")
+  completedAt      DateTime?     @map("completed_at")
 
   @@unique([contentId, position])
+  @@index([influencerId, createdAt])
   @@map("steps")
 }
 
@@ -129,6 +151,7 @@ model Asset {
   stepId       String?     @map("step_id")
   step         Step?       @relation(fields: [stepId], references: [id], onDelete: SetNull)
   kind         AssetKind
+  role         AssetRole?
   url          String
   width        Int?
   height       Int?
@@ -154,4 +177,14 @@ model LedgerEntry {
 
   @@index([userId, createdAt])
   @@map("ledger_entries")
+}
+
+// Sliding-window counters for anonymous forms (access code). Denied hits are not recorded.
+model RateLimitEvent {
+  id        BigInt   @id @default(autoincrement())
+  key       String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([key, createdAt])
+  @@map("rate_limit_events")
 }

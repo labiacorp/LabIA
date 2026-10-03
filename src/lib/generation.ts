@@ -1,0 +1,154 @@
+import { Prisma } from "@/generated/prisma/client";
+import type { AssetRole } from "@/generated/prisma/enums";
+import { getProvider } from "@/lib/provider";
+import { prisma } from "@/lib/prisma";
+import type { GenParams, GenerationResult } from "@/lib/providers/model-provider";
+
+// Money path for character-kit steps. Design ported from the V1 coordinator:
+//  - one operationKey per intent, so a double submit never charges or sends twice;
+//  - submission state: not_submitted -> submitting -> submitted | submission_unknown;
+//  - an ambiguous submit is NEVER resent automatically (the reservation stays until someone reconciles).
+// Unlike V1 nothing blocks waiting for fal: submit now, collect later (serverless friendly).
+
+export class UserError extends Error {}
+
+export type PlanItem = { role: AssetRole; model: string; params: GenParams };
+export type Quote = { items: (PlanItem & { costBrl: number })[]; totalBrl: number };
+
+const round4 = (value: number) => Math.round(value * 10000) / 10000;
+const MAX_POLL_ERRORS = 3;
+
+export function quote(plan: PlanItem[]): Quote {
+  const provider = getProvider();
+  const items = plan.map((item) => ({ ...item, costBrl: round4(provider.estimateCost(item.model, item.params).brl) }));
+  return { items, totalBrl: round4(items.reduce((sum, item) => sum + item.costBrl, 0)) };
+}
+
+type Created = { id: string; model: string; params: GenParams };
+
+export async function startPlan(input: { userId: string; influencerId: string; intentId: string; plan: PlanItem[]; expectedBrl: number }) {
+  const provider = getProvider(); // fails before any debit when fal is not configured
+  const priced = quote(input.plan);
+  if (Math.abs(priced.totalBrl - input.expectedBrl) > 0.005) {
+    throw new UserError(`O preço mudou de R$ ${input.expectedBrl.toFixed(2)} para R$ ${priced.totalBrl.toFixed(2)}. Revise e confirme de novo.`);
+  }
+
+  let created: Created[];
+  try {
+    created = await prisma.$transaction(async (tx) => {
+      // Serialize spends per user so two requests cannot both pass the balance check.
+      await tx.$queryRaw`SELECT id FROM users WHERE id = ${input.userId} FOR UPDATE`;
+      const keys = priced.items.map((item) => `${input.intentId}:${item.role}`);
+      if ((await tx.step.count({ where: { operationKey: { in: keys } } })) > 0) return []; // same intent again: nothing to do
+      const { _sum } = await tx.ledgerEntry.aggregate({ where: { userId: input.userId }, _sum: { deltaBrl: true } });
+      const balance = Number(_sum.deltaBrl?.toString() ?? 0);
+      if (balance + 1e-9 < priced.totalBrl) {
+        throw new UserError(`Saldo insuficiente: você tem R$ ${balance.toFixed(2)} e precisa de R$ ${priced.totalBrl.toFixed(2)}.`);
+      }
+      const rows: Created[] = [];
+      for (const [index, item] of priced.items.entries()) {
+        const step = await tx.step.create({
+          data: {
+            influencerId: input.influencerId,
+            kind: "CHARACTER",
+            role: item.role,
+            position: index,
+            status: "RUNNING",
+            provider: provider.id,
+            model: item.model,
+            input: item.params as Prisma.InputJsonValue,
+            operationKey: `${input.intentId}:${item.role}`,
+            estimatedCostBrl: item.costBrl,
+          },
+        });
+        await tx.ledgerEntry.create({ data: { userId: input.userId, deltaBrl: -item.costBrl, reason: "SPEND", stepId: step.id, note: `Reserva: ${item.role}` } });
+        rows.push({ id: step.id, model: item.model, params: item.params });
+      }
+      return rows;
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") return { started: 0 }; // lost a race on the same intent
+    throw error;
+  }
+
+  for (const step of created) await submit(step);
+  return { started: created.length };
+}
+
+async function submit(step: Created) {
+  const claimed = await prisma.step.updateMany({ where: { id: step.id, submissionState: "not_submitted" }, data: { submissionState: "submitting", startedAt: new Date() } });
+  if (claimed.count !== 1) return;
+  try {
+    const handle = await getProvider().generate(step.model, step.params);
+    await prisma.step.update({ where: { id: step.id }, data: { submissionState: "submitted", falRequestId: handle.id } });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    // We cannot know whether fal accepted it: keep the reservation, never resend, flag for reconciliation.
+    await prisma.step.update({
+      where: { id: step.id },
+      data: { submissionState: "submission_unknown", status: "FAILED", completedAt: new Date(), error: `Envio incerto (${message}). O valor ficou reservado e nada será reenviado sozinho.` },
+    });
+  }
+}
+
+type RunningStep = Prisma.StepGetPayload<Record<string, never>>;
+
+async function refund(step: RunningStep, message: string) {
+  await prisma.$transaction(async (tx) => {
+    const claimed = await tx.step.updateMany({ where: { id: step.id, status: "RUNNING" }, data: { status: "FAILED", completedAt: new Date(), error: message } });
+    if (claimed.count !== 1) return;
+    const estimated = Number(step.estimatedCostBrl?.toString() ?? 0);
+    const owner = await tx.influencer.findUniqueOrThrow({ where: { id: step.influencerId! }, select: { userId: true } });
+    if (estimated > 0) await tx.ledgerEntry.create({ data: { userId: owner.userId, deltaBrl: estimated, reason: "REFUND", stepId: step.id, note: "Estorno: geração falhou" } });
+  });
+}
+
+async function complete(step: RunningStep, result: GenerationResult) {
+  const actual = round4(result.cost.brl);
+  await prisma.$transaction(async (tx) => {
+    const claimed = await tx.step.updateMany({
+      where: { id: step.id, status: "RUNNING" },
+      data: { status: "DONE", submissionState: "completed", completedAt: new Date(), actualCostBrl: actual, error: null },
+    });
+    if (claimed.count !== 1) return; // another poll got here first
+    const owner = await tx.influencer.findUniqueOrThrow({ where: { id: step.influencerId! }, select: { userId: true } });
+    let faceAssetId: string | null = null;
+    for (const image of result.images) {
+      const asset = await tx.asset.create({
+        data: { userId: owner.userId, influencerId: step.influencerId, stepId: step.id, kind: "IMAGE", role: step.role, url: image.url, width: image.width, height: image.height },
+      });
+      if (step.role === "FRONT") faceAssetId = asset.id;
+    }
+    if (faceAssetId) await tx.influencer.update({ where: { id: step.influencerId! }, data: { faceAssetId } });
+    const diff = round4(Number(step.estimatedCostBrl?.toString() ?? 0) - actual);
+    if (Math.abs(diff) > 0.0001) {
+      await tx.ledgerEntry.create({ data: { userId: owner.userId, deltaBrl: diff, reason: diff > 0 ? "REFUND" : "SPEND", stepId: step.id, note: "Ajuste para o custo real" } });
+    }
+  });
+}
+
+// Looks at every running step of an influencer once. Safe to call concurrently (all writes are guarded by status).
+export async function collectRunning(userId: string, influencerId: string) {
+  const owned = await prisma.influencer.findFirst({ where: { id: influencerId, userId }, select: { id: true } });
+  if (!owned) return { running: 0 };
+  const provider = getProvider();
+  const steps = await prisma.step.findMany({ where: { influencerId, kind: "CHARACTER", status: "RUNNING", submissionState: "submitted", falRequestId: { not: null } } });
+
+  await Promise.all(steps.map(async (step) => {
+    const params = step.input as GenParams;
+    const handle = { id: step.falRequestId!, provider: provider.id, model: step.model! };
+    try {
+      const outcome = await provider.checkResult(handle, params);
+      if (outcome.state === "done") await complete(step, outcome.result);
+    } catch (error) {
+      // A throw can be a failed job or just a network blip: only give up (and refund) after repeated errors.
+      const message = error instanceof Error ? error.message : String(error);
+      const previous = Number(/^poll:(\d+):/.exec(step.error ?? "")?.[1] ?? 0);
+      if (previous + 1 >= MAX_POLL_ERRORS) await refund(step, `A geração falhou: ${message}`);
+      else await prisma.step.update({ where: { id: step.id }, data: { error: `poll:${previous + 1}:${message}` } });
+    }
+  }));
+
+  const running = await prisma.step.count({ where: { influencerId, kind: "CHARACTER", status: "RUNNING" } });
+  return { running };
+}

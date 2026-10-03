@@ -12,23 +12,37 @@ Next.js 16 (App Router, Server Actions) + TypeScript + Tailwind 4 (legacy `tailw
 
 ## Screens (`src/app`)
 
-`/login`, `/` (influencers), `/influencers/new`, `/i/[id]` (tabs: Conteúdos, Biblioteca, Perfil), `/i/[id]/c/[contentId]` (the pipeline, one card per step).
+`/acesso` (shared access code), `/login`, `/` (influencers), `/influencers/new`, `/i/[id]` (tabs: Conteúdos, Personagem, Biblioteca, Perfil), `/i/[id]/c/[contentId]` (the pipeline, one card per step). API: `POST /api/influencers/[id]/refresh` (polls running jobs), `/api/auth/*`.
+
+## How generation works (`src/lib/generation.ts`)
+
+Character kit = step 1 sheet (nano-banana-2, 2K, 3:2) then step 2 portraits front/profile/detail (nano-banana-2/edit, 1K, using the approved sheet as reference). Rules, ported from the V1 coordinator:
+- the price is quoted by the V1 provider layer (`src/lib/providers/`, copied from `main`), shown in R$, and sent back with the approval; a changed price charges nothing;
+- one `operationKey` per intent: a double submit or parallel requests never charge or send twice;
+- the ledger reserves the price in the same transaction that creates the step (row lock per user, so no overspend); refund on failure;
+- submit state `not_submitted -> submitting -> submitted | submission_unknown`; an ambiguous submit is never resent and keeps the reservation (`npx tsx scripts/ledger.ts refund <stepId>` reconciles);
+- no worker: the page polls `/api/influencers/[id]/refresh`, which checks fal once per running step; any error counts and only the third one fails the step and refunds.
+- `FAL_MOCK=1` (dev/test only, ignored in production) swaps fal for a fake provider with real prices; prompt markers `[mock-fail]` and `[mock-submit-error]` simulate failures.
+
+## Access
+
+`LABIA_ACCESS_CODE` + `AUTH_SECRET` gate sign-in (signed cookie, 8 tries/10 min/IP in Postgres, fails closed in production when unset); the check also runs in the Auth.js `signIn` callback. `ALLOWED_EMAILS` is an optional extra restriction.
 
 ## Data (`prisma/schema.prisma`)
 
-User, Influencer, Content, Step, Asset, LedgerEntry. Balance is the sum of `LedgerEntry.deltaBrl`; top-ups are manual.
+User, Influencer (with `visualSignature`), Content, Step (`kind CHARACTER` belongs to an influencer; `operationKey`, `submissionState`), Asset (`role` SHEET/FRONT/PROFILE/DETAIL), LedgerEntry, RateLimitEvent. Balance = sum of `LedgerEntry.deltaBrl`; top-ups are manual: `npx tsx scripts/ledger.ts topup <email> <brl>`.
 
 ## Not built yet
 
-- Generation: nothing calls fal.ai yet. Plan: `fal.queue.submit` with `webhookUrl`, result received on a route that verifies the ED25519 signature and is idempotent. No worker.
-- Cost quote and confirmation per step; ledger spend/refund.
-- Face reference upload (Vercel Blob), library content, voice, final assembly (`fal-ai/ffmpeg-api/merge-videos`).
-- Payments, terms and privacy text, CI, Vercel project/env for v2.
+- A real generation has never run from v2 (only the fake provider). First one needs the R$ estimate shown and the owner's ok; `FAL_KEY` is set locally and on Vercel; fal media URLs are stored as returned (copy to Vercel Blob later; the `/edit` price is assumed equal to the base model until confirmed).
+- Audio upload, voice and lip sync, the 3x5s video chain, final assembly (V1 has `video-extend`, `video-assembly`, audio upload to port).
+- Content steps (script, image, video) are only displayed, not runnable.
+- Canvas (planned as a second view of the same steps), library filters, MCP, payments, terms and privacy text, CI, Vercel env for v2.
 
 ## Environment
 
-Listed in `.env.example`. `DIRECT_URL` (unpooled) is used by Prisma migrations, `DATABASE_URL` (pooled) by the app. Dev-only e-mail login exists when `NODE_ENV=development` and is never registered in a production build. Old fal.ai model catalog and pricing worth reusing: `git show main:lib/providers/fal-models.ts`.
+Listed in `.env.example`. `DIRECT_URL` (unpooled) is used by Prisma migrations, `DATABASE_URL` (pooled) by the app. Dev-only e-mail login exists when `NODE_ENV=development`.
 
 ## Run and check
 
-`npm run dev`, `npm run typecheck`, `npm run build`. No tests yet.
+`npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (18 tests; the money-path ones run against the database with their own seeded user, deleted afterwards), `npm run build`.

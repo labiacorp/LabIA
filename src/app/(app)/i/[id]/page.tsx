@@ -7,11 +7,13 @@ import { Field, Input, Textarea } from "@/components/ui/field";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/session";
 import { createContent } from "../../actions";
+import { CharacterTab } from "./personagem/character-tab";
 
 export const dynamic = "force-dynamic";
 
 const tabs = [
   { key: "conteudos", label: "Conteúdos" },
+  { key: "personagem", label: "Personagem" },
   { key: "biblioteca", label: "Biblioteca" },
   { key: "perfil", label: "Perfil" },
 ] as const;
@@ -19,9 +21,11 @@ const tabs = [
 export default async function InfluencerPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ aba?: string }> }) {
   const userId = await requireUserId();
   const { id } = await params;
-  const aba = (await searchParams).aba ?? "conteudos";
   const influencer = await prisma.influencer.findFirst({ where: { id, userId } });
   if (!influencer) notFound();
+  // A new influencer lands on the character tab until it has a face.
+  const hasFace = !!influencer.faceAssetId;
+  const aba = (await searchParams).aba ?? (hasFace ? "conteudos" : "personagem");
 
   return (
     <div className="grid gap-6">
@@ -35,7 +39,7 @@ export default async function InfluencerPage({ params, searchParams }: { params:
           <Link key={tab.key} href={`/i/${id}?aba=${tab.key}`} aria-current={aba === tab.key ? "page" : undefined} className={`flex h-8 items-center rounded-control px-3 text-body-sm font-medium transition-colors ${aba === tab.key ? "bg-lab-surface-2 text-lab-text" : "text-lab-text-dim hover:bg-lab-surface-2 hover:text-lab-text"}`}>{tab.label}</Link>
         ))}
       </nav>
-      {aba === "biblioteca" ? <Library influencerId={id} /> : aba === "perfil" ? <Profile persona={influencer.persona} /> : <Contents influencerId={id} />}
+      {aba === "personagem" ? <CharacterTab influencerId={id} userId={userId} /> : aba === "biblioteca" ? <Library influencerId={id} /> : aba === "perfil" ? <Profile persona={influencer.persona} /> : <Contents influencerId={id} />}
     </div>
   );
 }

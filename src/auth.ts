@@ -2,6 +2,7 @@ import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 
+import { hasPass } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 
 declare module "next-auth" {
@@ -15,10 +16,11 @@ declare module "@auth/core/jwt" {
   }
 }
 
-// Closed beta: only listed e-mails get in. An empty list denies everyone.
+// Optional extra restriction on top of the access code: when ALLOWED_EMAILS is set, only those e-mails get in.
 function isAllowed(email?: string | null) {
+  if (!email) return false;
   const allowed = (process.env.ALLOWED_EMAILS ?? "").split(",").map((item) => item.trim().toLowerCase()).filter(Boolean);
-  return !!email && allowed.includes(email.toLowerCase());
+  return allowed.length === 0 || allowed.includes(email.toLowerCase());
 }
 
 // Dev-only e-mail login so the app can be driven without Google. Never registered in a production build.
@@ -45,6 +47,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async signIn({ account, profile, user }) {
+      // The access code guards every entry point, including a direct hit on /api/auth/*.
+      if (!(await hasPass())) return false;
       if (account?.provider === "google") return profile?.email_verified === true && isAllowed(profile.email);
       return devLogin && isAllowed(user.email);
     },

@@ -1,11 +1,13 @@
 import { redirect } from "next/navigation";
 
 import { auth, signIn } from "@/auth";
+import { hasPass } from "@/lib/access";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default async function LoginPage() {
   if ((await auth())?.user) redirect("/");
+  if (!(await hasPass())) redirect("/acesso");
   const devLogin = process.env.NODE_ENV === "development";
 
   return (
