@@ -11,10 +11,12 @@ export default async function DashboardPage() {
   const userId = await requireUserId();
   const [influencers, contents, assets, recent] = await Promise.all([
     prisma.influencer.count({ where: { userId } }),
-    prisma.content.count({ where: { influencer: { userId } } }),
+    prisma.content.count({
+      where: { influencer: { userId }, archivedAt: null },
+    }),
     prisma.asset.count({ where: { userId } }),
     prisma.content.findMany({
-      where: { influencer: { userId } },
+      where: { influencer: { userId }, archivedAt: null },
       orderBy: { updatedAt: "desc" },
       take: 6,
       include: { influencer: { select: { name: true } } },

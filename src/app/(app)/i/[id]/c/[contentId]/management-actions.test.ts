@@ -48,6 +48,7 @@ describe("production management", () => {
     ).toBe("");
     expect(mocks.find).toHaveBeenCalledWith({
       where: {
+        archivedAt: null,
         id: "content",
         influencerId: "character",
         influencer: { userId: "owner" },
@@ -131,6 +132,7 @@ describe("brief editing", () => {
     ).toBe("");
     expect(mocks.review).toHaveBeenCalledWith({
       where: {
+        archivedAt: null,
         id: "content",
         influencerId: "character",
         influencer: { userId: "owner" },

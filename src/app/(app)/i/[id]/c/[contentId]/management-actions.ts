@@ -26,7 +26,12 @@ export async function saveScript(
   try {
     await prisma.$transaction(async (tx) => {
       const content = await tx.content.findFirst({
-        where: { id: contentId, influencerId, influencer: { userId } },
+        where: {
+          id: contentId,
+          influencerId,
+          influencer: { userId },
+          archivedAt: null,
+        },
       });
       if (!content) throw new UserError("Conteúdo não encontrado.");
       const updated = await tx.step.updateMany({
@@ -78,6 +83,7 @@ export async function reviewContent(
     return { error: "Escolha uma revisão válida.", message: "" };
   const result = await prisma.content.updateMany({
     where: {
+      archivedAt: null,
       id: contentId,
       influencerId,
       influencer: { userId },
@@ -134,6 +140,7 @@ export async function updateBrief(
   try {
     const changed = await prisma.content.updateMany({
       where: {
+        archivedAt: null,
         id: contentId,
         influencerId,
         influencer: { userId },

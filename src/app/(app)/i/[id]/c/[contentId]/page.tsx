@@ -19,6 +19,7 @@ import { KitForm } from "../../personagem/kit-form";
 import { KitWatcher } from "../../personagem/kit-watcher";
 import { assembleVideo, generateScene, generateVideo } from "./actions";
 import { FlowCanvas } from "./flow-canvas";
+import { ArchiveControl } from "../../../../conteudos/archive-control";
 import { BriefForm } from "./brief-form";
 import { ScriptForm } from "./script-form";
 import { ReviewForm } from "./review-form";
@@ -45,6 +46,30 @@ export default async function ContentPage({
     },
   });
   if (!content) notFound();
+
+  if (content.archivedAt)
+    return (
+      <div className="mx-auto grid max-w-2xl gap-5">
+        <Link
+          href="/conteudos?archive=1"
+          className="text-body-sm text-lab-text-dim"
+        >
+          ← Arquivados
+        </Link>
+        <h1 className="break-words font-display text-h1">{content.title}</h1>
+        <p className="text-lab-text-dim">
+          Conteúdo arquivado. Suas mídias e o histórico foram preservados.
+          Restaure para continuar a produção.
+        </p>
+        <ArchiveControl id={contentId} archived />
+        <Link
+          href={`/biblioteca?influencer=${id}`}
+          className="text-body-sm underline"
+        >
+          Ver mídias do personagem
+        </Link>
+      </div>
+    );
 
   const canvasView = (await searchParams).view === "canvas";
   const { steps } = content;
@@ -109,6 +134,9 @@ export default async function ContentPage({
 
   return (
     <div className="grid gap-6">
+      <div className="flex justify-end">
+        <ArchiveControl id={contentId} archived={false} />
+      </div>
       <KitWatcher
         influencerId={id}
         active={steps.some((step) => step.status === "RUNNING")}

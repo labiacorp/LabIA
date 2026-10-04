@@ -6,11 +6,9 @@ import { ProfileForm } from "./profile-form";
 import { LibraryView } from "@/app/(app)/biblioteca/library-view";
 import { loadLibrary } from "@/lib/library-data";
 import { DEFAULT_LIBRARY_FILTERS } from "@/lib/library";
-import { Button } from "@/components/ui/button";
-import { Field, Input, Textarea } from "@/components/ui/field";
+import { buttonVariants } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/session";
-import { createContent } from "../../actions";
 import { CharacterTab } from "./personagem/character-tab";
 
 export const dynamic = "force-dynamic";
@@ -85,36 +83,26 @@ export default async function InfluencerPage({
 
 async function Contents({ influencerId }: { influencerId: string }) {
   const contents = await prisma.content.findMany({
-    where: { influencerId },
+    where: { influencerId, archivedAt: null },
     orderBy: { updatedAt: "desc" },
+    take: 24,
   });
   return (
     <div className="grid gap-6">
-      <form
-        action={createContent.bind(null, influencerId)}
-        className="grid gap-4 rounded-lab border border-lab-border bg-lab-surface-1 p-5"
-      >
-        <p className="font-display text-h3">Novo conteúdo</p>
-        <Field label="Título" htmlFor="title">
-          <Input
-            id="title"
-            name="title"
-            required
-            maxLength={120}
-            placeholder="Ex.: 3 erros ao começar a investir"
-          />
-        </Field>
-        <Field label="Ideia (opcional)" htmlFor="idea">
-          <Textarea
-            id="idea"
-            name="idea"
-            maxLength={2000}
-            rows={2}
-            className="font-sans text-body-sm"
-          />
-        </Field>
-        <Button className="justify-self-start">Criar conteúdo</Button>
-      </form>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link
+          href={`/conteudos/novo?influencer=${influencerId}`}
+          className={buttonVariants({ size: "lg" })}
+        >
+          Criar conteúdo
+        </Link>
+        <Link
+          href={`/conteudos?influencer=${influencerId}`}
+          className="text-body-sm underline"
+        >
+          Ver todos os conteúdos
+        </Link>
+      </div>
       {contents.length === 0 ? (
         <p className="text-body-sm text-lab-text-dim">Nenhum conteúdo ainda.</p>
       ) : (

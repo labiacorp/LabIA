@@ -75,3 +75,9 @@ Real Google OAuth, durable remote downloads/media lifetime, model invoices and f
 The account page now has owned production counts, available balance, rolling 30-day net reservations (not mislabeled as final generation cost), private JSON export, and global session revocation. The version mechanism follows Leaner's server-side pattern, with an immediate database version check on each JWT authentication rather than its cached interval. Old version-zero sessions are compatible until explicitly revoked. Export excludes auth/session and provider internals. Current-browser sign-out remains independent.
 
 Content title and idea can now be updated without changing generated media. The database write requires ownership and no running steps; title/idea bounds and controlled failures are enforced on the server. Browser QA used disposable accounts and verified name/brief persistence, export isolation, desktop/390px layouts, global revocation, and rejection of an old cookie from another browser. No paid provider calls or top-ups were made.
+
+## Production organization follow-up
+
+Added `/conteudos/novo` with owned character selection, validated title/idea and vertical/horizontal/square formats; draft creation remains free. Character tabs use the same form via a preselected character. Global contents now have 24-item pagination, ownership-aware counts, status/character/search filters and separate active/archive views. Character tabs show the latest 24 active items with a link to the full filtered list.
+
+Soft archival preserves status, steps, assets and ledger, can be restored, rejects RUNNING steps and serializes against generation starts through the existing owner row lock. Archived pages show restore/library access; the coordinator rejects new paid starts before reserving funds. Script/brief/review actions require active content. Dashboard recent production excludes archives, while account totals and the media library retain them.

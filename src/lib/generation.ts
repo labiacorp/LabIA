@@ -82,6 +82,8 @@ export async function startPlan(input: {
         : null;
       if (input.contentId && !content)
         throw new UserError("Conteúdo não encontrado.");
+      if (content?.archivedAt)
+        throw new UserError("Restaure o conteúdo antes de gerar novas mídias.");
       if (
         content &&
         (priced.items.length !== 1 || priced.items[0].role !== null)

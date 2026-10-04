@@ -38,6 +38,34 @@ describe.skipIf(!process.env.DATABASE_URL)("character kit money path", () => {
     vi.unstubAllEnvs();
   });
 
+  it("rejects archived content before creating a step or reserving funds", async () => {
+    const who = await seed(0);
+    const content = await prisma.content.create({
+      data: {
+        influencerId: who.influencerId,
+        title: "Archived QA",
+        archivedAt: new Date(),
+      },
+    });
+    const plan = [{ ...sheetItem(card), role: null }];
+    await expect(
+      startPlan({
+        ...who,
+        contentId: content.id,
+        contentKind: "IMAGE",
+        intentId: randomUUID(),
+        plan,
+        expectedBrl: quote(plan).totalBrl,
+      }),
+    ).rejects.toThrow("Restaure o conteúdo");
+    expect(await prisma.step.count({ where: { contentId: content.id } })).toBe(
+      0,
+    );
+    expect(
+      await prisma.ledgerEntry.count({ where: { userId: who.userId } }),
+    ).toBe(0);
+  });
+
   it("reserves the quoted price, submits once and collects the result once", async () => {
     const who = await seed(10);
     expect((await start(who)).started).toBe(1);

@@ -96,6 +96,7 @@ model Content {
   influencer   Influencer    @relation(fields: [influencerId], references: [id], onDelete: Cascade)
   title        String
   idea         String        @default("")
+  archivedAt DateTime? @map("archived_at")
   aspectRatio  String        @default("9:16") @map("aspect_ratio")
   status       ContentStatus @default(IDEA)
   steps        Step[]
@@ -103,6 +104,7 @@ model Content {
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
 
+  @@index([archivedAt, updatedAt])
   @@index([influencerId, updatedAt])
   @@map("contents")
 }
