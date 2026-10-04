@@ -6,10 +6,17 @@ import { createProduction } from "../management";
 export function CreationForm({
   characters,
   selected,
+  initial,
   defaultAspectRatio = "9:16",
 }: {
   characters: { id: string; name: string }[];
   selected?: string;
+  initial?: {
+    title: string;
+    idea: string;
+    script: string;
+    aspectRatio: string;
+  };
   defaultAspectRatio?: string;
 }) {
   const [error, action, pending] = useActionState(createProduction, "");
@@ -25,7 +32,7 @@ export function CreationForm({
         <select
           name="influencerId"
           required
-          defaultValue={selected ?? ""}
+          defaultValue={selected ?? (characters.length === 1 ? characters[0].id : "")}
           className={selectClass}
         >
           <option value="" disabled>
@@ -42,6 +49,7 @@ export function CreationForm({
         Título
         <Input
           name="title"
+          defaultValue={initial?.title ?? ""}
           required
           maxLength={120}
           placeholder="Ex.: três dicas para começar"
@@ -51,6 +59,7 @@ export function CreationForm({
         Ideia (opcional)
         <textarea
           name="idea"
+          defaultValue={initial?.idea ?? ""}
           rows={4}
           maxLength={2000}
           className={selectClass}
@@ -60,13 +69,27 @@ export function CreationForm({
         Formato
         <select
           name="aspectRatio"
-          defaultValue={defaultAspectRatio}
+          defaultValue={initial?.aspectRatio ?? defaultAspectRatio}
           className={selectClass}
         >
           <option value="9:16">Vertical · 9:16</option>
           <option value="16:9">Horizontal · 16:9</option>
           <option value="1:1">Quadrado · 1:1</option>
         </select>
+      </label>
+      <label className="grid gap-2 text-body-sm">
+        Roteiro inicial (opcional)
+        <textarea
+          name="script"
+          defaultValue={initial?.script ?? ""}
+          rows={6}
+          maxLength={2000}
+          className={selectClass}
+        />
+        <span className="text-caption text-lab-text-muted">
+          Revise os campos entre colchetes antes de gerar. O roteiro pode ser
+          editado depois.
+        </span>
       </label>
       <p className="text-body-sm text-lab-text-dim">
         Criar o rascunho é gratuito. Cada geração será confirmada separadamente,

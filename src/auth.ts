@@ -2,6 +2,8 @@ import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 
+import { cookies } from "next/headers";
+import { registerSignIn, REFERRAL_COOKIE } from "@/lib/referrals";
 import { z } from "zod";
 import { hasPass } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
@@ -67,13 +69,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async jwt({ token, user }) {
       if (user?.email) {
-        const email = user.email.toLowerCase();
-        const row = await prisma.user.upsert({
-          where: { email },
-          // Keep the display name edited in My Account on subsequent sign-ins.
-          update: { image: user.image ?? undefined },
-          create: { email, name: user.name, image: user.image },
-        });
+        const row = await registerSignIn(
+          { email: user.email, name: user.name, image: user.image },
+          (await cookies()).get(REFERRAL_COOKIE)?.value,
+        );
         token.uid = row.id;
         token.tokenVersion = row.tokenVersion;
         return token;

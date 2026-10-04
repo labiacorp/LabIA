@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ upsert: vi.fn().mockResolvedValue({ id: "existing-user" }), config: null as unknown as { callbacks: { jwt: (input: { token: Record<string, unknown>; user: { email: string; name: string; image: string } }) => Promise<Record<string, unknown>> } } }));
+vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
 vi.mock("next-auth", () => ({ default: (config: typeof mocks.config) => { mocks.config = config; return {}; } }));
 vi.mock("@/lib/prisma", () => ({ prisma: { user: { upsert: mocks.upsert } } }));
 vi.mock("@/lib/access", () => ({ hasPass: vi.fn() }));

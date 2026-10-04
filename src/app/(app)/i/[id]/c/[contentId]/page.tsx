@@ -19,6 +19,7 @@ import { KitForm } from "../../personagem/kit-form";
 import { KitWatcher } from "../../personagem/kit-watcher";
 import { assembleVideo, generateScene, generateVideo } from "./actions";
 import { FlowCanvas } from "./flow-canvas";
+import { SaveTemplate } from "../../../../modelos/save-template";
 import { ArchiveControl } from "../../../../conteudos/archive-control";
 import { BriefForm } from "./brief-form";
 import { ScriptForm } from "./script-form";
@@ -42,7 +43,7 @@ export default async function ContentPage({
     where: { id: contentId, influencerId: id, influencer: { userId } },
     include: {
       steps: { orderBy: { position: "asc" }, include: { assets: true } },
-      influencer: { select: { name: true } },
+      influencer: { select: { name: true, faceAssetId: true } },
     },
   });
   if (!content) notFound();
@@ -106,6 +107,7 @@ export default async function ContentPage({
     prisma.asset.findFirst({
       where: {
         userId,
+        id: content.influencer.faceAssetId ?? "",
         influencerId: id,
         role: "FRONT",
         step: { status: { in: ["DONE", "APPROVED"] } },
@@ -142,7 +144,14 @@ export default async function ContentPage({
 
   return (
     <div className="grid gap-6">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-3">
+        <Link
+          href={`/conteudos/novo?copy=${contentId}&influencer=${id}`}
+          className="rounded-control border border-lab-border px-4 py-3 text-body-sm"
+        >
+          Duplicar briefing
+        </Link>
+        <SaveTemplate contentId={contentId} />
         <ArchiveControl id={contentId} archived={false} />
       </div>
       <KitWatcher

@@ -52,6 +52,7 @@ describe("content organization", () => {
   });
   it("creates a free owned draft with an explicit format and fresh pipeline steps", async () => {
     const f = new FormData();
+    f.set("script", "Um roteiro reutilizado.");
     f.set("title", "Novo");
     f.set("idea", "");
     f.set("aspectRatio", "16:9");
@@ -65,7 +66,23 @@ describe("content organization", () => {
       select: { id: true },
     });
     expect(mocks.create.mock.calls[0][0].data.aspectRatio).toBe("16:9");
-    expect(mocks.create.mock.calls[0][0].data.steps.create).toHaveLength(4);
+    const steps = mocks.create.mock.calls[0][0].data.steps.create;
+    expect(steps).toHaveLength(4);
+    expect(
+      steps.find((s: { kind: string }) => s.kind === "SCRIPT"),
+    ).toMatchObject({
+      status: "DONE",
+      input: { script: "Um roteiro reutilizado." },
+      actualCostBrl: 0,
+    });
+    expect(
+      steps
+        .filter((s: { kind: string }) => s.kind !== "SCRIPT")
+        .every(
+          (s: { status?: string; operationKey?: string }) =>
+            !s.operationKey && (!s.status || s.status === "PENDING"),
+        ),
+    ).toBe(true);
   });
   it("rejects invalid formats and foreign characters before creation", async () => {
     const f = new FormData();

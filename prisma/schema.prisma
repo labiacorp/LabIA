@@ -68,7 +68,13 @@ model User {
   influencers Influencer[]
   assets      Asset[]
   ledger      LedgerEntry[]
+  templates ContentTemplate[]
+  referralCode String? @unique @map("referral_code")
+  referredById String? @map("referred_by_id")
+  referredBy User? @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals User[] @relation("Referrals")
 
+  @@index([referredById])
   @@map("users")
 }
 
@@ -195,4 +201,21 @@ model RateLimitEvent {
 
   @@index([key, createdAt])
   @@map("rate_limit_events")
+}
+
+model ContentTemplate {
+  id String @id @default(cuid())
+  userId String @map("user_id")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceContentId String @map("source_content_id")
+  name String
+  title String
+  idea String
+  script String @default("")
+  aspectRatio String @map("aspect_ratio")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@unique([userId, sourceContentId])
+  @@index([userId, updatedAt])
+  @@map("content_templates")
 }

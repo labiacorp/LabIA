@@ -15,6 +15,7 @@ import {
   LogOut,
   Library,
   Plug,
+  BookOpen,
 } from "lucide-react";
 import { logout } from "@/app/(app)/actions";
 import { AccountAvatar } from "@/components/app/account-avatar";
@@ -25,6 +26,7 @@ const links = [
   { href: "/", label: "Estúdio", icon: Sparkles },
   { href: "/influenciadores", label: "Influenciadores", icon: Users },
   { href: "/conteudos", label: "Conteúdos", icon: Film },
+  { href: "/modelos", label: "Modelos", icon: BookOpen },
   { href: "/biblioteca", label: "Biblioteca", icon: Library },
 ];
 const itemClass =
@@ -63,7 +65,7 @@ export function AppNavigation({
     <>
       <button
         type="button"
-        className="lab-hit-target rounded-control lg:hidden"
+        className="lab-hit-target rounded-control xl:hidden"
         aria-label="Abrir navegação"
         onClick={() => navigation.current?.showModal()}
       >
@@ -78,7 +80,7 @@ export function AppNavigation({
       </Link>
       <nav
         aria-label="Navegação principal"
-        className="ml-4 hidden gap-1 lg:flex"
+        className="ml-4 hidden gap-1 xl:flex"
       >
         {menuLinks()}
       </nav>

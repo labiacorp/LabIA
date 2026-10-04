@@ -1,3 +1,5 @@
+import { getReferralCode } from "@/lib/referrals";
+import { ReferralLink } from "./referral-link";
 import Link from "next/link";
 import { PageHeading } from "@/components/app/page-heading";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -32,7 +34,9 @@ export default async function AccountPage() {
         },
       }),
       prisma.influencer.count({ where: { userId } }),
-      prisma.content.count({ where: { influencer: { userId }, archivedAt: null } }),
+      prisma.content.count({
+        where: { influencer: { userId }, archivedAt: null },
+      }),
       prisma.asset.count({ where: { userId } }),
       prisma.ledgerEntry.aggregate({
         where: { userId },
@@ -47,6 +51,10 @@ export default async function AccountPage() {
         _sum: { deltaBrl: true },
       }),
     ]);
+  const [referralCode, referralCount] = await Promise.all([
+    getReferralCode(userId),
+    prisma.user.count({ where: { referredById: userId } }),
+  ]);
   const card = "rounded-lab border border-lab-border bg-lab-surface-1 p-6";
   return (
     <div className="mx-auto max-w-content">
@@ -143,6 +151,20 @@ export default async function AccountPage() {
             >
               Conferir extrato
             </Link>
+          </section>
+          <section className={card} id="indicacoes">
+            <h2 className="font-display text-xl">Indique a LabIA</h2>
+            <p className="mt-4 font-display text-3xl">{referralCount}</p>
+            <p className="text-body-sm text-lab-text-muted">
+              Novas contas cadastradas pela sua indicação
+            </p>
+            <ReferralLink code={referralCode} />
+            <p className="mt-3 text-body-sm leading-6 text-lab-text-dim">
+              Compartilhe seu link. A indicação é registrada no primeiro
+              cadastro em até 30 dias, neste navegador. Contas existentes não
+              contam. O acesso à beta continua sujeito ao código e à liberação
+              do e-mail; não há bônus ou créditos por indicação.
+            </p>
           </section>
           <section className={card}>
             <h2 className="font-display text-xl">Acesso e segurança</h2>

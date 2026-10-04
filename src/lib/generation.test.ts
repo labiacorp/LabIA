@@ -172,7 +172,10 @@ describe.skipIf(!process.env.DATABASE_URL)("content scene money path", () => {
     } });
     if (withFront) {
       const step = await prisma.step.create({ data: { influencerId: who.influencerId, kind: "CHARACTER", role: "FRONT", status: "DONE", position: 0 } });
-      await prisma.asset.create({ data: { userId: who.userId, influencerId: who.influencerId, stepId: step.id, role: "FRONT", kind: "IMAGE", url: "/mock/portrait.svg" } });
+      const reference = await prisma.asset.create({ data: { userId: who.userId, influencerId: who.influencerId, stepId: step.id, role: "FRONT", kind: "IMAGE", url: "/mock/portrait.svg" } });
+      await prisma.influencer.update({ where: { id: who.influencerId }, data: { faceAssetId: reference.id } });
+      // A newer portrait must not silently replace the selected reference.
+      await prisma.asset.create({ data: { userId: who.userId, influencerId: who.influencerId, stepId: step.id, role: "FRONT", kind: "IMAGE", url: "/mock/unselected.svg" } });
     }
     return { ...who, contentId: content.id };
   }

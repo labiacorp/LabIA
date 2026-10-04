@@ -10,6 +10,8 @@ export async function GET() {
     select: {
       name: true,
       bio: true,
+      referralCode: true,
+      _count: { select: { referrals: true } },
       avatar: true,
       defaultAspectRatio: true,
       defaultContentView: true,
@@ -44,6 +46,16 @@ export async function GET() {
           url: true,
           influencerId: true,
           contentId: true,
+          createdAt: true,
+        },
+      },
+      templates: {
+        select: {
+          name: true,
+          title: true,
+          idea: true,
+          script: true,
+          aspectRatio: true,
           createdAt: true,
         },
       },

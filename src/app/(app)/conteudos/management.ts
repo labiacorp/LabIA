@@ -12,6 +12,7 @@ export async function createProduction(_previous: string, form: FormData) {
       influencerId: z.string().min(1),
       title: z.string().trim().min(1).max(120),
       idea: z.string().trim().max(2000),
+      script: z.string().trim().max(2000).default(""),
       aspectRatio: z.enum(["9:16", "16:9", "1:1"]),
     })
     .safeParse(Object.fromEntries(form));
@@ -24,13 +25,22 @@ export async function createProduction(_previous: string, form: FormData) {
       select: { id: true },
     });
     if (!character) return "Escolha um personagem da sua conta.";
+    const { script, ...draft } = input.data;
     const content = await prisma.content.create({
       data: {
-        ...input.data,
+        ...draft,
         steps: {
           create: PIPELINE.map((step, position) => ({
             kind: step.kind,
             position,
+            ...(step.kind === "SCRIPT" && script
+              ? {
+                  input: { script },
+                  status: "DONE" as const,
+                  actualCostBrl: 0,
+                  completedAt: new Date(),
+                }
+              : {}),
           })),
         },
       },

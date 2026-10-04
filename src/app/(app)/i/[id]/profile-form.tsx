@@ -1,13 +1,17 @@
 "use client";
-import { useActionState } from "react";
+import Image from "next/image";
+import { useActionState, useState } from "react";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { saveInfluencer } from "./profile-actions";
 export function ProfileForm({
   influencer,
+  references,
 }: {
+  references: { id: string; url: string; label: string }[];
   influencer: {
     id: string;
+    faceAssetId: string | null;
     name: string;
     niche: string;
     tone: string;
@@ -19,6 +23,8 @@ export function ProfileForm({
     saveInfluencer.bind(null, influencer.id),
     { error: "", message: "" },
   );
+  const [reference, setReference] = useState(influencer.faceAssetId ?? "");
+  const selectedReference = references.find((asset) => asset.id === reference);
   return (
     <form
       action={action}
@@ -90,6 +96,39 @@ export function ProfileForm({
           className="font-sans text-body-sm"
         />
       </Field>
+      {references.length > 0 && (
+        <label className="grid gap-2 text-body-sm">
+          Retrato de referência
+          <select
+            name="faceAssetId"
+            value={reference}
+            onChange={(event) => setReference(event.target.value)}
+            className="min-h-11 rounded-control border border-lab-border bg-lab-surface-2 px-3"
+          >
+            <option value="" disabled>
+              Escolha um retrato pronto
+            </option>
+            {references.map((asset) => (
+              <option key={asset.id} value={asset.id}>
+                {asset.label}
+              </option>
+            ))}
+          </select>
+          <span className="text-caption text-lab-text-muted">
+            Usado nas próximas cenas. As mídias existentes continuam iguais.
+          </span>
+        </label>
+      )}
+      {selectedReference && (
+        <Image
+          src={selectedReference.url}
+          alt="Retrato selecionado para as próximas cenas"
+          width={128}
+          height={160}
+          unoptimized
+          className="h-40 w-32 rounded-lg object-cover"
+        />
+      )}
       <Button size="lg" className="justify-self-start" loading={pending}>
         Salvar perfil
       </Button>

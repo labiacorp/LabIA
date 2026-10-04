@@ -33,6 +33,17 @@ export default async function InfluencerPage({
     where: { id, userId },
   });
   if (!influencer) notFound();
+  const references = await prisma.asset.findMany({
+    where: {
+      userId,
+      influencerId: id,
+      kind: "IMAGE",
+      role: "FRONT",
+      step: { status: { in: ["DONE", "APPROVED"] } },
+    },
+    select: { id: true, url: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  });
   // A new influencer lands on the character tab until it has a face.
   const hasFace = !!influencer.faceAssetId;
   const requestedTab = (await searchParams).aba;
@@ -73,7 +84,14 @@ export default async function InfluencerPage({
       ) : aba === "biblioteca" ? (
         <Library influencerId={id} userId={userId} />
       ) : aba === "perfil" ? (
-        <ProfileForm influencer={influencer} />
+        <ProfileForm
+          influencer={influencer}
+          references={references.map((asset) => ({
+            id: asset.id,
+            url: asset.url,
+            label: `Retrato de ${asset.createdAt.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })} · ${asset.id.slice(-5)}`,
+          }))}
+        />
       ) : (
         <Contents influencerId={id} />
       )}

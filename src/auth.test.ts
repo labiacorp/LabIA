@@ -5,6 +5,9 @@ const mocks = vi.hoisted(() => ({
   find: vi.fn(),
   upsert: vi.fn(),
 }));
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ get: () => undefined }),
+}));
 vi.mock("next-auth", () => ({
   default: (config: NextAuthConfig) => {
     mocks.config = config;
