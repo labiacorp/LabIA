@@ -12,7 +12,7 @@ Next.js 16 (App Router, Server Actions) + TypeScript + Tailwind 4 (legacy `tailw
 
 ## Screens (`src/app`)
 
-`/acesso` (shared access code), `/login`, `/` (influencers), `/influencers/new`, `/i/[id]` (tabs: Conteúdos, Personagem, Biblioteca, Perfil), `/i/[id]/c/[contentId]` (the pipeline, one card per step). API: `POST /api/influencers/[id]/refresh` (polls running jobs), `/api/auth/*`.
+`/acesso` (shared access code), `/login`, `/` (primary influencer studio: appearance builder, presets/sheet previews, owned characters, motion briefs, history), `/influencers/new` (redirect to studio), `/i/[id]` (tabs: Conteúdos, Personagem, Biblioteca, Perfil), `/i/[id]/c/[contentId]` (the pipeline, one card per step). API: `POST /api/influencers/[id]/refresh` (polls running jobs), `/api/auth/*`.
 
 ## How generation works (`src/lib/generation.ts`)
 
@@ -41,9 +41,11 @@ Goal: a platform that is feature-complete, deployed and ready for the founders t
 - Character kit: sheet then front/profile/detail portraits (quoted in R$, idempotent, balance reserved under a row lock, refunds, ambiguous submit never resent, manual reconciliation via `scripts/ledger.ts`).
 - Content pipeline: scene IMAGE from the FRONT portrait; VIDEO = three chained 5s Kling blocks (last frame via fal FFmpeg, measured duration cost); ASSEMBLY via fal merge-videos; content moves to REVIEW. All verified only with the fake provider (41 tests, desktop and 390px).
 - Reel estimate on the content page (about R$ 5.89 without voice at 5.21).
+- Primary studio, closely following the Higgsfield reference requested by Diego: 19 appearance groups stored in the character prompt, six editable briefs, character sheet dialog, account-scoped gallery/history and motion draft creation with the existing V2 pipeline. Registration/drafts are free; generation keeps the existing BRL approval. Public reference preview images are externally hosted and attributed. Photo upload, Genjutsu motion transfer and object replacement remain unimplemented. Details: `docs/references/higgsfield-influencer-studio.md`.
+- GitHub CI on PRs to `v2`/`main` and task-branch pushes: typecheck, lint, unit/mocked-provider tests, build. Database integration tests require an isolated Neon database and are excluded from fork CI; no real API credentials are provided.
 
 ### To do (in blocks; each block is small, committed, and updates this file)
-1. **Go live.** New Vercel project for V2 (not the V1 project), env vars, production Neon branch, Google OAuth client, domain, access code, CI on GitHub (typecheck, lint, tests, build; none exists yet). Needs the founders: accounts, OAuth client, domain.
+1. **Go live.** New Vercel project for V2 (not the V1 project), env vars, production Neon branch, Google OAuth client, domain, access code, and a dedicated CI Neon database for integration tests. Needs the founders: accounts, OAuth client, domain.
 2. **Files that last.** Copy generated media from fal URLs to Vercel Blob; uploads (base photo, audio, an existing character sheet), ported from V1 `app/api/assets/upload` with its tests. Needs the founders: `BLOB_READ_WRITE_TOKEN` in `.env.local` and on Vercel.
 3. **Voice and lip sync.** Research is in `docs/video-and-voice-research.md` (LatentSync after assembly recommended for cost; PixVerse and Sync Lipsync 2 are alternatives). Needs the founders: lip sync option, uploaded audio vs generated voice.
 4. **Complete the pipeline.** Real SCRIPT step (needs the founders: user-written vs AI-written, and the model), retry/regeneration of any step, reuse clips of a failed chain, download the final video, archive/delete content and influencers.
@@ -62,4 +64,4 @@ Listed in `.env.example`. `DIRECT_URL` (unpooled) is used by Prisma migrations, 
 
 ## Run and check
 
-`npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (41 tests; the money-path ones run against the database with their own seeded user, deleted afterwards), `npm run build`.
+`npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (45 tests; the money-path ones run against the database with their own seeded user, deleted afterwards), `npm run build`.

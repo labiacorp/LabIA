@@ -1,0 +1,33 @@
+name: V2 checks
+on:
+  pull_request:
+    branches: [v2, main]
+  push:
+    branches: ['diego/**', 'felipe/**']
+permissions:
+  contents: read
+concurrency:
+  group: v2-checks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    env:
+      FAL_MOCK: '1'
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/labia
+      DIRECT_URL: postgresql://ci:ci@localhost:5432/labia
+      AUTH_SECRET: ci-only-placeholder-secret-at-least-32-characters
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      # Money-path integration tests require an isolated Neon database. Never pass
+      # production database/provider credentials into a fork pull-request job.
+      - name: Unit and mocked provider contract tests
+        run: npx vitest run src/lib/access.test.ts src/lib/character.test.ts src/lib/content-plan.test.ts src/lib/providers/ffmpeg.test.ts src/lib/studio.test.ts
+      - run: npm run build
