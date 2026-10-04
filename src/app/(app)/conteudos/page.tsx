@@ -1,0 +1,17 @@
+import Link from "next/link";
+import { PageHeading } from "@/components/app/page-heading";
+import { buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { EmptyState } from "@/components/ui/empty-state";
+import { prisma } from "@/lib/prisma";
+import { requireUserId } from "@/lib/session";
+import { contentStatusLabels, dateLabel } from "@/lib/platform";
+
+export default async function ContentsPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string }> }) {
+  const userId = await requireUserId();
+  const params = await searchParams;
+  const q = String(params.q ?? "").trim().slice(0, 120);
+  const status = ["IDEA", "IN_PROGRESS", "REVIEW", "APPROVED", "REJECTED"].includes(params.status ?? "") ? params.status as "IDEA" | "IN_PROGRESS" | "REVIEW" | "APPROVED" | "REJECTED" : undefined;
+  const items = await prisma.content.findMany({ where: { influencer: { userId }, ...(q ? { title: { contains: q, mode: "insensitive" as const } } : {}), ...(status ? { status } : {}) }, orderBy: { updatedAt: "desc" }, take: 100, include: { influencer: { select: { name: true } }, _count: { select: { steps: { where: { status: { in: ["DONE", "APPROVED"] } } } } } } });
+  return <div className="mx-auto max-w-content"><PageHeading title="Seus conteúdos" description="Acompanhe suas ideias, produções e vídeos em revisão." action={<Link href="/influenciadores" className={buttonVariants({ size: "lg" })}>Criar conteúdo</Link>} /><form className="mb-6 flex flex-wrap gap-2"><Input name="q" aria-label="Buscar conteúdo pelo título" placeholder="Buscar pelo título" defaultValue={q} className="max-w-sm" /><select name="status" aria-label="Filtrar por status" defaultValue={status ?? ""} className="h-9 max-w-full rounded-control border border-lab-border bg-lab-surface-2 px-3 text-body-sm"><option value="">Todos os status</option>{Object.entries(contentStatusLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select><button className={buttonVariants({ variant: "secondary" })}>Filtrar</button></form>{items.length ? <><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{items.map((item) => <Link key={item.id} href={`/i/${item.influencerId}/c/${item.id}`} className="rounded-lab border border-lab-border bg-lab-surface-1 p-5 hover:border-lab-border-strong"><span className="inline-block rounded-control bg-lab-surface-2 px-2 py-1 text-caption">{contentStatusLabels[item.status]}</span><h2 className="mt-4 break-words font-display text-xl">{item.title}</h2><p className="mt-2 text-body-sm text-lab-text-dim">{item.influencer.name} · {item.aspectRatio}</p><p className="mt-4 text-caption text-lab-text-muted">{item._count.steps} etapa(s) concluída(s) · {dateLabel(item.updatedAt)}</p></Link>)}</div>{items.length === 100 ? <p className="mt-4 text-caption text-lab-text-muted">Exibindo os 100 mais recentes. Refine os filtros para encontrar outros conteúdos.</p> : null}</> : <EmptyState title={q || status ? "Nenhum conteúdo neste filtro" : "Transforme uma ideia em conteúdo"} description={q || status ? "Ajuste os filtros para encontrar a produção que procura." : "Abra um influenciador e crie uma nova produção na aba Conteúdos."} action={<Link href={q || status ? "/conteudos" : "/influenciadores"} className={buttonVariants({ variant: "secondary", size: "lg" })}>{q || status ? "Limpar filtros" : "Escolher influenciador"}</Link>} />}</div>;
+}

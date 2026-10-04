@@ -57,7 +57,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const email = user.email.toLowerCase();
         const row = await prisma.user.upsert({
           where: { email },
-          update: { name: user.name ?? undefined, image: user.image ?? undefined },
+          // Keep the display name edited in My Account on subsequent sign-ins.
+          update: { image: user.image ?? undefined },
           create: { email, name: user.name, image: user.image },
         });
         token.uid = row.id;
