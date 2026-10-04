@@ -69,3 +69,9 @@ Afterward `npm audit --omit=dev` reports zero findings. Five high findings remai
 7. Optional executor connections and MCP, carrying over the V1 ownership and spend approvals.
 
 Real Google OAuth, durable remote downloads/media lifetime, model invoices and face continuity remain unverified. Credentials and model decisions are concrete dependencies, not reasons to block the already testable management UI.
+
+## Account and brief follow-up (2026-10-04)
+
+The account page now has owned production counts, available balance, rolling 30-day net reservations (not mislabeled as final generation cost), private JSON export, and global session revocation. The version mechanism follows Leaner's server-side pattern, with an immediate database version check on each JWT authentication rather than its cached interval. Old version-zero sessions are compatible until explicitly revoked. Export excludes auth/session and provider internals. Current-browser sign-out remains independent.
+
+Content title and idea can now be updated without changing generated media. The database write requires ownership and no running steps; title/idea bounds and controlled failures are enforced on the server. Browser QA used disposable accounts and verified name/brief persistence, export isolation, desktop/390px layouts, global revocation, and rejection of an old cookie from another browser. No paid provider calls or top-ups were made.

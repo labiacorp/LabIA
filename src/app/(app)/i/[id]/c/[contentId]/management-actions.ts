@@ -111,3 +111,54 @@ export async function reviewContent(
           : "Vídeo devolvido à revisão.",
   };
 }
+
+export async function updateBrief(
+  influencerId: string,
+  contentId: string,
+  _previous: ManagementState,
+  form: FormData,
+): Promise<ManagementState> {
+  const userId = await requireUserId();
+  const parsed = z
+    .object({
+      title: z.string().trim().min(1).max(120),
+      idea: z.string().trim().max(2000),
+    })
+    .safeParse({ title: form.get("title"), idea: form.get("idea") });
+  if (!parsed.success)
+    return {
+      error:
+        "Use um título de até 120 caracteres e uma ideia de até 2.000 caracteres.",
+      message: "",
+    };
+  try {
+    const changed = await prisma.content.updateMany({
+      where: {
+        id: contentId,
+        influencerId,
+        influencer: { userId },
+        steps: { none: { status: "RUNNING" } },
+      },
+      data: parsed.data,
+    });
+    if (changed.count !== 1)
+      return {
+        error:
+          "Conteúdo indisponível ou com geração em andamento. Aguarde para editar.",
+        message: "",
+      };
+  } catch {
+    return {
+      error: "Não conseguimos salvar o briefing. Tente novamente.",
+      message: "",
+    };
+  }
+  revalidatePath(`/i/${influencerId}/c/${contentId}`);
+  revalidatePath(`/i/${influencerId}`);
+  revalidatePath("/conteudos");
+  revalidatePath("/painel");
+  return {
+    error: "",
+    message: "Briefing salvo. As mídias existentes foram preservadas.",
+  };
+}

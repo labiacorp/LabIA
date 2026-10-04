@@ -58,6 +58,7 @@ model User {
   email       String        @unique
   name        String?
   image       String?
+  tokenVersion Int @default(0) @map("token_version")
   createdAt   DateTime      @default(now()) @map("created_at")
   influencers Influencer[]
   assets      Asset[]

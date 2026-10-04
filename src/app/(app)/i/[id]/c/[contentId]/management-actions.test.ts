@@ -20,7 +20,7 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("@/lib/generation", () => ({
   UserError: class UserError extends Error {},
 }));
-import { saveScript, reviewContent } from "./management-actions";
+import { saveScript, reviewContent, updateBrief } from "./management-actions";
 const previous = { error: "", message: "" };
 const form = (field: string, value: string) => {
   const data = new FormData();
@@ -112,6 +112,45 @@ describe("production management", () => {
         )
       ).error,
     ).not.toBe("");
+    expect(mocks.review).not.toHaveBeenCalled();
+  });
+});
+
+describe("brief editing", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    mocks.userId.mockResolvedValue("owner");
+    mocks.review.mockResolvedValue({ count: 1 });
+  });
+  it("uses authenticated ownership and blocks running production in the write itself", async () => {
+    const data = form("title", "  Novo título  ");
+    data.set("idea", "Ideia");
+    data.set("userId", "foreign");
+    expect(
+      (await updateBrief("character", "content", previous, data)).error,
+    ).toBe("");
+    expect(mocks.review).toHaveBeenCalledWith({
+      where: {
+        id: "content",
+        influencerId: "character",
+        influencer: { userId: "owner" },
+        steps: { none: { status: "RUNNING" } },
+      },
+      data: { title: "Novo título", idea: "Ideia" },
+    });
+  });
+  it("rejects unavailable content and invalid input", async () => {
+    const data = form("title", "Título");
+    data.set("idea", "");
+    mocks.review.mockResolvedValue({ count: 0 });
+    expect(
+      (await updateBrief("character", "content", previous, data)).error,
+    ).toContain("indisponível");
+    mocks.review.mockClear();
+    data.set("title", "x".repeat(121));
+    expect(
+      (await updateBrief("character", "content", previous, data)).error,
+    ).toContain("120");
     expect(mocks.review).not.toHaveBeenCalled();
   });
 });

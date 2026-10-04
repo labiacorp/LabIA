@@ -19,6 +19,7 @@ import { KitForm } from "../../personagem/kit-form";
 import { KitWatcher } from "../../personagem/kit-watcher";
 import { assembleVideo, generateScene, generateVideo } from "./actions";
 import { FlowCanvas } from "./flow-canvas";
+import { BriefForm } from "./brief-form";
 import { ScriptForm } from "./script-form";
 import { ReviewForm } from "./review-form";
 import { DownloadAsset } from "@/app/(app)/biblioteca/library-view";
@@ -120,6 +121,13 @@ export default async function ContentPage({
           ← {content.influencer.name}
         </Link>
         <h1 className="mt-2 font-display text-h1">{content.title}</h1>
+        <BriefForm
+          influencerId={id}
+          contentId={contentId}
+          title={content.title}
+          idea={content.idea}
+          running={steps.some((step) => step.status === "RUNNING")}
+        />
         {content.idea ? (
           <p className="mt-1.5 max-w-form text-body-sm text-lab-text-dim">
             {content.idea}

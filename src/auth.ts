@@ -14,6 +14,7 @@ declare module "next-auth" {
 declare module "@auth/core/jwt" {
   interface JWT {
     uid?: string;
+    tokenVersion?: number;
   }
 }
 
@@ -74,7 +75,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           create: { email, name: user.name, image: user.image },
         });
         token.uid = row.id;
+        token.tokenVersion = row.tokenVersion;
+        return token;
       }
+      if (!token.uid) return null;
+      const current = await prisma.user.findUnique({
+        where: { id: token.uid },
+        select: { tokenVersion: true },
+      });
+      if (!current || current.tokenVersion !== (token.tokenVersion ?? 0))
+        return null;
       return token;
     },
     async session({ session, token }) {

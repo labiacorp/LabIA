@@ -3,12 +3,145 @@ import { PageHeading } from "@/components/app/page-heading";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/session";
-import { dateLabel } from "@/lib/platform";
+import { dateLabel, currency } from "@/lib/platform";
 import { logout } from "../actions";
 import { AccountForm } from "./account-form";
+import { SessionControls } from "./session-controls";
+
+function rollingWindowStart() {
+  return new Date(Date.now() - 30 * 86400000);
+}
 
 export default async function AccountPage() {
   const userId = await requireUserId();
-  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { name: true, email: true, createdAt: true } });
-  return <div className="mx-auto max-w-content"><PageHeading title="Minha conta" description="Seu perfil, acesso e informações da conta em um só lugar." /><div className="grid gap-5 md:grid-cols-2"><section className="rounded-lab border border-lab-border bg-lab-surface-1 p-6"><h2 className="mb-5 font-display text-xl">Seu perfil</h2><AccountForm name={user.name} /><dl className="mt-6 grid gap-4 border-t border-lab-border pt-5 text-body-sm"><div><dt className="text-lab-text-muted">E-mail da conta</dt><dd className="mt-1 break-all">{user.email}</dd></div><div><dt className="text-lab-text-muted">Na LabIA desde</dt><dd className="mt-1">{dateLabel(user.createdAt)}</dd></div></dl></section><div className="grid content-start gap-5"><section className="rounded-lab border border-lab-border bg-lab-surface-1 p-6"><h2 className="font-display text-xl">Acesso</h2><p className="my-4 text-body-sm leading-6 text-lab-text-dim">Seu acesso é pessoal. Ao sair, será necessário entrar novamente para acessar seus personagens e conteúdos.</p><form action={logout}><Button variant="secondary" size="lg">Sair da conta</Button></form></section><section className="rounded-lab border border-lab-border bg-lab-surface-1 p-6"><h2 className="font-display text-xl">Seus custos</h2><p className="my-4 text-body-sm leading-6 text-lab-text-dim">A criação de rascunhos é gratuita. Cada geração mostra uma estimativa em reais antes da confirmação.</p><Link href="/saldo" className={buttonVariants({ variant: "secondary", size: "lg" })}>Ver saldo e extrato</Link></section></div></div></div>;
+  // A rolling window avoids presenting a UTC month boundary as a Brazilian billing period.
+  const since = rollingWindowStart();
+  const [user, influencers, contents, assets, balance, usage] =
+    await Promise.all([
+      prisma.user.findUniqueOrThrow({
+        where: { id: userId },
+        select: { name: true, email: true, createdAt: true },
+      }),
+      prisma.influencer.count({ where: { userId } }),
+      prisma.content.count({ where: { influencer: { userId } } }),
+      prisma.asset.count({ where: { userId } }),
+      prisma.ledgerEntry.aggregate({
+        where: { userId },
+        _sum: { deltaBrl: true },
+      }),
+      prisma.ledgerEntry.aggregate({
+        where: {
+          userId,
+          createdAt: { gte: since },
+          reason: { in: ["SPEND", "REFUND"] },
+        },
+        _sum: { deltaBrl: true },
+      }),
+    ]);
+  const card = "rounded-lab border border-lab-border bg-lab-surface-1 p-6";
+  return (
+    <div className="mx-auto max-w-content">
+      <PageHeading
+        title="Minha conta"
+        description="Gerencie seu perfil, acompanhe seu uso e cuide do acesso à sua produção."
+      />
+      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[
+          ["Personagens", influencers, "/influenciadores"],
+          ["Conteúdos", contents, "/conteudos"],
+          ["Mídias", assets, "/biblioteca"],
+          [
+            "Saldo disponível",
+            currency(Number(balance._sum.deltaBrl ?? 0)),
+            "/saldo",
+          ],
+        ].map(([label, value, href]) => (
+          <Link
+            key={label}
+            href={String(href)}
+            className={`${card} transition-colors hover:border-lab-text-muted`}
+          >
+            <span className="block text-body-sm text-lab-text-muted">
+              {label}
+            </span>
+            <span className="mt-3 block break-words font-display text-2xl">
+              {value}
+            </span>
+          </Link>
+        ))}
+      </div>
+      <div className="grid items-start gap-5 lg:grid-cols-2">
+        <div className="grid gap-5">
+          <section className={card}>
+            <h2 className="mb-5 font-display text-xl">Seu perfil</h2>
+            <AccountForm name={user.name} />
+            <dl className="mt-6 grid gap-4 border-t border-lab-border pt-5 text-body-sm">
+              <div>
+                <dt className="text-lab-text-muted">E-mail de acesso</dt>
+                <dd className="mt-1 break-all">{user.email}</dd>
+              </div>
+              <div>
+                <dt className="text-lab-text-muted">Na LabIA desde</dt>
+                <dd className="mt-1">{dateLabel(user.createdAt)}</dd>
+              </div>
+            </dl>
+          </section>
+          <section className={card}>
+            <h2 className="font-display text-xl">Seus dados</h2>
+            <p className="my-4 text-body-sm leading-6 text-lab-text-dim">
+              Baixe uma cópia do perfil, personagens, ideias, links das mídias e
+              movimentações da sua conta em JSON. Os arquivos de mídia podem ser
+              baixados pela biblioteca.
+            </p>
+            <a
+              href="/api/account/export"
+              className={buttonVariants({ variant: "secondary", size: "lg" })}
+            >
+              Exportar meus dados
+            </a>
+          </section>
+        </div>
+        <div className="grid gap-5">
+          <section className={card}>
+            <h2 className="font-display text-xl">Uso e custos</h2>
+            <p className="mt-4 text-body-sm text-lab-text-muted">
+              Reservas líquidas nos últimos 30 dias
+            </p>
+            <p className="mt-2 font-display text-3xl">
+              {currency(
+                Number(usage._sum.deltaBrl ?? 0) === 0
+                  ? 0
+                  : -Number(usage._sum.deltaBrl),
+              )}
+            </p>
+            <p className="my-4 text-body-sm leading-6 text-lab-text-dim">
+              Total reservado para gerações, descontando reembolsos nesse
+              período. Uma geração em andamento pode estar incluída. O custo
+              final aparece em cada etapa.
+            </p>
+            <Link
+              href="/saldo"
+              className={buttonVariants({ variant: "secondary", size: "lg" })}
+            >
+              Conferir extrato
+            </Link>
+          </section>
+          <section className={card}>
+            <h2 className="font-display text-xl">Acesso e segurança</h2>
+            <p className="my-4 text-body-sm leading-6 text-lab-text-dim">
+              Ao encerrar todas as sessões, o acesso será invalidado no
+              servidor. Outros navegadores precisarão entrar novamente ao fazer
+              a próxima solicitação.
+            </p>
+            <form action={logout}>
+              <Button variant="secondary" size="lg">
+                Sair deste navegador
+              </Button>
+            </form>
+            <SessionControls />
+          </section>
+        </div>
+      </div>
+    </div>
+  );
 }

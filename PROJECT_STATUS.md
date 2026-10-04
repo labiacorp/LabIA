@@ -12,7 +12,7 @@ Next.js 16 (App Router, Server Actions) + TypeScript + Tailwind 4 (legacy `tailw
 
 ## Screens (`src/app`)
 
-`/acesso` (shared access code), `/login`, `/painel` (dashboard), `/conta` (editable display name and sign-out), `/influenciadores` (owned character list and search), `/conteudos` (owned production list, search and status filters), `/saldo` (available balance and latest 100 ledger entries), `/biblioteca` (global owned media, filters, 24-item pages, details and downloads), `/conexoes` (read-only integration readiness), `/` (primary influencer studio: appearance builder, presets/sheet previews, owned characters, motion briefs, history), `/influencers/new` (redirect to studio), `/i/[id]` (tabs: Conteúdos, Personagem, Biblioteca, Perfil), `/i/[id]/c/[contentId]` (editable free script, pipeline steps/canvas, final review and downloads). API: authenticated `GET /api/assets/[id]/download`, `POST /api/influencers/[id]/refresh` (polls running jobs), `/api/auth/*`.
+`/acesso` (shared access code), `/login`, `/painel` (dashboard), `/conta` (profile, owned usage totals, balance, rolling 30-day net reservations, private JSON export, current/all-session sign-out), `/influenciadores` (owned character list and search), `/conteudos` (owned production list, search and status filters), `/saldo` (available balance and latest 100 ledger entries), `/biblioteca` (global owned media, filters, 24-item pages, details and downloads), `/conexoes` (read-only integration readiness), `/` (primary influencer studio: appearance builder, presets/sheet previews, owned characters, motion briefs, history), `/influencers/new` (redirect to studio), `/i/[id]` (tabs: Conteúdos, Personagem, Biblioteca, Perfil), `/i/[id]/c/[contentId]` (editable title/brief when no generation is running, free script, pipeline steps/canvas, final review and downloads). API: authenticated `GET /api/assets/[id]/download`, `POST /api/influencers/[id]/refresh` (polls running jobs), `/api/auth/*`.
 
 ## How generation works (`src/lib/generation.ts`)
 
@@ -51,7 +51,7 @@ Goal: a platform that is feature-complete, deployed and ready for the founders t
 2. **Files that last.** Copy generated media from fal URLs to Vercel Blob; uploads (base photo, audio, an existing character sheet), ported from V1 `app/api/assets/upload` with its tests. Needs the founders: `BLOB_READ_WRITE_TOKEN` in `.env.local` and on Vercel.
 3. **Voice and lip sync.** Research is in `docs/video-and-voice-research.md` (LatentSync after assembly recommended for cost; PixVerse and Sync Lipsync 2 are alternatives). Needs the founders: lip sync option, uploaded audio vs generated voice.
 4. **Complete the pipeline.** Optional AI-written script (manual script is free and functional), safe retry/regeneration with attempt history and verified-clip reuse, durable uploads, and archive/restore for content/influencers. Final mock-video download and human review are implemented.
-5. **Management screens.** Authorized manual top-up management (balance/extract UI is read-only), per-user spend limit, cost-per-piece reporting and pagination beyond the disclosed 100-item influencer/content/ledger limits. Character profile editing is implemented; content metadata editing and archiving remain. Global library has filters and real pagination.
+5. **Management screens.** Authorized manual top-up management (balance/extract UI is read-only), per-user spend limit, cost-per-piece reporting and pagination beyond the disclosed 100-item influencer/content/ledger limits. Character profile editing is implemented; title/idea editing is implemented; content archiving remains. Global library has filters and real pagination.
 6. **Canvas extensions.** The second view of Steps is implemented. Persistent shared layout, arbitrary graph editing, typed connection validation, cycle prevention, palette and branched execution remain; recover these from V1 while preserving the V2 model.
 7. **UI/UX pass from the design reference.** Continue the influencer detail and production screens, global library and states (loading, empty, error) using `design/reference/` and its `MAPA-DE-APLICACAO.md` copy rules, adapted to Influencers > Content > Steps. Can start now, no decisions needed.
 8. **Finish.** Terms and privacy pages, mobile pass, optional MCP.
@@ -66,6 +66,10 @@ Listed in `.env.example`. `DIRECT_URL` (unpooled) is used by Prisma migrations, 
 
 ## Run and check
 
-`npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (65 tests; the money-path ones run against the database with their own seeded user, deleted afterwards), `npm run build`.
+`npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (72 tests; the money-path ones run against the database with their own seeded user, deleted afterwards), `npm run build`.
 
 Dependency audit: production dependency scan reports zero findings after targeted mysql2/deepmerge-ts overrides. Five high findings remain in the development lint/glob chain via braces; the current advisory lists no patched version. See the audit document for sources and compatibility checks.
+
+## Account management follow-up
+
+User token versions invalidate JWT sessions on every authenticated request after global sign-out; legacy tokens remain valid only at version zero. Account exports select owned profile, character briefs, media links and ledger amounts, excluding tokens and provider internals. Migration `20261004090000_account_sessions` adds the version column.
