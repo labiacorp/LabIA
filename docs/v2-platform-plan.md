@@ -18,9 +18,13 @@ Keep the V2 model: Influencer > Content > Steps. Adapt V1's projects and flows t
 
 - Block 1 provides searches and status filtering, with an explicit 100-result limit. Editing/archive and full pagination remain in subsequent blocks.
 - The studio remains at `/`. The brand link opens `/painel`; all existing studio and production links keep working.
-- Libraries inside each character remain available until the global library is delivered.
+- Global media library is now delivered; character libraries reuse it with a character filter.
 - Balance/extract is read-only. Credit additions remain team-operated; no payment or top-up action is introduced.
 - Each block gets a task branch, checks, browser review and a PR to `v2`. Production `main` remains V1.
+
+## Audit follow-up
+
+The V1 and backup comparison, Leaner reference review, restored functions and remaining gaps are recorded in `docs/v2-platform-audit.md`. Canvas is currently a view of the fixed production recipe; arbitrary graph editing remains a later block. Manual scripts and final review/download are implemented; voice and durable uploads remain pending.
 
 ## Dependencies
 
