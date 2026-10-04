@@ -29,6 +29,6 @@ History and the owned-character gallery use account-scoped database queries. No 
 
 ## Verification and GitHub
 
-Local validation uses a disposable QA user and `FAL_MOCK=1`. GitHub CI runs typecheck, lint, unit/mocked-provider tests and build without real credentials. Database integration tests run against the configured Neon database locally with their own disposable users; they are intentionally excluded from the untrusted fork CI job.
+Local validation uses a disposable QA user and `FAL_MOCK=1`. The studio commit passed GitHub typecheck, lint, unit/mocked-provider tests and build without real credentials. The workflow is preserved separately on the fork branch `diego/v2-ci` because the upstream writer token lacks workflow scope. Database integration tests run against the configured Neon database locally with their own disposable users; they are intentionally excluded from the untrusted fork CI job.
 
 The current GitHub credential has read-only access to `labiacorp/LabIA`. Delivery uses `useleaner/LabIA:diego/influencer-studio` with a PR targeting `labiacorp/LabIA:v2`; no direct working-branch push or merge.
