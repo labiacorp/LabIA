@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { collectRunning, reconcileReservation } from "./generation";
+import { collectRunning, reconcileReservation, UserError } from "./generation";
 import { getBalanceBrl } from "./ledger";
 import { prisma } from "./prisma";
 import { MockProvider } from "./providers/mock";
@@ -159,7 +159,7 @@ describe.skipIf(!process.env.DATABASE_URL)("persisted 3x5s video chain", () => {
   it("rejects another user's scene and refuses assembly before all clips are ready", async () => {
     const owner = await seed(); const other = await seed();
     await expect(run({ ...owner, userId: other.userId })).rejects.toThrow(/imagem da cena/);
-    await expect(startAssembly({ ...owner, intentId: randomUUID(), expectedBrl: 0 })).rejects.toThrow(/três clipes/);
+    await expect(startAssembly({ ...owner, intentId: randomUUID(), expectedBrl: 0 })).rejects.toThrow(UserError);
     expect(await getBalanceBrl(other.userId)).toBe(10);
   });
 });

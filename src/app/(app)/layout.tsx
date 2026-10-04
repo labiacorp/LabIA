@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CostChip } from "@/components/ui/cost-chip";
 import { getBalanceBrl } from "@/lib/ledger";
 import { requireUserId } from "@/lib/session";
+import { mockEnabled } from "@/lib/provider";
 import { logout } from "./actions";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -18,6 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <Link href="/" aria-current="page" className="flex h-8 items-center rounded-control bg-lab-surface-2 px-3 text-body-sm font-medium">Influencers</Link>
         </nav>
         <div className="ml-auto flex items-center gap-4">
+          {mockEnabled() ? <span className="hidden text-caption text-lab-warning sm:inline">Geração simulada</span> : null}
           {balance.ok ? <CostChip state="actual" plain value={balance.value} prefix="saldo" /> : <CostChip state="unavailable" prefix="saldo" />}
           <form action={logout}><Button variant="ghost" size="sm">Sair</Button></form>
         </div>

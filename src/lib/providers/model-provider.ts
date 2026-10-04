@@ -164,6 +164,7 @@ export interface ModelProvider {
   capabilities?: ProviderCapabilities;
   listModels(kind: ModelKind): ModelInfo[];
   estimateCost(model: string, params: GenParams): CostEstimate;
+  validate?(model: string, params: GenParams): void;
   generate(model: string, params: GenParams): Promise<JobHandle>;
   waitForResult(
     handle: JobHandle,

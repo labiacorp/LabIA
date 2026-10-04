@@ -1,5 +1,7 @@
+import { findImageDefinition, IMAGE_DEFINITIONS, prepareImage, imageCost, type ImagePricingSnapshot } from "./image-models";
 import { fal } from "@fal-ai/client";
 import { ffmpegCost, ffmpegInput, ffmpegResult, isFfmpeg } from "./ffmpeg";
+import { findVideoDefinition, prepareVideo, VIDEO_DEFINITIONS, type VideoPricingSnapshot } from "./video-models";
 
 import {
   DEFAULT_USD_BRL_RATE,
@@ -641,26 +643,32 @@ export class FalProvider implements ModelProvider {
 
   listModels(kind: ModelKind): ModelInfo[] {
     if (kind === "video") {
-      return FAL_VIDEO_MODELS.map(({ aliases, defaultInput, ...model }) => {
+      const legacy = FAL_VIDEO_MODELS.map(({ aliases, defaultInput, ...model }) => {
         void aliases;
         void defaultInput;
         return model;
       });
+      return [...VIDEO_DEFINITIONS.map((entry): ModelInfo => ({
+        id: entry.id, provider: this.id, name: entry.name, kind: "video", description: "Vídeo a partir da imagem da cena.",
+        pricing: { unit: (entry.mapping === "hailuo" || entry.billingUnit === "clip") ? "clip" : "second", unitPriceUsd: (entry.mapping === "hailuo" || entry.billingUnit === "clip") ? entry.clipRates?.[String(entry.durations[0])]?.[entry.resolutions[0]] ?? entry.rates[String(entry.durations[0])] : entry.rates[entry.resolutions[0]], note: `https://fal.ai/models/${entry.id}; checked ${entry.verifiedOn ?? "2026-10-03"}; exact price depends on configuration` },
+      })), ...legacy.filter((entry) => !findVideoDefinition(entry.id))];
     }
 
     if (kind !== "image") {
       return [];
     }
 
-    return FAL_IMAGE_MODELS.map(({ aliases, defaultInput, ...model }) => {
+    return [...IMAGE_DEFINITIONS.map((entry): ModelInfo => ({ id: entry.id, name: entry.name, kind: "image", provider: this.id, description: "Imagem com referência do personagem.", pricing: { unit: "image", unitPriceUsd: Object.values(entry.rates)[0], note: `https://fal.ai/models/${entry.id}; checked2026-10-04` } })), ...FAL_IMAGE_MODELS.filter((model) => !findImageDefinition(model.id)).map(({ aliases, defaultInput, ...model }) => {
       void aliases;
       void defaultInput;
       return model;
-    });
+    })];
   }
 
   estimateCost(model: string, params: GenParams): CostEstimate {
+    if (findImageDefinition(model) && (params.imagePricing || model !== "fal-ai/nano-banana-2/edit")) return prepareImage(model, params, this.usdBrlRate).cost;
     if (isFfmpeg(model)) return ffmpegCost();
+    if (findVideoDefinition(model) && (!findFalVideoModel(model) || typeof params.image_url === "string")) return prepareVideo(model, params, this.usdBrlRate).cost;
     const videoModel = findFalVideoModel(model);
 
     if (videoModel) {
@@ -751,17 +759,32 @@ export class FalProvider implements ModelProvider {
     });
   }
 
+  validateInput(model: string, params: GenParams): void {
+    if (findImageDefinition(model) && (params.imagePricing || model !== "fal-ai/nano-banana-2/edit")) { prepareImage(model, params, this.usdBrlRate); return; }
+    if (findVideoDefinition(model)) { prepareVideo(model, params, this.usdBrlRate); return; }
+    if (isFfmpeg(model)) { ffmpegInput(model, params); return; }
+    if (findFalVideoModel(model)) { normalizeFalVideoInput(model, params); return; }
+    normalizeFalInput(resolveFalImageModelId(model), params);
+  }
+
+  validate(model: string, params: GenParams): void {
+    this.validateInput(model, params);
+    if (!this.hasCredentials) throw new Error("Configure a chave da fal.ai antes de gerar.");
+  }
+
   async generate(model: string, params: GenParams): Promise<JobHandle> {
     if (!this.hasCredentials) {
       throw new Error("FAL_KEY nao configurada. Defina a chave da fal.ai antes de gerar.");
     }
 
-    const resolvedModel = isFfmpeg(model) ? model : findFalVideoModel(model)
+    const nativeImage = findImageDefinition(model) && (params.imagePricing || model !== "fal-ai/nano-banana-2/edit") ? prepareImage(model, params, this.usdBrlRate) : null;
+    const native = findVideoDefinition(model) ? prepareVideo(model, params, this.usdBrlRate) : null;
+    const resolvedModel = nativeImage || native ? model : isFfmpeg(model) ? model : findFalVideoModel(model)
       ? getVideoEndpoint(model, params).endpoint
       : resolveFalImageModelId(model);
     const webhookUrl = getStringParam(params, "webhookUrl");
     const response = await fal.queue.submit(resolvedModel as never, {
-      input: isFfmpeg(resolvedModel) ? ffmpegInput(resolvedModel, params) : findFalVideoModel(resolvedModel)
+      input: nativeImage ? nativeImage.input : native ? native.input : isFfmpeg(resolvedModel) ? ffmpegInput(resolvedModel, params) : findFalVideoModel(resolvedModel)
         ? normalizeFalVideoInput(resolvedModel, params)
         : normalizeFalInput(resolvedModel, params),
       webhookUrl,
@@ -794,7 +817,7 @@ export class FalProvider implements ModelProvider {
       requestId: handle.id,
     });
     if (isFfmpeg(handle.model)) return ffmpegResult(handle.model, result.requestId, result.data);
-    const videoModel = findFalVideoModel(handle.model);
+    const videoModel = findVideoDefinition(handle.model) ?? findFalVideoModel(handle.model);
 
     if (videoModel) {
       const videos = normalizeGeneratedVideos(result.data);
@@ -853,6 +876,14 @@ export class FalProvider implements ModelProvider {
     params: GenParams,
     assets: GeneratedAsset[],
   ): CostEstimate {
+    if (params.imagePricing && findImageDefinition(model)) return imageCost(params.imagePricing as ImagePricingSnapshot, assets.length);
+    if (findImageDefinition(model) && model !== "fal-ai/nano-banana-2/edit") return imageCost(prepareImage(model, params, this.usdBrlRate).snapshot, assets.length);
+    if (findVideoDefinition(model) && (params.videoPricing || !findFalVideoModel(model))) {
+      const snapshot = params.videoPricing as VideoPricingSnapshot | undefined;
+      // Native recipes always fetch metadata before settlement; do not invent dimensions/duration here.
+      if (snapshot) return { usd: snapshot.quotedUsd, brl: snapshot.quotedBrl, usdBrlRate: snapshot.usdBrlRate, billingMode: "api", source: `${snapshot.source}; reserved estimate pending metadata` };
+      return prepareVideo(model, params, this.usdBrlRate).cost;
+    }
     const videoModel = findFalVideoModel(model);
 
     if (videoModel) {

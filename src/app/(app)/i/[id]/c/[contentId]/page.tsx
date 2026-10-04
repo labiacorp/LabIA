@@ -5,19 +5,19 @@ import { notFound } from "next/navigation";
 import { Badge, stepStatus } from "@/components/ui/badge";
 import { CostChip } from "@/components/ui/cost-chip";
 import { Alert } from "@/components/ui/alert";
-import { sceneQuote } from "@/lib/content-generation";
+import { getImageOptions } from "@/lib/content-generation";
 import { getBalanceBrl } from "@/lib/ledger";
-import { formatBrlValue } from "@/lib/money";
 import { estimateReel } from "@/lib/content-plan";
 import { PIPELINE } from "@/lib/pipeline";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/session";
-import { videoQuote } from "@/lib/video-chain";
+import { getVideoOptions } from "@/lib/video-options";
 import type { VideoChain } from "@/lib/video-chain";
 import { KitForm } from "../../personagem/kit-form";
 import { KitWatcher } from "../../personagem/kit-watcher";
 import { assembleVideo, generateScene, generateVideo } from "./actions";
 import { SceneForm } from "./scene-form";
+import { VideoForm } from "./video-form";
 
 export const dynamic = "force-dynamic";
 
@@ -33,20 +33,19 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
   const { steps } = content;
   const total = (pick: (step: (typeof steps)[number]) => { toString(): string } | null) => steps.reduce((sum, step) => sum + Number(pick(step)?.toString() ?? 0), 0);
   const reel = estimateReel();
-  const estimated = reel.totalBrl;
   const spent = total((step) => step.actualCostBrl);
-  const price = sceneQuote().totalBrl;
+  const imageOptions = getImageOptions(content.aspectRatio);
   const [balance, front] = await Promise.all([
     getBalanceBrl(userId),
     prisma.asset.findFirst({ where: { userId, influencerId: id, role: "FRONT", step: { status: { in: ["DONE", "APPROVED"] } } }, select: { id: true } }),
   ]);
   const blockedReason = !front ? "Gere o retrato de frente na aba Personagem antes de criar a cena."
-    : balance + 1e-9 < price ? `Saldo insuficiente: você tem ${formatBrlValue(balance)} e precisa de ${formatBrlValue(price)}.` : undefined;
-  const videoPrice = videoQuote().totalBrl;
+    : undefined;
+  const sceneAsset = steps.find((step) => step.kind === "IMAGE" && step.status === "DONE")?.assets[0];
+  const videoOptions = getVideoOptions(sceneAsset ? { width: sceneAsset.width, height: sceneAsset.height } : undefined);
   const sceneReady = steps.some((step) => step.kind === "IMAGE" && step.status === "DONE" && step.assets.length > 0);
-  const videoReady = steps.some((step) => step.kind === "VIDEO" && step.status === "DONE" && step.assets.length === 3);
-  const videoBlocked = !sceneReady ? "Disponível depois que a imagem da cena estiver pronta."
-    : balance + 1e-9 < videoPrice ? `Saldo insuficiente: você tem ${formatBrlValue(balance)} e precisa de ${formatBrlValue(videoPrice)}.` : undefined;
+  const videoReady = steps.some((step) => step.kind === "VIDEO" && step.status === "DONE" && step.assets.length > 0);
+  const videoBlocked = !sceneReady ? "Disponível depois que a imagem da cena estiver pronta." : undefined;
 
   return (
     <div className="grid gap-6">
@@ -56,7 +55,6 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
         <h1 className="mt-2 font-display text-h1">{content.title}</h1>
         {content.idea ? <p className="mt-1.5 max-w-form text-body-sm text-lab-text-dim">{content.idea}</p> : null}
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <CostChip state="estimated" value={estimated} prefix="reel de 15s (sem voz)" />
           <CostChip state="actual" value={spent} prefix="gasto" />
         </div>
       </div>
@@ -74,6 +72,7 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
               <div className="flex shrink-0 flex-col items-end gap-2">
                 <Badge variant={variant} dot>{label}</Badge>
                 {(() => {
+                  if ((step.kind === "VIDEO" || step.kind === "IMAGE") && !step.estimatedCostBrl) return null;
                   const planned = reel.perStep[step.kind];
                   if (step.actualCostBrl) return <CostChip size="sm" state="actual" value={Number(step.actualCostBrl.toString())} />;
                   if (step.estimatedCostBrl) return <CostChip size="sm" state="estimated" value={Number(step.estimatedCostBrl.toString())} />;
@@ -83,7 +82,7 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
               </div>
               {step.kind === "IMAGE" ? <div className="w-full min-w-0">
                 {step.status === "PENDING" || step.status === "QUOTED" ? <SceneForm
-                  action={generateScene.bind(null, id, contentId)} intent={randomUUID()} expectedBrl={price}
+                  action={generateScene.bind(null, id, contentId)} intent={randomUUID()} options={imageOptions} balanceBrl={balance}
                   prompt={content.idea || content.title} blockedReason={blockedReason}
                 /> : null}
                 {step.status === "RUNNING" ? <p role="status" className="mt-3 text-body-sm text-lab-text-dim">Gerando imagem… O custo está reservado.</p> : null}
@@ -94,19 +93,17 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
                 ))}
               </div> : null}
               {step.kind === "VIDEO" ? <div className="w-full min-w-0">
-                {step.status === "PENDING" || step.status === "QUOTED" ? <SceneForm
-                  action={generateVideo.bind(null, id, contentId)} intent={randomUUID()} expectedBrl={videoPrice}
-                  prompt={content.idea || content.title} blockedReason={videoBlocked} fieldLabel="Movimento"
-                  label="Aprovar custo e gerar 3 clipes"
-                  description="Três blocos de 5s. Cada continuação começa no último quadro do clipe anterior."
+                {step.status === "PENDING" || step.status === "QUOTED" ? <VideoForm
+                  action={generateVideo.bind(null, id, contentId)} intent={randomUUID()} balanceBrl={balance} options={videoOptions}
+                  prompt={content.idea || content.title} blockedReason={videoBlocked}
                 /> : null}
                 {step.status === "RUNNING" ? <p role="status" className="text-body-sm text-lab-text-dim">
-                  Gerando vídeo… {(step.input as { chain?: VideoChain }).chain?.clips.length ?? 0} de 3 clipes verificados. O custo total está reservado.
+                  Gerando vídeo… {(step.input as { chain?: VideoChain }).chain?.clips.length ?? 0} de {(step.input as { chain?: VideoChain }).chain?.recipe?.blocks ?? 3} clipes verificados. O custo está reservado.
                 </p> : null}
               </div> : null}
               {step.kind === "ASSEMBLY" && (step.status === "PENDING" || step.status === "QUOTED") ? <div className="w-full">
                 <KitForm action={assembleVideo.bind(null, id, contentId)} intent={randomUUID()} expectedBrl={0}
-                  label="Montar vídeo final" blockedReason={videoReady ? undefined : "Disponível depois dos três clipes."} />
+                  label="Finalizar vídeo" blockedReason={videoReady ? undefined : "Disponível depois da geração do vídeo."} />
               </div> : null}
               {step.kind !== "IMAGE" && step.status === "FAILED" ? <div className="w-full"><Alert variant="error" title="Esta etapa falhou">{step.error}</Alert></div> : null}
               {step.assets.filter((asset) => asset.kind === "VIDEO").sort((a, b) => {
