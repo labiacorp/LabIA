@@ -3,6 +3,7 @@
 ## Assignment
 
 - Owner: Felipe + Codex.
+- GitHub review: [draft PR #5](https://github.com/labiacorp/LabIA/pull/5), targeting `v2`; open and not merged.
 - Branch: `felipe/labia-v2-work`, created from `v2` at `ded7c3146667e13e9866fd0bb256643fd82edeef`.
 - Started: 2026-10-03.
 - Status: implementation block finished locally on 2026-10-04, marked finished at Felipe's request; awaiting full-app review on 2026-10-05 before deciding whether to integrate into `v2`; Felipe subsequently authorized committing/publishing the task branch for team visibility. This status does not assert complete fal.ai catalog coverage or live provider verification.
@@ -70,3 +71,5 @@ Known follow-ups are retained explicitly:complete fal.ai endpoint coverage, GPT 
 Felipe subsequently requested GitHub visibility for the team. This authorizes committing/publishing only `felipe/labia-v2-work` and opening a draft PR targeting `v2`. It does not authorize merging into `v2` or `main`, deploying or running paid generations. Tomorrow's full-app review remains the integration gate.
 
 `origin/v2` advanced to `ad2a49f` (influencer studio) while this task branch was based on `ded7c31`. The draft must be reviewed together with that work, including overlap in PROJECT_STATUS,layout and the new-influencer route. No concurrent studio work is being overwritten or merged automatically. Reviewers should also decide the existing reconciliation policy when calculated actual spend exceeds the approved estimated reservation; it can produce an additional debit. This is inherited behavior retained by the new measured-output models, not a claim of a hard spending ceiling.
+
+Publication completed: implementation commit `c6c5c31` pushed to `origin/felipe/labia-v2-work`; draft[PR#5](https://github.com/labiacorp/LabIA/pull/5) opened with base`v2`. Review and known follow-ups are visible to repository members. No merge or manual deployment.
