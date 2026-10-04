@@ -10,22 +10,33 @@ export async function updateAccount(
   form: FormData,
 ) {
   const userId = await requireUserId();
-  const result = z.string().trim().min(1).max(80).safeParse(form.get("name"));
+  const result = z
+    .object({
+      name: z.string().trim().min(1).max(80),
+      bio: z.string().trim().max(240).default(""),
+      defaultAspectRatio: z.enum(["9:16", "16:9", "1:1"]).default("9:16"),
+      defaultContentView: z.enum(["steps", "canvas"]).default("steps"),
+    })
+    .safeParse(Object.fromEntries(form));
   if (!result.success)
-    return { ok: false, message: "Use um nome entre 1 e 80 caracteres." };
+    return {
+      ok: false,
+      message:
+        "Use um nome entre 1 e 80 caracteres, uma bio de até 240 e preferências válidas.",
+    };
   try {
     await prisma.user.update({
       where: { id: userId },
-      data: { name: result.data },
+      data: result.data,
     });
   } catch {
     return {
       ok: false,
-      message: "Não conseguimos salvar seu nome. Tente novamente.",
+      message: "Não conseguimos salvar seu perfil. Tente novamente.",
     };
   }
   revalidatePath("/", "layout");
-  return { ok: true, message: "Seu nome foi atualizado." };
+  return { ok: true, message: "Seu perfil foi atualizado." };
 }
 
 export async function revokeSessions() {

@@ -16,7 +16,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       },
     }),
     prisma.content.findMany({
-      where: { influencer: { userId } }, orderBy: { updatedAt: "desc" }, take: 30,
+      where: { influencer: { userId }, archivedAt: null }, orderBy: { updatedAt: "desc" }, take: 30,
       include: {
         influencer: { select: { name: true } },
         assets: { where: { kind: "IMAGE" }, orderBy: { createdAt: "desc" }, take: 1 },

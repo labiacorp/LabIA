@@ -71,7 +71,15 @@ export default async function ContentPage({
       </div>
     );
 
-  const canvasView = (await searchParams).view === "canvas";
+  const requestedView = (await searchParams).view;
+  const preferences = requestedView
+    ? null
+    : await prisma.user.findUnique({
+        where: { id: userId },
+        select: { defaultContentView: true },
+      });
+  const canvasView =
+    (requestedView ?? preferences?.defaultContentView) === "canvas";
   const { steps } = content;
   const script =
     (

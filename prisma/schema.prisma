@@ -58,6 +58,11 @@ model User {
   email       String        @unique
   name        String?
   image       String?
+  bio String @default("")
+  defaultAspectRatio String @default("9:16") @map("default_aspect_ratio")
+  defaultContentView String @default("steps") @map("default_content_view")
+  avatar Bytes?
+  avatarUpdatedAt DateTime? @map("avatar_updated_at")
   tokenVersion Int @default(0) @map("token_version")
   createdAt   DateTime      @default(now()) @map("created_at")
   influencers Influencer[]

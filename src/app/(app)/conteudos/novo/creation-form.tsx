@@ -6,9 +6,11 @@ import { createProduction } from "../management";
 export function CreationForm({
   characters,
   selected,
+  defaultAspectRatio = "9:16",
 }: {
   characters: { id: string; name: string }[];
   selected?: string;
+  defaultAspectRatio?: string;
 }) {
   const [error, action, pending] = useActionState(createProduction, "");
   const selectClass =
@@ -56,7 +58,11 @@ export function CreationForm({
       </label>
       <label className="grid gap-2 text-body-sm">
         Formato
-        <select name="aspectRatio" defaultValue="9:16" className={selectClass}>
+        <select
+          name="aspectRatio"
+          defaultValue={defaultAspectRatio}
+          className={selectClass}
+        >
           <option value="9:16">Vertical · 9:16</option>
           <option value="16:9">Horizontal · 16:9</option>
           <option value="1:1">Quadrado · 1:1</option>

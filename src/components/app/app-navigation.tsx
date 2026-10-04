@@ -17,6 +17,7 @@ import {
   Plug,
 } from "lucide-react";
 import { logout } from "@/app/(app)/actions";
+import { AccountAvatar } from "@/components/app/account-avatar";
 import { CostChip } from "@/components/ui/cost-chip";
 
 const links = [
@@ -33,23 +34,17 @@ export function AppNavigation({
   name,
   email,
   balance,
+  avatarVersion,
 }: {
   name: string | null;
   email: string;
   balance: number | null;
+  avatarVersion?: number;
 }) {
   const pathname = usePathname();
   const navigation = useRef<HTMLDialogElement>(null);
   const account = useRef<HTMLDialogElement>(null);
   const displayName = name || email.split("@")[0];
-  const initials = displayName
-    .trim()
-    .split(/\s+/)
-    .map((part) => part[0])
-    .filter((_, index, parts) => index === 0 || index === parts.length - 1)
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
   const active = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
   const menuLinks = () =>
@@ -106,7 +101,7 @@ export function AppNavigation({
           aria-label={`Abrir conta de ${displayName}`}
           className="flex size-11 shrink-0 items-center justify-center rounded-full border border-lab-border-strong bg-lab-surface-2 text-caption font-semibold focus-visible:outline-none focus-visible:shadow-lab-focus"
         >
-          {initials}
+          <AccountAvatar name={displayName} version={avatarVersion} />
         </button>
       </div>
       <dialog

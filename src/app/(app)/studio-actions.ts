@@ -52,8 +52,9 @@ export async function createStudioMotion(_: StudioState, data: FormData): Promis
     }).parse(Object.fromEntries(data));
     const owned = await prisma.influencer.findFirst({ where: { id: input.influencerId, userId }, select: { id: true, faceAssetId: true } });
     if (!owned?.faceAssetId) return { error: "Escolha um personagem com retrato de frente aprovado." };
+    const preferences = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { defaultAspectRatio: true } });
     const content = await prisma.content.create({ data: {
-      influencerId: owned.id, title: input.title, idea: input.idea,
+      influencerId: owned.id, title: input.title, idea: input.idea, aspectRatio: preferences.defaultAspectRatio,
       steps: { create: PIPELINE.map((step, position) => ({ kind: step.kind, position })) },
     } });
     influencerId = owned.id;

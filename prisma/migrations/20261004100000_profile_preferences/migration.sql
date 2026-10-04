@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "bio" TEXT NOT NULL DEFAULT '', ADD COLUMN "default_aspect_ratio" TEXT NOT NULL DEFAULT '9:16', ADD COLUMN "default_content_view" TEXT NOT NULL DEFAULT 'steps', ADD COLUMN "avatar" BYTEA, ADD COLUMN "avatar_updated_at" TIMESTAMP(3);

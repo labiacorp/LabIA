@@ -15,6 +15,10 @@ export default async function NewContentPage({
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   });
+  const preferences = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { defaultAspectRatio: true },
+  });
   const chosen = (await searchParams).influencer;
   return (
     <div className="mx-auto max-w-2xl">
@@ -28,6 +32,7 @@ export default async function NewContentPage({
       {characters.length ? (
         <CreationForm
           characters={characters}
+          defaultAspectRatio={preferences.defaultAspectRatio}
           selected={
             characters.some((c) => c.id === chosen) ? chosen : undefined
           }

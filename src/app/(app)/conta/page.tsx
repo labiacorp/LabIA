@@ -6,6 +6,7 @@ import { requireUserId } from "@/lib/session";
 import { dateLabel, currency } from "@/lib/platform";
 import { logout } from "../actions";
 import { AccountForm } from "./account-form";
+import { AvatarForm } from "./avatar-form";
 import { SessionControls } from "./session-controls";
 
 function rollingWindowStart() {
@@ -20,10 +21,18 @@ export default async function AccountPage() {
     await Promise.all([
       prisma.user.findUniqueOrThrow({
         where: { id: userId },
-        select: { name: true, email: true, createdAt: true },
+        select: {
+          name: true,
+          email: true,
+          createdAt: true,
+          bio: true,
+          defaultAspectRatio: true,
+          defaultContentView: true,
+          avatarUpdatedAt: true,
+        },
       }),
       prisma.influencer.count({ where: { userId } }),
-      prisma.content.count({ where: { influencer: { userId } } }),
+      prisma.content.count({ where: { influencer: { userId }, archivedAt: null } }),
       prisma.asset.count({ where: { userId } }),
       prisma.ledgerEntry.aggregate({
         where: { userId },
@@ -48,7 +57,7 @@ export default async function AccountPage() {
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
           ["Personagens", influencers, "/influenciadores"],
-          ["Conteúdos", contents, "/conteudos"],
+          ["Conteúdos ativos", contents, "/conteudos"],
           ["Mídias", assets, "/biblioteca"],
           [
             "Saldo disponível",
@@ -74,7 +83,16 @@ export default async function AccountPage() {
         <div className="grid gap-5">
           <section className={card}>
             <h2 className="mb-5 font-display text-xl">Seu perfil</h2>
-            <AccountForm name={user.name} />
+            <AvatarForm
+              name={user.name || user.email}
+              version={user.avatarUpdatedAt?.getTime()}
+            />
+            <AccountForm
+              name={user.name}
+              bio={user.bio}
+              defaultAspectRatio={user.defaultAspectRatio}
+              defaultContentView={user.defaultContentView}
+            />
             <dl className="mt-6 grid gap-4 border-t border-lab-border pt-5 text-body-sm">
               <div>
                 <dt className="text-lab-text-muted">E-mail de acesso</dt>

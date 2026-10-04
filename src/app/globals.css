@@ -226,3 +226,8 @@
   .studio-dialog { width: calc(100vw - 1.5rem); max-height: 90dvh; }
   .studio-empty { padding: 1.5rem .75rem; }
 }
+
+/* User-controlled names must wrap without forcing grid/flex tracks wider. */
+#app-content { min-width: 0; overflow-wrap: anywhere; }
+#app-content :where(h1, h2, h3, p, span, a, dd) { overflow-wrap: anywhere; }
+#app-content :where(input, textarea, select) { min-width: 0; max-width: 100%; }

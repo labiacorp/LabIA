@@ -9,6 +9,10 @@ export async function GET() {
     where: { id: userId },
     select: {
       name: true,
+      bio: true,
+      avatar: true,
+      defaultAspectRatio: true,
+      defaultContentView: true,
       email: true,
       createdAt: true,
       influencers: {
@@ -25,6 +29,7 @@ export async function GET() {
               title: true,
               idea: true,
               aspectRatio: true,
+              archivedAt: true,
               status: true,
               createdAt: true,
             },
@@ -46,9 +51,21 @@ export async function GET() {
     },
   });
   if (!user) return new Response(null, { status: 404 });
+  const { avatar, ...profile } = user;
   return new Response(
     JSON.stringify(
-      { exportedAt: new Date().toISOString(), account: user },
+      {
+        exportedAt: new Date().toISOString(),
+        account: {
+          ...profile,
+          photo: avatar
+            ? {
+                mimeType: "image/webp",
+                base64: Buffer.from(avatar).toString("base64"),
+              }
+            : null,
+        },
+      },
       null,
       2,
     ),

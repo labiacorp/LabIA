@@ -1,5 +1,7 @@
 # V2 platform completion plan
 
+The updated research-led sequence and acceptance criteria are maintained in [Platform benchmark and execution](research/platform-benchmark-and-execution.md). The latest whole-app user audit is in [User audit](qa/2026-10-04-user-audit.md).
+
 Diego requested an overview before further implementation and then authorized starting this sequence on 2026-10-03. The studio is the primary creation tool within LabIA. The complete application also needs navigation, account management, production management and media management.
 
 ## Architecture
@@ -16,7 +18,7 @@ Keep the V2 model: Influencer > Content > Steps. Adapt V1's projects and flows t
 
 ## Current delivery boundaries
 
-- Block 1 provides searches and status filtering, with an explicit 100-result limit. Editing/archive and full pagination remain in subsequent blocks.
+- Account/profile, global content pagination and reversible content archives are implemented. Character and ledger pagination remain follow-up work.
 - The studio remains at `/`. The brand link opens `/painel`; all existing studio and production links keep working.
 - Global media library is now delivered; character libraries reuse it with a character filter.
 - Balance/extract is read-only. Credit additions remain team-operated; no payment or top-up action is introduced.

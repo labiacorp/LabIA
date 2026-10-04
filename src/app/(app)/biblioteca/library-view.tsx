@@ -78,8 +78,14 @@ export function DownloadAsset({ id }: { id: string }) {
           try {
             const response = await fetch(`/api/assets/${id}/download`);
             if (!response.ok) {
-              const data = await response.json();
-              throw new Error(data.error || "Não foi possível baixar agora.");
+              setError(
+                response.status === 401
+                  ? "Sua sessão expirou. Entre novamente para baixar o arquivo."
+                  : response.status === 404
+                    ? "Este arquivo não está disponível para sua conta."
+                    : "Não foi possível baixar o arquivo agora. Tente novamente.",
+              );
+              return;
             }
             const blob = await response.blob();
             const url = URL.createObjectURL(blob);
@@ -93,11 +99,9 @@ export function DownloadAsset({ id }: { id: string }) {
             anchor.click();
             anchor.remove();
             window.setTimeout(() => URL.revokeObjectURL(url), 10000);
-          } catch (failure) {
+          } catch {
             setError(
-              failure instanceof Error
-                ? failure.message
-                : "Não foi possível baixar agora.",
+              "Não foi possível baixar o arquivo. Confira sua conexão e tente novamente.",
             );
           } finally {
             setPending(false);
