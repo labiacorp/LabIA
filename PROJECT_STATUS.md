@@ -12,7 +12,7 @@ Next.js 16 (App Router, Server Actions) + TypeScript + Tailwind 4 (legacy `tailw
 
 ## Screens (`src/app`)
 
-`/acesso` (shared access code), `/login`, `/painel` (dashboard), `/conta` (editable display name and sign-out), `/influenciadores` (owned character list and search), `/conteudos` (owned production list, search and status filters), `/saldo` (available balance and latest 100 ledger entries), `/` (primary influencer studio: appearance builder, presets/sheet previews, owned characters, motion briefs, history), `/influencers/new` (redirect to studio), `/i/[id]` (tabs: Conteúdos, Personagem, Biblioteca, Perfil), `/i/[id]/c/[contentId]` (the pipeline, one card per step). API: `POST /api/influencers/[id]/refresh` (polls running jobs), `/api/auth/*`.
+`/acesso` (shared access code), `/login`, `/painel` (dashboard), `/conta` (editable display name and sign-out), `/influenciadores` (owned character list and search), `/conteudos` (owned production list, search and status filters), `/saldo` (available balance and latest 100 ledger entries), `/biblioteca` (global media filters/pages/details/downloads), `/conexoes` (integration readiness), `/` (primary influencer studio: appearance builder, presets/sheet previews, owned characters, motion briefs, history), `/influencers/new` (redirect to studio), `/i/[id]` (tabs: Conteúdos, Personagem, Biblioteca, Perfil), `/i/[id]/c/[contentId]` (the pipeline, one card per step). API: `POST /api/influencers/[id]/refresh` (polls running jobs), `/api/auth/*`.
 
 ## How generation works (`src/lib/generation.ts`)
 
@@ -37,6 +37,7 @@ User, Influencer (with `visualSignature`), Content, Step (`kind CHARACTER` belon
 Goal: a platform that is feature-complete, deployed and ready for the founders to test real models by hand. Building and testing here never runs a real generation (use `FAL_MOCK=1`). The UI must follow `design/reference/` (Claude Design handoff; see AGENTS.md): the current build is generic and must be improved from that reference, adapted to V2's structure. Keep everything in the tokens (`tailwind.config.ts`, `src/app/globals.css`, `src/components/ui`) so that a later rebrand by Claude Design is a token change.
 
 ### Done
+- Management/auth audit fixes: global owned library with filters and pagination, image/video/audio previews, provenance and safe authenticated downloads; editable character profile/category; controlled login errors, OAuth readiness and development email validation; read-only Connections configuration view. Missing fal credentials fail before a balance reservation. Production dependency audit has zero findings after targeted overrides; five development lint/glob alerts remain.
 - Platform shell: active desktop navigation and accessible native mobile/account dialogs; dashboard with account-scoped counts and recent productions; editable account display name retained on subsequent sign-in; influencer/content searches and content-status filters; read-only balance and ledger. Lists show the latest 100 matches and disclose the limit. Shared loading/error states and empty/filter-empty states. The studio remains at `/`; the wordmark opens `/painel`.
 - Foundation: Next 16, Prisma 7 on Neon, Auth.js with Google, access code gate, Claude Design tokens and `ui` components.
 - Character kit: sheet then front/profile/detail portraits (quoted in R$, idempotent, balance reserved under a row lock, refunds, ambiguous submit never resent, manual reconciliation via `scripts/ledger.ts`).
@@ -50,7 +51,7 @@ Goal: a platform that is feature-complete, deployed and ready for the founders t
 2. **Files that last.** Copy generated media from fal URLs to Vercel Blob; uploads (base photo, audio, an existing character sheet), ported from V1 `app/api/assets/upload` with its tests. Needs the founders: `BLOB_READ_WRITE_TOKEN` in `.env.local` and on Vercel.
 3. **Voice and lip sync.** Research is in `docs/video-and-voice-research.md` (LatentSync after assembly recommended for cost; PixVerse and Sync Lipsync 2 are alternatives). Needs the founders: lip sync option, uploaded audio vs generated voice.
 4. **Complete the pipeline.** Real SCRIPT step (needs the founders: user-written vs AI-written, and the model), retry/regeneration of any step, reuse clips of a failed chain, download the final video, archive/delete content and influencers.
-5. **Management screens.** Global library with filters (V1 has them), authorized manual top-up management (balance/extract UI is read-only), per-user spend limit, cost-per-piece report, and pagination beyond the disclosed 100-item list limits. Influencer/content editing and archiving remain to build.
+5. **Management screens.** Global library filters and pagination are implemented. Remaining: authorized manual top-up management (balance/extract UI is read-only), per-user spend limit, cost-per-piece report, and pagination beyond the disclosed 100-item list limits. Character profile editing is implemented; content editing and archiving remain.
 6. **Canvas** as a second view of the same steps (port V1 pieces: typed handles, invalid-edge hint, palette by area).
 7. **UI/UX pass from the design reference.** Continue the influencer detail and production screens, global library and states (loading, empty, error) using `design/reference/` and its `MAPA-DE-APLICACAO.md` copy rules, adapted to Influencers > Content > Steps. Can start now, no decisions needed.
 8. **Finish.** Terms and privacy pages, mobile pass, optional MCP.
@@ -65,4 +66,4 @@ Listed in `.env.example`. `DIRECT_URL` (unpooled) is used by Prisma migrations, 
 
 ## Run and check
 
-`npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (50 tests; the money-path ones run against the database with their own seeded user, deleted afterwards), `npm run build`.
+`npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (61 tests; the money-path ones run against the database with their own seeded user, deleted afterwards), `npm run build`.

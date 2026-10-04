@@ -2,6 +2,7 @@ import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 
+import { z } from "zod";
 import { hasPass } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 
@@ -19,7 +20,10 @@ declare module "@auth/core/jwt" {
 // Optional extra restriction on top of the access code: when ALLOWED_EMAILS is set, only those e-mails get in.
 function isAllowed(email?: string | null) {
   if (!email) return false;
-  const allowed = (process.env.ALLOWED_EMAILS ?? "").split(",").map((item) => item.trim().toLowerCase()).filter(Boolean);
+  const allowed = (process.env.ALLOWED_EMAILS ?? "")
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
   return allowed.length === 0 || allowed.includes(email.toLowerCase());
 }
 
@@ -31,15 +35,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   pages: { signIn: "/login", error: "/login" },
   providers: [
-    Google({ clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET }),
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
     ...(devLogin
       ? [
           Credentials({
             id: "dev",
             credentials: { email: {} },
             authorize: async (credentials) => {
-              const email = String(credentials?.email ?? "").trim().toLowerCase();
-              return isAllowed(email) ? { id: email, email } : null;
+              const email = String(credentials?.email ?? "")
+                .trim()
+                .toLowerCase();
+              return z.email().safeParse(email).success && isAllowed(email)
+                ? { id: email, email }
+                : null;
             },
           }),
         ]
@@ -49,7 +60,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ account, profile, user }) {
       // The access code guards every entry point, including a direct hit on /api/auth/*.
       if (!(await hasPass())) return false;
-      if (account?.provider === "google") return profile?.email_verified === true && isAllowed(profile.email);
+      if (account?.provider === "google")
+        return profile?.email_verified === true && isAllowed(profile.email);
       return devLogin && isAllowed(user.email);
     },
     async jwt({ token, user }) {

@@ -1,31 +1,63 @@
 import { redirect } from "next/navigation";
-
-import { auth, signIn } from "@/auth";
+import { auth } from "@/auth";
 import { hasPass } from "@/lib/access";
+import { googleConfigured, loginErrorMessage } from "@/lib/auth-config";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-
-export default async function LoginPage() {
-  if ((await auth())?.user) redirect("/");
+import { DevelopmentLogin } from "./dev-form";
+import { loginGoogle } from "./actions";
+export const metadata = { title: "Entrar · LabIA" };
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  if ((await auth())?.user) redirect("/painel");
   if (!(await hasPass())) redirect("/acesso");
-  const devLogin = process.env.NODE_ENV === "development";
-
+  const enabled = googleConfigured();
+  const message = loginErrorMessage((await searchParams).error);
   return (
-    <main className="mx-auto flex min-h-screen max-w-form flex-col justify-center gap-8 px-5">
+    <main className="mx-auto flex min-h-screen max-w-form flex-col justify-center gap-6 px-5 py-8">
       <div>
-        <p className="lab-wordmark text-h1">Lab<span>IA</span></p>
-        <p className="mt-3 text-body text-lab-text-dim">Crie conteúdo com influencers de IA, com o custo à vista antes de cada geração.</p>
+        <p className="lab-wordmark text-h1">
+          Lab<span>IA</span>
+        </p>
+        <h1 className="mt-6 font-display text-h2">Entre no seu laboratório</h1>
+        <p className="mt-3 text-body-sm leading-6 text-lab-text-dim">
+          Seus personagens, produções e arquivos em um só lugar. Cada geração
+          mostra o custo antes de você confirmar.
+        </p>
       </div>
-      <form action={async () => { "use server"; await signIn("google", { redirectTo: "/" }); }}>
-        <Button size="lg" className="w-full">Entrar com Google</Button>
+      {message ? <Alert variant="error" title={message} /> : null}
+      <form action={loginGoogle}>
+        <Button
+          size="lg"
+          variant="secondary"
+          disabled={!enabled}
+          className="w-full"
+        >
+          <span
+            aria-hidden
+            className="flex size-5 items-center justify-center rounded-full bg-lab-text text-xs font-bold text-lab-bg"
+          >
+            G
+          </span>
+          Continuar com Google
+        </Button>
       </form>
-      {devLogin ? (
-        <form action={async (data: FormData) => { "use server"; await signIn("dev", { email: data.get("email"), redirectTo: "/" }); }} className="grid gap-2 border-t border-lab-border pt-5">
-          <p className="font-mono text-eyebrow uppercase text-lab-text-muted">Só em desenvolvimento</p>
-          <Input name="email" type="email" required placeholder="e-mail liberado" />
-          <Button variant="secondary">Entrar sem Google</Button>
-        </form>
+      {!enabled ? (
+        <Alert
+          variant="info"
+          title="O login com Google ainda está sendo preparado."
+        >
+          A equipe precisa concluir a configuração para liberar esta forma de
+          acesso.
+        </Alert>
       ) : null}
+      {process.env.NODE_ENV === "development" ? <DevelopmentLogin /> : null}
+      <p className="text-caption text-lab-text-muted">
+        Beta fechada · use a conta que recebeu acesso.
+      </p>
     </main>
   );
 }
