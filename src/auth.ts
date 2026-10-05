@@ -8,7 +8,7 @@ import { z } from "zod";
 import { hasPass } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/password";
-import { clientIp, hit } from "@/lib/rate-limit";
+import { clearHits, clientIp, hit } from "@/lib/rate-limit";
 
 declare module "next-auth" {
   interface Session {
@@ -73,6 +73,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
         if (!(await verifyPassword(password, row?.passwordHash)) || !row) return null;
         if (!row.emailVerifiedAt) throw new UnverifiedEmail();
+        await clearHits(`login:${email}`);
         return { id: row.id, email };
       },
     }),

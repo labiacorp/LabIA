@@ -15,7 +15,7 @@ vi.mock("next-auth", () => ({
     return {};
   },
 }));
-vi.mock("@/lib/rate-limit", () => ({ hit: async () => true, clientIp: async () => "test" }));
+vi.mock("@/lib/rate-limit", () => ({ hit: async () => true, clearHits: async () => {}, clientIp: async () => "test" }));
 vi.mock("@/lib/prisma", () => ({
   prisma: { user: { findUnique: mocks.find, upsert: mocks.upsert } },
 }));

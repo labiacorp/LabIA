@@ -1,6 +1,14 @@
 # Plan: owner accounts and the full account pipeline
 
-Status: proposal, 2026-10-05. Nothing here is built yet. Companion to
+Status (2026-10-05, branch `diego/account-pipeline`): phases 0 to 6 are built, tested (unit + Playwright
+at desktop and 390px) and committed; phase 7 is partly done (enumeration-safe sign-up, CI). Still open:
+the founders' decisions marked "Needs the founders" below, Resend credentials, the legal review, and the
+password minimum (4 by decision until launch). Current state lives in `PROJECT_STATUS.md`.
+
+Built differently from the proposal: connecting Google needs no button (a Google sign-in with the same
+address binds it; `googleSub` keeps it bound after an e-mail change), so there is no connect/disconnect
+action; the owner top-up is two in-form steps rather than a confirm dialog; account deletion removes
+the ledger with the account (no card payments exist yet), which the founders may still want to change. Companion to
 `docs/qa/2026-10-05-account-audit-from-leaner.md` (the gaps this plan closes, with the Leaner
 code each one can be ported from).
 

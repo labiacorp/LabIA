@@ -22,6 +22,9 @@ export async function hit(key: string, limit: number, windowSeconds: number) {
   return accepted;
 }
 
+// A success clears its own key, so only consecutive failures add up (the login limiter).
+export const clearHits = (key: string) => prisma.rateLimitEvent.deleteMany({ where: { key } });
+
 export const TOO_MANY_ATTEMPTS =
   "Muitas tentativas. Espere alguns minutos e tente de novo.";
 

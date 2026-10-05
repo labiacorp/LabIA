@@ -24,3 +24,6 @@ This file is identical to `AGENTS.md` (read by Codex). Edit one, mirror the othe
 - `Button asChild` (Radix Slot) breaks in server components with React 19: use `buttonVariants` on a `<Link>`.
 - `CostChip` states `free`, `estimated` and `actual` need a numeric `value` (`free` takes `0`), otherwise it shows "A calcular".
 - `FalProvider.waitForResult` blocks; use `checkResult`. Next 16: `params` and `searchParams` are Promises; read `node_modules/next/dist/docs` for unfamiliar APIs.
+- A client component must never import a server module, even for a constant: `password-form.tsx` importing `src/lib/password.ts` shipped `node:crypto` and a module-level scrypt hash to the browser. Shared constants live in import-free modules (`password-rules.ts`, `consent.ts`).
+- Every `/admin` server action starts with `await requireOwner()` (a layout does not protect an action; `admin/actions.test.ts` checks it). Owners are granted only with `scripts/owner.ts`.
+- `npm run test:e2e` runs its own `next dev` on port 3100 with `FAL_MOCK=1`; never point it at a server on 3000. Specs seed through `tests/helpers.ts` (`sql` over `pg`: the Prisma 7 client is ESM-only and Playwright loads CommonJS) and delete their accounts in `afterAll`.

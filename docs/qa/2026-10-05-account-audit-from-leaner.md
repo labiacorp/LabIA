@@ -1,6 +1,10 @@
 # Account, profile and settings audit, 2026-10-05 (from Leaner's playbook)
 
-Report-only. Nothing in the code or database was changed. Scope: `/login`, `/acesso`,
+Report-only when written. Status update, same day: A1, A2, A4, A5 and B1 to B8 are implemented on
+branch `diego/account-pipeline` (see `docs/account-and-owner-plan.md`); A3 stays open by the founders'
+decision (4-character minimum until launch). Correction to A4 below: Leaner's per-e-mail counter can
+also be filled by a stranger's failures; the real difference was that LabIA counted successful logins
+too. A success now clears the counter. Scope: `/login`, `/acesso`,
 `/conta` and everything behind it (`src/auth.ts`, `src/app/login/actions.ts`,
 `src/app/(app)/conta/*`, `src/app/api/account/*`, `src/lib/{password,access,rate-limit,session}.ts`).
 

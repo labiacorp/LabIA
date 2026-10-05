@@ -12,7 +12,7 @@ Next.js 16 (App Router, Server Actions) + TypeScript + Tailwind 4 (legacy `tailw
 
 ## Screens (`src/app`)
 
-`/acesso` (shared access code), `/login`, `/painel` (dashboard), `/conta` (profile/photo/bio and effective format/view preferences, owned usage totals, balance, rolling 30-day net reservations, private JSON export, current/all-session sign-out), `/influenciadores` (owned character list and search), `/conteudos` (owned production list, 24-item pages, search, character/status filters and reversible archives), `/conteudos/novo` (free draft creation with owned character and 9:16/16:9/1:1 format), `/saldo` (available balance and latest 100 ledger entries), `/biblioteca` (global owned media, filters, 24-item pages, details and downloads), `/conexoes` (read-only integration readiness), `/` (primary influencer studio: appearance builder, presets/sheet previews, owned characters, motion briefs, history), `/influencers/new` (redirect to studio), `/i/[id]` (tabs: Conteúdos, Personagem, Biblioteca, Perfil), `/i/[id]/c/[contentId]` (editable title/brief when no generation is running, free script, pipeline steps/canvas, final review and downloads). API: authenticated `GET /api/assets/[id]/download`, `POST /api/influencers/[id]/refresh` (polls running jobs), `/api/auth/*`.
+`/acesso` (shared access code), `/login`, `/painel` (dashboard), `/conta` (profile/photo/bio and effective format/view preferences, owned usage totals, balance, rolling 30-day net reservations, private JSON export), `/conta/seguranca` (e-mail, password, Google status, sign out everywhere, delete account), `/admin` (owners only), `/verificar-email`, `/esqueci-senha`, `/redefinir-senha/[token]`, `/termos`, `/privacidade`, `/consentimento`, `/influenciadores` (owned character list and search), `/conteudos` (owned production list, 24-item pages, search, character/status filters and reversible archives), `/conteudos/novo` (free draft creation with owned character and 9:16/16:9/1:1 format), `/saldo` (available balance and latest 100 ledger entries), `/biblioteca` (global owned media, filters, 24-item pages, details and downloads), `/conexoes` (read-only integration readiness), `/` (primary influencer studio: appearance builder, presets/sheet previews, owned characters, motion briefs, history), `/influencers/new` (redirect to studio), `/i/[id]` (tabs: Conteúdos, Personagem, Biblioteca, Perfil), `/i/[id]/c/[contentId]` (editable title/brief when no generation is running, free script, pipeline steps/canvas, final review and downloads). API: authenticated `GET /api/assets/[id]/download`, `POST /api/influencers/[id]/refresh` (polls running jobs), `/api/auth/*`.
 
 ## Reusable drafts and referrals
 
@@ -39,6 +39,18 @@ Character kit = step 1 sheet (nano-banana-2, 2K, 3:2) then step 2 portraits fron
 ## Access
 
 `LABIA_ACCESS_CODE` + `AUTH_SECRET` gate sign-in (signed cookie, 8 tries/10 min/IP in Postgres, fails closed in production when unset); the check also runs in the Auth.js `signIn` callback. `ALLOWED_EMAILS` is an optional extra restriction.
+
+## Accounts, owners and e-mail (2026-10-05)
+
+Full plan and reasoning: `docs/account-and-owner-plan.md`; the audit it answers: `docs/qa/2026-10-05-account-audit-from-leaner.md`.
+
+- **E-mail confirmation.** Password sign-up never signs in: it mails a link and a 6-digit code (`EmailToken`, hashed, single use, the latest of a purpose retires older ones) and the password provider refuses an unconfirmed address. Sign-up with a taken address answers the same and mails the owner instead. Google sign-ins bind `googleSub`, mark the address verified and drop a password nobody proved (closes the pre-account takeover). Password accounts created before the migration confirm like new ones; Google-only ones were backfilled as verified.
+- **Password reset** (`/esqueci-senha`): 1-hour single-use link; also how a Google-only account gets a password; ends every session.
+- **Acesso e segurança** (`/conta/seguranca`): change password (current one required; other sessions end), change e-mail (old address keeps working until the new one is confirmed from its own inbox, then sessions end and the old address is notified), delete account (typed EXCLUIR; refused while a step runs or has an unresolved cost, guard inside the delete; private uploads removed). Google-only accounts prove themselves with a Google sign-in from the last 5 minutes (`src/lib/reauth.ts`): one gate for the page, revealed when a locked row is tapped, plus an inline copy for a session that ages out mid-form.
+- **Logout revokes**: "Sair" bumps `tokenVersion`, so it equals "sair de todos os navegadores".
+- **Owners.** `User.role` OWNER, granted only with `npx tsx scripts/owner.ts grant <email>` (never by UI or env var), honoured only on a Google session (`src/lib/owner.ts`; the dev provider stands in locally). `/admin`: accounts with balances, manual top-up (two-step, idempotent per operation key, replaces `scripts/ledger.ts topup`), reconciliation of uncertain steps, and the `admin_actions` log. Every admin action calls `requireOwner()` first; a test enforces it. No founder account is an owner until someone runs the grant.
+- **Terms and consent.** `/termos` and `/privacidade` are DRAFTS: legal entity, CNPJ and contact address are missing, and the image-rights/likeness clauses need the founders' and a lawyer's read. Password sign-up requires the checkbox; Google-created accounts accept once at `/consentimento` (enforced in the `(app)` layout). Bump `CURRENT_TERMS_VERSION` and `LEGAL_UPDATED_AT` (`src/lib/consent.ts`) by hand when the text changes; accounts created before `CONSENT_TRACKING_SINCE` are never asked and never backfilled.
+- **E-mail sending**: Resend HTTP API (`src/lib/email.ts`). Production requires `RESEND_API_KEY`, `EMAIL_FROM` and `LABIA_PUBLIC_URL` (links are never built from the request Host). Development writes to `.handoff/outbox.jsonl`.
 
 ## Data (`prisma/schema.prisma`)
 
@@ -71,10 +83,10 @@ Goal: a platform that is feature-complete, deployed and ready for the founders t
 2. **Files that last.** Copy generated media from fal URLs to Vercel Blob; uploads (base photo, audio, an existing character sheet), ported from V1 `app/api/assets/upload` with its tests. Needs the founders: `BLOB_READ_WRITE_TOKEN` in `.env.local` and on Vercel.
 3. **Voice and lip sync.** Research is in `docs/video-and-voice-research.md` (LatentSync after assembly recommended for cost; PixVerse and Sync Lipsync 2 are alternatives). Needs the founders: lip sync option, uploaded audio vs generated voice.
 4. **Complete the pipeline.** Optional AI-written script (manual script is free and functional), safe retry/regeneration with attempt history and verified-clip reuse, durable uploads, and archive/restore for content/influencers. Final mock-video download and human review are implemented.
-5. **Management screens.** Authorized manual top-up management (balance/extract UI is read-only), per-user spend limit, cost-per-piece reporting and pagination beyond the disclosed 100-item influencer/content/ledger limits. Character profile editing is implemented; title/idea editing and reversible archives are implemented. Global library has filters and real pagination.
+5. **Management screens.** Manual top-up management is done (`/admin`, owners only); remaining: per-user spend limit, cost-per-piece reporting and pagination beyond the disclosed 100-item influencer/content/ledger limits. Character profile editing is implemented; title/idea editing and reversible archives are implemented. Global library has filters and real pagination.
 6. **Canvas extensions.** The second view of Steps is implemented. Persistent shared layout, arbitrary graph editing, typed connection validation, cycle prevention, palette and branched execution remain; recover these from V1 while preserving the V2 model.
 7. **UI/UX pass from the design reference.** Continue the influencer detail and production screens, global library and states (loading, empty, error) using `design/reference/` and its `MAPA-DE-APLICACAO.md` copy rules, adapted to Influencers > Content > Steps. Can start now, no decisions needed.
-8. **Finish.** Terms and privacy pages, mobile pass, optional MCP.
+8. **Finish.** Terms and privacy pages exist as drafts (see Accounts above); legal review, mobile pass, optional MCP.
 9. **Model/API catalog and provider extensibility (V2-PROVIDERS, in progress).** Verify fal.ai's current catalog against the LabIA integrations, integrate selected missing APIs and update existing ones. Review the catalog/adapter/pipeline boundaries so new models and provider updates have a small, documented integration path. Preserve server-side pricing, idempotency, reservation/refund and non-blocking polling. See [`docs/provider-catalog-task.md`](docs/provider-catalog-task.md); coordinate shared provider and generation files with Felipe.
 
 Not now: payments, self-service signup, locale currency, auto-posting, Cloudflare.
@@ -83,11 +95,13 @@ Unverified until the founders run real generations by hand: real fal outputs and
 
 ## Environment
 
-Listed in `.env.example`. `DIRECT_URL` (unpooled) is used by Prisma migrations, `DATABASE_URL` (pooled) by the app. Sign-in: Google, or e-mail + password (scrypt, `users.password_hash`; signup is open unless `LABIA_ACCESS_CODE` or `ALLOWED_EMAILS` is set; min password 4, no e-mail verification yet; login and signup rate-limited). The passwordless e-mail login exists only when `NODE_ENV=development`.
+Listed in `.env.example`. `DIRECT_URL` (unpooled) is used by Prisma migrations, `DATABASE_URL` (pooled) by the app. Sign-in: Google, or e-mail + password (scrypt, `users.password_hash`; signup is open unless `LABIA_ACCESS_CODE` or `ALLOWED_EMAILS` is set; min password 4 by decision until launch; the address must be confirmed before password sign-in; login and signup rate-limited). The passwordless e-mail login exists only when `NODE_ENV=development`.
 
 ## Run and check
 
-`npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (103 tests; the money-path ones run against the database with their own seeded user, deleted afterwards), `npm run build`.
+`npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (165 tests; the money-path ones run against the database with their own seeded user, deleted afterwards), `npm run build`, `npm run test:e2e` (Playwright, 12 tests x desktop and 390px; starts its own `next dev` on port 3100 with `FAL_MOCK=1`, never the one on 3000; specs seed and delete their own accounts and clear only the local address's rate-limit counters).
+
+CI (`.github/workflows/ci.yml`): all of the above plus `npm audit --omit=dev --audit-level=high` on every push and PR, against a Postgres service container; no Neon, provider or production secret reaches it. Not yet run on GitHub: pushing a workflow file needs a token with the `workflow` scope. Dependabot watches npm and actions weekly.
 
 Dependency audit: production dependency scan reports zero findings after targeted mysql2/deepmerge-ts overrides. Five high findings remain in the development lint/glob chain via braces; the current advisory lists no patched version. See the audit document for sources and compatibility checks.
 
