@@ -2,7 +2,7 @@ import { createHash, createHmac, randomBytes, randomInt } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 
 export type EmailPurpose = "VERIFY" | "RESET" | "CHANGE_EMAIL";
-export const TOKEN_TTL_MS: Record<EmailPurpose, number> = { VERIFY: 24 * 3600_000, RESET: 3600_000, CHANGE_EMAIL: 24 * 3600_000 };
+const TOKEN_TTL_MS: Record<EmailPurpose, number> = { VERIFY: 24 * 3600_000, RESET: 3600_000, CHANGE_EMAIL: 24 * 3600_000 };
 
 // 256 random bits: a plain sha256 at rest is enough. The 6-digit code is HMAC'd with the account id
 // and AUTH_SECRET, so a leaked table does not hand out codes by a 10^6 lookup.

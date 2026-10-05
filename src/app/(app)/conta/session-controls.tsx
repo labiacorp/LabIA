@@ -1,12 +1,12 @@
 "use client";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
-import { revokeSessions } from "./actions";
+import { logout } from "../actions";
 
 export function SessionControls() {
   const [error, action, pending] = useActionState(async () => {
     try {
-      await revokeSessions();
+      await logout();
       return "";
     } catch (error) {
       if (

@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { Alert } from "@/components/ui/alert";
 import { Badge, stepStatus } from "@/components/ui/badge";
 import { PORTRAIT_ROLES, ROLE_LABEL } from "@/lib/character";
-import { formatBrlValue } from "@/lib/money";
+import { currency } from "@/lib/platform";
 import { quote } from "@/lib/generation";
 import { cardOf, loadKit, planFor, type KitStep } from "@/lib/kit";
 import { getBalanceBrl } from "@/lib/ledger";
@@ -83,7 +83,7 @@ export async function CharacterTab({
     !providerConfigured()
       ? "A geração ainda precisa ser configurada pela equipe."
       : balance + 1e-9 < total
-        ? `Saldo insuficiente: você tem ${formatBrlValue(balance)} e precisa de ${formatBrlValue(total)}.`
+        ? `Saldo insuficiente: você tem ${currency(balance)} e precisa de ${currency(total)}.`
         : undefined;
 
   return (

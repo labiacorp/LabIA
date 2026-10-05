@@ -38,13 +38,3 @@ export async function updateAccount(
   revalidatePath("/", "layout");
   return { ok: true, message: "Seu perfil foi atualizado." };
 }
-
-export async function revokeSessions() {
-  const userId = await requireUserId();
-  await prisma.user.update({
-    where: { id: userId },
-    data: { tokenVersion: { increment: 1 } },
-  });
-  const { signOut } = await import("@/auth");
-  await signOut({ redirectTo: "/login" });
-}

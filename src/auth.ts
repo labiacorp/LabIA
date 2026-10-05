@@ -39,7 +39,7 @@ export function isAllowed(email?: string | null) {
 
 // Right password, address never confirmed. Thrown only after the password matched, so the hint
 // reaches the account's owner and nobody else; the login form offers to resend the link.
-export class UnverifiedEmail extends CredentialsSignin {
+class UnverifiedEmail extends CredentialsSignin {
   code = "unverified";
 }
 
