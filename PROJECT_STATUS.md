@@ -83,7 +83,7 @@ Unverified until the founders run real generations by hand: real fal outputs and
 
 ## Environment
 
-Listed in `.env.example`. `DIRECT_URL` (unpooled) is used by Prisma migrations, `DATABASE_URL` (pooled) by the app. Sign-in: Google, or e-mail + password (scrypt, `users.password_hash`; signup needs the access pass and `ALLOWED_EMAILS`, no e-mail verification yet; login and signup rate-limited). The passwordless e-mail login exists only when `NODE_ENV=development`.
+Listed in `.env.example`. `DIRECT_URL` (unpooled) is used by Prisma migrations, `DATABASE_URL` (pooled) by the app. Sign-in: Google, or e-mail + password (scrypt, `users.password_hash`; signup is open unless `LABIA_ACCESS_CODE` or `ALLOWED_EMAILS` is set; min password 4, no e-mail verification yet; login and signup rate-limited). The passwordless e-mail login exists only when `NODE_ENV=development`.
 
 ## Run and check
 

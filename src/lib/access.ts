@@ -19,7 +19,8 @@ const code = () => process.env.LABIA_ACCESS_CODE?.trim() || null;
 // to pass, so a missing variable locks the form instead of opening it.
 export function gateMode(): GateMode {
   if (code() && secret()) return "on";
-  return process.env.NODE_ENV === "production" || code() ? "closed" : "off";
+  // ponytail: no code set means the beta is open (any production deploy included); a code without a secret stays closed.
+  return code() ? "closed" : "off";
 }
 
 const sha256 = (value: string) => createHash("sha256").update(value).digest();

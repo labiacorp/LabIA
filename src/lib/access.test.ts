@@ -42,12 +42,12 @@ describe("access gate", () => {
     expect(codeMatches("")).toBe(false);
   });
 
-  it("closes in production when the code or the secret is missing", () => {
+  it("is open in production with no code, and closed with a code but no secret", () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("LABIA_ACCESS_CODE", "");
     vi.stubEnv("AUTH_SECRET", "");
-    expect(gateMode()).toBe("closed");
-    expect(hasAccessPass("anything")).toBe(false);
+    expect(gateMode()).toBe("off");
+    expect(hasAccessPass("anything")).toBe(true);
     vi.stubEnv("LABIA_ACCESS_CODE", "beta-code"); // code without a secret
     expect(gateMode()).toBe("closed");
   });

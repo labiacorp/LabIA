@@ -1,6 +1,6 @@
 import { randomBytes, scrypt, timingSafeEqual } from "node:crypto";
 
-export const PASSWORD_MIN = 10;
+export const PASSWORD_MIN = 4;
 export const PASSWORD_MAX = 128;
 
 // scrypt N=2^16, r=8 (about 64 MB, OWASP-level). Stored as scrypt$N$salt$hash so the cost can be raised later.

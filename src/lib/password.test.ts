@@ -14,7 +14,7 @@ describe("password hashing", () => {
   });
 
   it("enforces length", () => {
-    expect(passwordError("short")).not.toBeNull();
+    expect(passwordError("abc")).not.toBeNull();
     expect(passwordError("long enough pass")).toBeNull();
     expect(passwordError("x".repeat(129))).not.toBeNull();
   });
