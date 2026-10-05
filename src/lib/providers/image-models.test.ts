@@ -47,3 +47,36 @@ describe("reference image model contracts", () => {
     expect(getImageOptions("9:16").find((option) => option.model === "bytedance/seedream/v5/lite/edit")?.configurations[0].brl).toBeCloseTo(.189, 4);
   });
 });
+
+describe("text-to-image models for the character sheet", () => {
+  const sheet = { prompt: "Character reference sheet", aspect_ratio: "3:2" };
+  it.each([
+    ["fal-ai/nano-banana-2", "2K", .12],
+    ["fal-ai/nano-banana-pro", "4K", .3],
+    ["bytedance/seedream/v5/lite/text-to-image", "2K", .035],
+    ["fal-ai/bytedance/seedream/v4.5/text-to-image", "2K", .04],
+    ["fal-ai/flux-pro/kontext/text-to-image", "default", .04],
+    ["fal-ai/flux-pro/kontext/max/text-to-image", "default", .08],
+    ["fal-ai/qwen-image-max/text-to-image", "2K", .075],
+  ])("quotes and submits %s without any reference image", async (model, resolution, usd) => {
+    const selection = { ...sheet, resolution };
+    const prepared = prepareImage(model, selection, 5.4);
+    await provider().generate(model, { ...selection, imagePricing: prepared.snapshot });
+    const wire = sdk.submit.mock.calls.at(-1)![1].input;
+    expect(sdk.submit.mock.calls.at(-1)![0]).toBe(model);
+    expect(prepared.cost.usd).toBeCloseTo(usd, 6);
+    expect(wire).not.toHaveProperty("image_urls");
+    expect(wire).not.toHaveProperty("image_url");
+    expect(wire.num_images).toBe(1);
+  });
+
+  it("refuses a reference on a text-only model and a missing one on an edit model", () => {
+    expect(() => prepareImage("fal-ai/nano-banana-2", { ...sheet, resolution: "2K", image_urls: ["https://fixture/x.png"] }, 5.4)).toThrow();
+    expect(() => prepareImage("fal-ai/nano-banana-2/edit", { ...sheet, resolution: "2K" }, 5.4)).toThrow();
+  });
+
+  it("keeps text-only models out of the scene options", () => {
+    expect(getImageOptions("9:16").map((option) => option.model)).not.toContain("fal-ai/nano-banana-2");
+  });
+});
+

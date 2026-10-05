@@ -1,4 +1,4 @@
-import { prepareImage, IMAGE_DEFINITIONS } from "./providers/image-models";
+import { prepareImage, SCENE_DEFINITIONS } from "./providers/image-models";
 import { REEL } from "@/lib/content-plan";
 import { quote, startPlan, UserError, type PlanItem } from "@/lib/generation";
 import { prisma } from "@/lib/prisma";
@@ -22,7 +22,7 @@ export function sceneItem(prompt: string, frontUrl: string, aspectRatio: string,
 
 export const sceneQuote = (selection?: ImageSelection, aspectRatio = "9:16") => quote([sceneItem("estimate", "https://estimate", aspectRatio, selection)]);
 export function getImageOptions(aspectRatio: string) {
-  return IMAGE_DEFINITIONS.map((model) => ({ model: model.id, name: model.name, configurations: Object.keys(model.rates).flatMap((resolution) => {
+  return SCENE_DEFINITIONS.map((model) => ({ model: model.id, name: model.name, configurations: Object.keys(model.rates).flatMap((resolution) => {
     try { return [{ resolution, brl: sceneQuote({ model: model.id, resolution }, aspectRatio).totalBrl }]; } catch { return []; }
   }), maxPrompt: Math.min(2000, (model.maxPrompt ?? 4000) - 180), source: `https://fal.ai/models/${model.id}`, checkedOn: "2026-10-04" }));
 }

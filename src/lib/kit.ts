@@ -1,6 +1,6 @@
 import type { Asset, Influencer, Step } from "@/generated/prisma/client";
 import type { AssetRole } from "@/generated/prisma/enums";
-import { type CharacterCard, PORTRAIT_ROLES, portraitItem, sheetItem } from "@/lib/character";
+import { type CharacterCard, PORTRAIT_ROLES, portraitItem, type SheetSelection, sheetItem } from "@/lib/character";
 import { type PlanItem, UserError } from "@/lib/generation";
 import { prisma } from "@/lib/prisma";
 
@@ -29,8 +29,10 @@ export type Kit = Awaited<ReturnType<typeof loadKit>>;
 
 const alive = (step: KitStep | null) => !!step && (step.status === "RUNNING" || step.status === "DONE" || step.status === "APPROVED");
 
-export function planFor(phase: "SHEET" | "PORTRAITS", card: CharacterCard, kit: Kit): PlanItem[] {
-  if (phase === "SHEET") return [sheetItem(card)];
+export function planFor(phase: "SHEET" | "PORTRAITS", card: CharacterCard, kit: Kit, sheet?: SheetSelection): PlanItem[] {
+  if (phase === "SHEET") {
+    try { return [sheetItem(card, sheet)]; } catch (error) { throw new UserError(error instanceof Error ? error.message : "Configuração de imagem inválida."); }
+  }
   if (!kit.sheetUrl) throw new UserError("Gere e aprove a ficha antes dos retratos.");
   const sheetUrl = kit.sheetUrl;
   return PORTRAIT_ROLES.filter((role) => !alive(kit.portraits[role])).map((role) => portraitItem(role, card, sheetUrl));

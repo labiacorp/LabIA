@@ -658,7 +658,7 @@ export class FalProvider implements ModelProvider {
       return [];
     }
 
-    return [...IMAGE_DEFINITIONS.map((entry): ModelInfo => ({ id: entry.id, name: entry.name, kind: "image", provider: this.id, description: "Imagem com referência do personagem.", pricing: { unit: "image", unitPriceUsd: Object.values(entry.rates)[0], note: `https://fal.ai/models/${entry.id}; checked2026-10-04` } })), ...FAL_IMAGE_MODELS.filter((model) => !findImageDefinition(model.id)).map(({ aliases, defaultInput, ...model }) => {
+    return [...IMAGE_DEFINITIONS.map((entry): ModelInfo => ({ id: entry.id, name: entry.name, kind: "image", provider: this.id, description: entry.textOnly ? "Imagem a partir de texto." : "Imagem com referência do personagem.", pricing: { unit: "image", unitPriceUsd: Object.values(entry.rates)[0], note: `https://fal.ai/models/${entry.id}; checked2026-10-04` } })), ...FAL_IMAGE_MODELS.filter((model) => !findImageDefinition(model.id)).map(({ aliases, defaultInput, ...model }) => {
       void aliases;
       void defaultInput;
       return model;
