@@ -40,7 +40,7 @@ jobs:
       DIRECT_URL: postgresql://ci:ci@localhost:5432/labia
       AUTH_SECRET: ci-only-placeholder-secret-at-least-32-characters
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
