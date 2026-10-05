@@ -16,7 +16,7 @@
   --lab-text-disabled: #5D6577;      /* NOVO · o antigo muted vira só "desabilitado" (nunca texto informativo) */
 
   /* Reagente — MANTIDO (regra de raridade: ver tabela "o que pode ser verde") */
-  --lab-reagent: #526CF5;            /* MANTIDO · fundo de CTA primário/Executar, foco, porta ativa */
+  --lab-reagent: #445EDC;            /* MANTIDO · fundo de CTA primário/Executar, foco, porta ativa */
   --lab-reagent-bright: #A6B5FF;     /* MANTIDO · números de custo, "IA" do wordmark — nunca fundo */
   --lab-reagent-dim: rgba(82, 108, 245, 0.09); /* MANTIDO · fundo do chip de custo */
   --lab-reagent-line: rgba(82, 108, 245, 0.22); /* NOVO · borda do chip de custo (substitui border-lab-reagent/20 solto) */
@@ -353,3 +353,55 @@ html[data-theme="light"] .workspace-panel,html[data-theme="light"] .account-sett
 .library-search > button { flex-shrink:0; white-space:nowrap; height:2.75rem; }
 .library-search input { min-width:0; }
 @media(min-width:1024px) and (max-width:1279px) { :root { --lab-studio-panel-width:18rem; } .studio-card-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+/* Creation home: one primary story, useful starting points, real recent work. */
+.home-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:2rem; }
+.home-heading p { color:var(--lab-text-muted); font-size:.625rem; letter-spacing:.12em; margin-bottom:.625rem; }
+.home-heading h1 { font-size:1.75rem; line-height:1.25; font-weight:600; letter-spacing:-.035em; }
+.home-studio-hero { display:grid; grid-template-columns:1.1fr 1fr; gap:1rem; overflow:hidden; border:1px solid var(--lab-border); border-radius:1.25rem; background:var(--lab-surface-1); }
+.home-studio-copy { padding:2.5rem; }
+.home-tool-label { display:flex; align-items:center; gap:.5rem; font-size:.625rem; letter-spacing:.1em; color:var(--lab-text-muted); }
+.home-studio-copy h2 { font-size:2.5rem; line-height:1.15; letter-spacing:-.045em; font-weight:600; margin:1.25rem 0; }
+.home-studio-copy > p { max-width:23rem; font-size:.875rem; line-height:1.7; color:var(--lab-text-dim); margin-bottom:1.75rem; }
+.home-process-art { position:relative; min-height:22rem; display:grid; place-items:center; background:radial-gradient(ellipse at 55% 45%,var(--lab-reagent-dim),transparent 72%); }
+.home-art-grid { position:absolute; inset:0; background-image:linear-gradient(var(--lab-border) 1px,transparent 1px),linear-gradient(90deg,var(--lab-border) 1px,transparent 1px); background-size:32px 32px; mask-image:radial-gradient(ellipse,black,transparent 70%); opacity:.35; }
+.home-art-card { position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1rem; width:8rem; height:10rem; border:1px solid var(--lab-border-strong); border-radius:1rem; background:var(--lab-surface-1); box-shadow:0 12px 24px rgba(0,0,0,.06); color:var(--lab-text-dim); }
+.home-art-card span { font-size:.6875rem; }
+.home-art-character { transform:translate(-70px,-20px) rotate(-12deg); }
+.home-art-scene { transform:translate(0,-10px) rotate(2deg); color:var(--lab-reagent-bright); z-index:1; }
+.home-art-video { transform:translate(70px,15px) rotate(12deg); }
+.home-process-art > p { position:absolute; bottom:2rem; color:var(--lab-text-muted); font-size:.6875rem; }
+.home-entry-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; margin:1.25rem 0 2.75rem; }
+.home-entry { display:flex; align-items:center; gap:.75rem; padding:1.25rem; border:1px solid var(--lab-border); border-radius:.875rem; background:var(--lab-surface-1); transition:border-color var(--lab-dur-micro); }
+.home-entry:hover { border-color:var(--lab-border-strong); }
+.home-entry > span:not(.home-entry-icon) { flex:1; min-width:0; }
+.home-entry > svg { flex-shrink:0; color:var(--lab-text-muted); }
+.home-entry-icon { display:grid; place-items:center; flex-shrink:0; color:var(--lab-text-dim); }
+.home-entry strong { display:block; font-size:.8125rem; font-weight:500; }
+.home-entry small { display:block; font-size:.6875rem; line-height:1.5; color:var(--lab-text-muted); margin-top:.375rem; }
+.home-recent-heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1.25rem; }
+.home-recent-heading h2 { font-size:1.125rem; font-weight:600; letter-spacing:-.02em; }
+.home-recent-heading a { display:flex; align-items:center; gap:.5rem; color:var(--lab-text-dim); font-size:.75rem; }
+.home-recent-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
+.home-production-card { overflow:hidden; border:1px solid var(--lab-border); border-radius:1rem; background:var(--lab-surface-1); }
+.home-production-preview { display:grid; place-items:center; position:relative; aspect-ratio:16/10; background:radial-gradient(ellipse at 50% 30%,var(--lab-reagent-dim),var(--lab-surface-2)); color:var(--lab-text-muted); }
+.home-production-preview img { width:100%; height:100%; position:absolute; inset:0; object-fit:cover; }
+.home-production-preview span { position:absolute; left:.75rem; top:.75rem; padding:.3rem .5rem; font-size:.625rem; border-radius:.375rem; color:var(--lab-text); background:var(--lab-scrim); border:1px solid var(--lab-border); }
+.home-production-info { padding:1rem; }
+.home-production-info p { font-size:.6875rem; color:var(--lab-text-muted); }
+.home-production-info h3 { font-size:.875rem; font-weight:500; margin:.5rem 0 .75rem; overflow-wrap:anywhere; }
+.home-production-info small { font-size:.625rem; color:var(--lab-text-muted); }
+.home-summary { display:flex; justify-content:center; flex-wrap:wrap; gap:.75rem; color:var(--lab-text-muted); font-size:.6875rem; margin-top:2rem; }
+.home-summary a { min-height:2.75rem; display:flex; align-items:center; }
+.home-summary > span { padding-top:.875rem; }
+@media(max-width:1100px) { .home-entry-grid { grid-template-columns:1fr; } .home-studio-copy { padding:1.75rem; } .home-art-card { width:6.5rem; height:8rem; } .home-art-character { transform:translate(-50px,-15px) rotate(-12deg); } .home-art-video { transform:translate(50px,15px) rotate(12deg); } }
+@media(max-width:640px) { .home-studio-hero { grid-template-columns:1fr; } .home-studio-copy h2 { font-size:2rem; } .home-process-art { min-height:14rem; } .home-process-art > p { bottom:1rem; } .home-art-card { height:7rem; } .home-recent-grid { grid-template-columns:1fr; } .home-heading h1 { font-size:1.5rem; } }
+
+.shell-nav-footer a[aria-current="page"] { background:var(--lab-surface-2); color:var(--lab-text); }
+button:not(:disabled),summary { cursor:pointer; }
+@media(max-width:640px) { .home-process-art { display:none; } }
+
+.home-production-card:hover { border-color:var(--lab-border-strong); }
+.home-production-card:focus-visible,.home-entry:focus-visible { outline:2px solid var(--lab-reagent); outline-offset:3px; }
+
+.home-production-info small,.home-summary { font-size:.75rem; }

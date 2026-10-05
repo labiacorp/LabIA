@@ -112,7 +112,7 @@ export function AppNavigation({
       </div>
       </div>
       <div className="shell-navigation-row">
-        <p className="shell-nav-caption">SEU ESPAÇO</p><nav aria-label="Navegação principal" className="shell-navigation">{menuLinks()}</nav><div className="shell-nav-footer"><Link href="/saldo" className={itemClass}><Wallet className="size-4" />Saldo e extrato</Link><Link href="/conta" className={itemClass}><UserRound className="size-4" />Conta</Link></div>
+        <p className="shell-nav-caption">SEU ESPAÇO</p><nav aria-label="Navegação principal" className="shell-navigation">{menuLinks()}</nav><div className="shell-nav-footer"><Link href="/saldo" aria-current={pathname === "/saldo" ? "page" : undefined} className={itemClass}><Wallet className="size-4" />Saldo e extrato</Link><Link href="/conta" aria-current={pathname === "/conta" ? "page" : undefined} className={itemClass}><UserRound className="size-4" />Conta</Link></div>
         <span className="shell-beta"><span className="lab-status-dot bg-lab-reagent" />Beta</span>
       </div>
       <dialog ref={create} className="app-menu-dialog shell-create-dialog" aria-labelledby="create-title" onClick={(event) => { if(event.target === event.currentTarget) create.current?.close(); }}>

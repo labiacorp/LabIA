@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/session";
-import { contentStatusLabels, dateLabel } from "@/lib/platform";
+import { ProductionCard } from "@/components/app/production-card";
+import { contentStatusLabels } from "@/lib/platform";
 import type { ContentStatus } from "@/generated/prisma/client";
 export default async function ContentsPage({
   searchParams,
@@ -56,9 +57,7 @@ export default async function ContentsPage({
     take: 24,
     include: {
       influencer: { select: { name: true } },
-      _count: {
-        select: { steps: { where: { status: { in: ["DONE", "APPROVED"] } } } },
-      },
+      assets: {where:{userId,kind:"IMAGE"},orderBy:{createdAt:"desc"},take:1,select:{url:true}},
     },
   });
   const href = (p: number, a = archived) => {
@@ -106,14 +105,14 @@ export default async function ContentsPage({
           Arquivados
         </Link>
       </nav>
-      <form className="mb-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
+      <form className="mb-6 grid grid-cols-2 gap-2 lg:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
         {archived && <input type="hidden" name="archive" value="1" />}
         <Input
           name="q"
           aria-label="Buscar conteúdo pelo título"
           placeholder="Buscar pelo título"
           defaultValue={q}
-          className="min-w-0"
+          className="col-span-2 min-w-0 lg:col-span-1"
         />
         <select
           name="status"
@@ -142,7 +141,7 @@ export default async function ContentsPage({
           ))}
         </select>
         <button
-          className={buttonVariants({ variant: "secondary", size: "lg" })}
+          className={buttonVariants({ variant: "secondary", size: "lg", className:"col-span-2 lg:col-span-1" })}
         >
           Filtrar
         </button>
@@ -154,25 +153,7 @@ export default async function ContentsPage({
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((item) => (
-              <Link
-                key={item.id}
-                href={`/i/${item.influencerId}/c/${item.id}`}
-                className="rounded-lab border border-lab-border bg-lab-surface-1 p-5 hover:border-lab-border-strong"
-              >
-                <span className="rounded-control bg-lab-surface-2 px-2 py-1 text-caption">
-                  {archived ? "Arquivado" : contentStatusLabels[item.status]}
-                </span>
-                <h2 className="mt-4 break-words font-display text-xl">
-                  {item.title}
-                </h2>
-                <p className="mt-2 text-body-sm text-lab-text-dim">
-                  {item.influencer.name} · {item.aspectRatio}
-                </p>
-                <p className="mt-4 text-caption text-lab-text-muted">
-                  {item._count.steps} {item._count.steps === 1 ? "etapa concluída" : "etapas concluídas"} ·{" "}
-                  {dateLabel(item.updatedAt)}
-                </p>
-              </Link>
+              <ProductionCard key={item.id} id={item.id} influencerId={item.influencerId} title={item.title} influencerName={item.influencer.name} status={item.status} updatedAt={item.updatedAt} preview={item.assets[0]?.url} archived={archived} />
             ))}
           </div>
           <nav

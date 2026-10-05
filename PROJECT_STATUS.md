@@ -107,3 +107,9 @@ Validation for the simplification pass: 103 tests in the full suite plus the new
 User authorized ignoring legacy brand/design constraints for a more polished product. Researched Apple account/settings and Linear's calmer workspace/navigation. Account now uses centered identity, grouped settings rows and focused native dialogs for profile, sessions and referrals; existing server actions are reused. Desktop navigation is a quiet sidebar; mobile retains tabs/sheet. Shared neutral palette with blue accents and Inter display type replaces green laboratory styling; new browsers default to light while saved theme choices persist. Library has quick type tabs, direct search, secondary advanced filters and clickable image previews. Filename search includes imported references. Studio opens only the first optional trait group.
 
 Workspace direction checks: all 104 tests passed, plus targeted library regressions after direct-search changes; typecheck/lint/build passed. Browser checked eight routes at 390/1024/1440px (24 views), with no overflow; account edit dialog and image detail click-through verified. No real provider calls or user-data writes.
+
+## Creation home
+
+Dashboard now presents a primary character-studio story, original code-based process artwork on desktop, three useful entry routes and real owned-image previews for recent productions. Large metric cards are replaced by a quiet linked summary. Mobile omits decorative process artwork so entry actions arrive earlier. No provider calls or generation were added. Imported filename search has a disposable-owner isolation regression test.
+
+Creation-home checks: 105 tests across 31 files pass, typecheck/lint/build pass. Content list and dashboard share ProductionCard and scoped real previews. Primary-action white text contrast was measured and adjusted above 4.5:1 in both themes.
