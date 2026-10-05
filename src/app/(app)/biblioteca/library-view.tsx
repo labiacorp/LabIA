@@ -23,7 +23,7 @@ import {
 import { currency, dateLabel } from "@/lib/platform";
 import type { LibraryAsset } from "@/lib/library-data";
 
-export function MediaPreview({
+function MediaPreview({
   asset,
 }: {
   asset: { kind: string; url: string; title: string };

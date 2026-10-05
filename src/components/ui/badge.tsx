@@ -43,4 +43,4 @@ export const stepStatus = {
   DONE: ["review", "Revisar"], FAILED: ["error", "Falhou"], APPROVED: ["ready", "Aprovado"],
 } as const;
 
-export { Badge, badgeVariants };
+export { Badge };
