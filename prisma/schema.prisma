@@ -75,6 +75,9 @@ model User {
   // The Google account this user is bound to, so a later Google sign-in finds it even after an e-mail change.
   googleSub String? @unique @map("google_sub")
   emailTokens EmailToken[]
+  // Terms/Privacy acceptance (src/lib/consent.ts). Null on accounts created before tracking began.
+  consentAcceptedAt DateTime? @map("consent_accepted_at")
+  consentTermsVersion String? @map("consent_terms_version")
   // Granted only by scripts/owner.ts; see src/lib/owner.ts for what it unlocks and how.
   role UserRole @default(USER)
   adminActions AdminAction[]

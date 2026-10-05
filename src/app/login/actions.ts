@@ -11,6 +11,7 @@ import { clientIp, hit, TOO_MANY_ATTEMPTS } from "@/lib/rate-limit";
 import { registerSignIn, REFERRAL_COOKIE } from "@/lib/referrals";
 import { googleConfigured } from "@/lib/auth-config";
 import { issueEmailToken } from "@/lib/email-tokens";
+import { CONSENT_FIELD, consentAcceptedNow } from "@/lib/consent";
 import { sendAccountExists, sendVerifyEmail } from "@/lib/account-emails";
 export async function loginGoogle() {
   if (!googleConfigured()) return;
@@ -64,6 +65,8 @@ export async function authenticatePassword(
   if (create) {
     const invalid = passwordError(password);
     if (invalid) return { error: invalid };
+    if (form.get(CONSENT_FIELD) !== "on")
+      return { error: "Para criar a conta, aceite os Termos de Uso e a Política de Privacidade." };
     if (!isAllowed(email.data))
       return { error: "Este e-mail não tem acesso à beta. Confira o convite que você recebeu." };
     if (!(await hit(`signup-ip:${await clientIp()}`, 5, 3600)))
@@ -76,7 +79,7 @@ export async function authenticatePassword(
         // Only claims an account that still has no password, so a racing signup cannot overwrite another one.
         const claimed = await prisma.user.updateMany({
           where: { id: user.id, passwordHash: null },
-          data: { passwordHash: await hashPassword(password) },
+          data: { passwordHash: await hashPassword(password), ...consentAcceptedNow() },
         });
         if (claimed.count === 1) {
           const { token, code } = await issueEmailToken(user.id, "VERIFY");

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CONSENT_FIELD } from "@/lib/consent";
 import { PASSWORD_MAX, PASSWORD_MIN } from "@/lib/password-rules";
 import { authenticatePassword } from "./actions";
 export function PasswordLogin() {
@@ -27,6 +28,12 @@ export function PasswordLogin() {
           placeholder={create ? `Mínimo de ${PASSWORD_MIN} caracteres` : "Sua senha"}
         />
       </label>
+      {create ? (
+        <label className="flex items-start gap-3 text-body-sm leading-6">
+          <input type="checkbox" name={CONSENT_FIELD} required className="mt-1 size-5 shrink-0 accent-lab-reagent" />
+          <span>Li e aceito os <Link href="/termos" target="_blank" className="underline">Termos de Uso</Link> e a <Link href="/privacidade" target="_blank" className="underline">Política de Privacidade</Link>.</span>
+        </label>
+      ) : null}
       <Button size="lg" loading={pending}>
         {create ? "Criar conta" : "Entrar"}
       </Button>

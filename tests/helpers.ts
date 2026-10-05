@@ -10,11 +10,14 @@ export const sql = neon(process.env.DATABASE_URL!);
 // Every spec seeds its own accounts under one prefix and deletes them in afterAll. Never a real one.
 export const runPrefix = () => `e2e-${Date.now().toString(36)}-${randomBytes(3).toString("hex")}`;
 
-export async function seedUser(email: string, options: { password?: string; role?: "USER" | "OWNER"; verified?: boolean } = {}) {
+// Seeded accounts have confirmed their e-mail and accepted the current Terms unless told otherwise,
+// so specs about something else never stop at those gates.
+export async function seedUser(email: string, options: { password?: string; role?: "USER" | "OWNER"; verified?: boolean; consent?: boolean } = {}) {
   const id = `e2e${randomBytes(10).toString("hex")}`;
   const hash = options.password ? await hashPassword(options.password) : null;
   const verifiedAt = options.verified === false ? null : new Date();
-  await sql`INSERT INTO users (id, email, role, password_hash, email_verified_at) VALUES (${id}, ${email}, ${options.role ?? "USER"}::"UserRole", ${hash}, ${verifiedAt})`;
+  const consentAt = options.consent === false ? null : new Date();
+  await sql`INSERT INTO users (id, email, role, password_hash, email_verified_at, consent_accepted_at, consent_terms_version) VALUES (${id}, ${email}, ${options.role ?? "USER"}::"UserRole", ${hash}, ${verifiedAt}, ${consentAt}, ${consentAt ? "e2e" : null})`;
   return id;
 }
 
@@ -29,7 +32,20 @@ export async function signInDev(page: Page, email: string) {
   const form = page.locator("form").filter({ hasText: "Só em desenvolvimento" });
   await form.getByRole("textbox").fill(email);
   await form.getByRole("button").click();
+  // The URL passes through /painel before the layout sends a new account on to /consentimento,
+  // so wait for what actually rendered, not for the address.
+  await page.locator("#app-content, input[name=acceptTerms]").first().waitFor();
+  if (await page.locator("input[name=acceptTerms]").count()) await acceptConsent(page);
+}
+
+// What a Google-created account sees once: no sign-up form ever asked it.
+export async function acceptConsent(page: Page) {
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page).toHaveURL(/\/painel/);
+  // Wait for the panel to render: navigating away while the action's redirect is still landing
+  // gets overridden by it.
+  await page.locator("#app-content").waitFor();
 }
 
 export async function signInPassword(page: Page, email: string, password: string) {

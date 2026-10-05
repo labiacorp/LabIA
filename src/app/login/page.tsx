@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { hasPass } from "@/lib/access";
@@ -69,6 +70,9 @@ export default async function LoginPage({
       {process.env.NODE_ENV === "development" ? <DevelopmentLogin /> : null}
       <p className="text-caption text-lab-text-muted">
         Beta fechada · use a conta que recebeu acesso.
+      </p>
+      <p className="text-caption text-lab-text-muted">
+        <Link href="/termos" className="underline">Termos de Uso</Link> · <Link href="/privacidade" className="underline">Política de Privacidade</Link>
       </p>
     </main>
   );

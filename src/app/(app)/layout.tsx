@@ -2,6 +2,8 @@ import { AppNavigation } from "@/components/app/app-navigation";
 import { getBalanceBrl } from "@/lib/ledger";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import { needsConsent } from "@/lib/consent";
 import { ownerSession } from "@/lib/owner";
 import { requireUserId } from "@/lib/session";
 
@@ -16,8 +18,10 @@ export default async function AppLayout({
     .catch(() => ({ ok: false as const }));
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { name: true, email: true, avatarUpdatedAt: true, role: true },
+    select: { name: true, email: true, avatarUpdatedAt: true, role: true, createdAt: true, consentAcceptedAt: true },
   });
+  // Accounts created through Google never saw the sign-up checkbox; they accept once, here.
+  if (needsConsent(user)) redirect("/consentimento");
   // Only decides whether the Admin link shows; /admin checks again on its own (requireOwner).
   const owner = user.role === "OWNER" && ownerSession(await auth());
 
