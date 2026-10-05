@@ -11,6 +11,9 @@ const port = Number(process.env.PLAYWRIGHT_PORT ?? 3100);
 export default defineConfig({
   testDir: "./tests",
   timeout: 60_000,
+  // `next dev` compiles each route on its first hit, which can outlast the default 5s on a cold start
+  // (right after `npm run build`, as in CI). Assertions wait for the page, not for the compiler.
+  expect: { timeout: 20_000 },
   workers: 1,
   reporter: "list",
   use: { baseURL: `http://localhost:${port}`, locale: "pt-BR", trace: "retain-on-failure" },
