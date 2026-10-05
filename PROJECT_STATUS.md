@@ -104,7 +104,7 @@ Databases (Neon, org LabIA): project "LabIA Prod" (green-pine-20802172) is Verce
 
 `npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (165 tests; the money-path ones run against the database with their own seeded user, deleted afterwards), `npm run build`, `npm run test:e2e` (Playwright, 12 tests x desktop and 390px; starts its own `next dev` on port 3100 with `FAL_MOCK=1`, never the one on 3000; specs seed and delete their own accounts and clear only the local address's rate-limit counters).
 
-CI (`.github/workflows/ci.yml`): all of the above plus `npm audit --omit=dev --audit-level=high` on every push and PR, against a Postgres service container; no Neon, provider or production secret reaches it. Not yet run on GitHub: pushing a workflow file needs a token with the `workflow` scope. Dependabot watches npm and actions weekly.
+CI (`.github/workflows/ci.yml`): all of the above plus `npm audit --omit=dev --audit-level=high` on every push and PR, against a Postgres service container; no Neon, provider or production secret reaches it. Not yet run on GitHub: pushing a workflow file needs a token with the `workflow` scope.
 
 Dependency audit: production dependency scan reports zero findings after targeted mysql2/deepmerge-ts overrides. Five high findings remain in the development lint/glob chain via braces; the current advisory lists no patched version. See the audit document for sources and compatibility checks.
 
