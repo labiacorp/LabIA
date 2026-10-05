@@ -78,7 +78,7 @@ export async function authenticatePassword(
     await signIn("password", { email: email.data, password, redirectTo: "/painel" });
   } catch (error) {
     if (error instanceof AuthError)
-      return { error: create ? "Conta criada, mas não foi possível entrar. Tente entrar de novo." : "E-mail ou senha incorretos, ou muitas tentativas. Tente de novo em alguns minutos." };
+      return { error: create ? "Conta criada, mas não foi possível entrar. Tente entrar de novo." : "E-mail ou senha incorretos. Se ainda não tem conta, use "criar com senha" abaixo." };
     throw error;
   }
   return { error: "" };
