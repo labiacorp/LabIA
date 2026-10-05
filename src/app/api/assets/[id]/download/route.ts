@@ -27,6 +27,7 @@ export async function GET(
   });
   if (!asset)
     return Response.json({ error: "Arquivo não encontrado." }, { status: 404 });
+  if (asset.storageKey) return Response.redirect(new URL(`/api/assets/${asset.id}/file?download=1`, _request.url));
   const source = downloadSource(
     asset.url,
     process.env.NODE_ENV === "development" && process.env.FAL_MOCK === "1",

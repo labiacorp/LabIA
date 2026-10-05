@@ -12,6 +12,7 @@ import {
 import { MERGE_MODEL, METADATA_MODEL } from "@/lib/providers/ffmpeg";
 
 function modelLabel(id: string | null) {
+  if (id === "higgsfield/genjutsu/motion-transfer/v1.0") return "Genjutsu Motion Transfer · Higgsfield";
   if (id === MERGE_MODEL) return "Montagem de vídeo · fal.ai";
   if (id === METADATA_MODEL) return "Quadro de continuidade · fal.ai";
   const model = id ? (findFalImageModel(id) ?? findFalVideoModel(id)) : null;
@@ -76,16 +77,18 @@ export async function loadLibrary(userId: string, filters: LibraryFilters) {
       id: asset.id,
       kind: asset.kind,
       url: asset.url,
-      title: asset.role
-        ? ROLE_LABEL[asset.role]
-        : asset.step?.kind === "ASSEMBLY"
-          ? "Vídeo final"
-          : (asset.content?.title ??
-            (asset.kind === "AUDIO"
-              ? "Áudio"
-              : asset.kind === "VIDEO"
-                ? "Clipe de vídeo"
-                : "Imagem da cena")),
+      title:
+        asset.fileName ??
+        (asset.role
+          ? ROLE_LABEL[asset.role]
+          : asset.step?.kind === "ASSEMBLY"
+            ? "Vídeo final"
+            : (asset.content?.title ??
+              (asset.kind === "AUDIO"
+                ? "Áudio"
+                : asset.kind === "VIDEO"
+                  ? "Clipe de vídeo"
+                  : "Imagem da cena"))),
       role: asset.role,
       influencer: asset.influencer,
       content: asset.content,
@@ -93,9 +96,11 @@ export async function loadLibrary(userId: string, filters: LibraryFilters) {
       width: asset.width,
       height: asset.height,
       duration: asset.durationSec,
-      modelLabel: modelLabel(asset.step?.model ?? null),
+      modelLabel: asset.storageKey
+        ? "Arquivo importado por você"
+        : modelLabel(asset.step?.model ?? null),
       prompt: promptOf(asset.step?.input),
-      actualCost: cost(asset.step?.actualCostBrl),
+      actualCost: asset.storageKey ? 0 : cost(asset.step?.actualCostBrl),
       estimatedCost: cost(asset.step?.estimatedCostBrl),
     })),
   };

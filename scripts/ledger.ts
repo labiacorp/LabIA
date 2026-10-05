@@ -24,7 +24,7 @@ async function main() {
     const step = await prisma.step.findUnique({ where: { id: arg ?? "" }, include: { influencer: true } });
     if (!step?.influencer) throw new Error("Step not found.");
     const { reconcileReservation } = await import("../src/lib/generation");
-    if (step.kind === "VIDEO" && amount === undefined) throw new Error("Video reconciliation requires the TOTAL actual cost in BRL, verified in the provider dashboard.");
+    if ((step.kind === "VIDEO" || step.provider === "higgsfield") && amount === undefined) throw new Error("Video reconciliation requires the TOTAL actual cost in BRL, verified in the provider dashboard.");
     const result = await reconcileReservation(step.influencer.userId, step.id, Number(amount ?? 0));
     console.log(`Reconciled step ${step.id}: actual R$ ${result.actualBrl.toFixed(4)}, adjustment R$ ${result.adjustmentBrl.toFixed(4)}.`);
   } else {

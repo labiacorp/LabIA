@@ -1,3 +1,5 @@
+import { HiggsfieldProvider } from "@/lib/providers/higgsfield";
+import { MOTION_MODEL } from "@/lib/motion";
 import { FalProvider } from "@/lib/providers/fal";
 import { MockProvider } from "@/lib/providers/mock";
 import type {
@@ -19,10 +21,17 @@ export type PollableProvider = ModelProvider & {
 export const mockEnabled = () =>
   process.env.NODE_ENV !== "production" && process.env.FAL_MOCK === "1";
 
-export const providerConfigured = () =>
-  mockEnabled() || Boolean(process.env.FAL_KEY?.trim());
+export const providerConfigured = (model?: string) =>
+  mockEnabled() ||
+  (model === MOTION_MODEL
+    ? Boolean(
+        process.env.HF_CREDENTIALS?.trim() &&
+          process.env.LABIA_PUBLIC_URL?.startsWith("https://"),
+      )
+    : Boolean(process.env.FAL_KEY?.trim()));
 
-export function getProvider(): PollableProvider {
+export function getProvider(model?: string): PollableProvider {
+  if (model === MOTION_MODEL) return new HiggsfieldProvider(mockEnabled());
   if (mockEnabled()) return new MockProvider();
   return new FalProvider({
     usdBrlRate: Number(process.env.USD_BRL_RATE) || undefined,

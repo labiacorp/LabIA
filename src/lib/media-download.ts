@@ -26,6 +26,7 @@ export function downloadSource(
     const host = url.hostname;
     if (
       host === "fal.media" ||
+      host === "cdn.higgsfield.ai" ||
       host.endsWith(".fal.media") ||
       host.endsWith(".blob.vercel-storage.com")
     )

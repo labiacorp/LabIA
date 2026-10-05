@@ -26,6 +26,7 @@ const links = [
   { href: "/", label: "Estúdio", icon: Sparkles },
   { href: "/influenciadores", label: "Influenciadores", icon: Users },
   { href: "/conteudos", label: "Conteúdos", icon: Film },
+  { href: "/trends", label: "Trends", icon: Sparkles },
   { href: "/modelos", label: "Modelos", icon: BookOpen },
   { href: "/biblioteca", label: "Biblioteca", icon: Library },
 ];

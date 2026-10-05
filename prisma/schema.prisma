@@ -106,6 +106,7 @@ model Content {
   influencerId String        @map("influencer_id")
   influencer   Influencer    @relation(fields: [influencerId], references: [id], onDelete: Cascade)
   title        String
+  motion Json?
   idea         String        @default("")
   archivedAt DateTime? @map("archived_at")
   aspectRatio  String        @default("9:16") @map("aspect_ratio")
@@ -167,6 +168,10 @@ model Asset {
   kind         AssetKind
   role         AssetRole?
   url          String
+  storageKey String? @map("storage_key")
+  contentType String? @map("content_type")
+  fileName String? @map("file_name")
+  sizeBytes Int? @map("size_bytes")
   width        Int?
   height       Int?
   durationSec  Float?      @map("duration_sec")

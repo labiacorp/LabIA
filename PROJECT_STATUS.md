@@ -20,6 +20,12 @@ Next.js 16 (App Router, Server Actions) + TypeScript + Tailwind 4 (legacy `tailw
 - Character profile selects and previews a completed owned FRONT portrait. Scene UI and execution use this explicit selection, including when newer portraits exist.
 - `/conta#indicacoes` exposes a stable personal referral link and new-account count. `/r/[code]` captures first-touch attribution for 30 days; the sign-in creation branch attributes only new accounts. `/convite` explains beta restrictions. No financial reward, email sending or access-gate bypass. See `docs/research/referrals.md`.
 
+## Motion recreation and imported references
+
+`/trends` prepares parking/group, dance and custom motion briefs with an owned imported video and up to three ordered images. Import supports normalized JPEG/PNG/WebP and structurally validated MP4 H.264 (4–30s), maximum 4 MiB. Production uses private Vercel Blob; explicit development mock mode uses ignored local storage. Private previews enforce ownership, support ranges and expose short-lived provider links only at generation.
+
+Genjutsu Motion Transfer uses the shared reservation/operation-key coordinator and asynchronous polling. Completed video appears in production review and the library. Real final cost stays unknown until verified; reservations are preserved for reconciliation. Mock output is clearly identified. Live Blob/Higgsfield integration remains unverified without credentials; the catalog contains recipes and requires the user's source video. Details: `docs/qa/2026-10-04-motion-recreation.md`.
+
 ## How generation works (`src/lib/generation.ts`)
 
 Character kit = step 1 sheet (nano-banana-2, 2K, 3:2) then step 2 portraits front/profile/detail (nano-banana-2/edit, 1K, using the approved sheet as reference). Rules, ported from the V1 coordinator:
@@ -72,7 +78,7 @@ Listed in `.env.example`. `DIRECT_URL` (unpooled) is used by Prisma migrations, 
 
 ## Run and check
 
-`npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (92 tests; the money-path ones run against the database with their own seeded user, deleted afterwards), `npm run build`.
+`npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (103 tests; the money-path ones run against the database with their own seeded user, deleted afterwards), `npm run build`.
 
 Dependency audit: production dependency scan reports zero findings after targeted mysql2/deepmerge-ts overrides. Five high findings remain in the development lint/glob chain via braces; the current advisory lists no patched version. See the audit document for sources and compatibility checks.
 
@@ -83,3 +89,5 @@ Profile thumbnails are private normalized 256px WebP stored with the user; new d
 User token versions invalidate JWT sessions on every authenticated request after global sign-out; legacy tokens remain valid only at version zero. Account exports select owned profile, character briefs, media links and ledger amounts, excluding tokens and provider internals. Migration `20261004090000_account_sessions` adds the version column.
 
 Content archival is soft: media and ledger are retained. It uses the same per-user row lock as generation starts, rejects RUNNING steps and prevents new paid starts while archived. The dashboard shows active production only; account production counts show active items. Character tabs link to the single creation form and the paginated filtered content list.
+
+Connections now distinguishes Higgsfield and private reference-storage configuration from verified live availability.

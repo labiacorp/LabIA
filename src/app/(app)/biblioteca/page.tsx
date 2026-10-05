@@ -1,3 +1,5 @@
+import { UploadReference } from "./upload-reference";
+import { referenceStorageReady, localReferenceStorage } from "@/lib/reference-storage";
 import { PageHeading } from "@/components/app/page-heading";
 import { loadLibrary } from "@/lib/library-data";
 import { parseLibraryFilters, type LibraryParams } from "@/lib/library";
@@ -18,6 +20,7 @@ export default async function LibraryPage({
         title="Biblioteca"
         description="Imagens, clipes e vídeos finais dos seus personagens, com origem e custo da etapa."
       />
+      <UploadReference ready={referenceStorageReady()} local={localReferenceStorage()} />
       <LibraryView {...data} filters={{ ...filters, page: data.page }} />
     </div>
   );

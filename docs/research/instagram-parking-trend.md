@@ -1,6 +1,6 @@
 # Parking trend: product requirements
 
-Requested by the user on 2026-10-04 as the next capability set for LabIA. Status: researched and scoped, not implemented. This adds to the existing platform roadmap.
+Requested by the user on 2026-10-04 as the next capability set for LabIA. Status: initial upload, multi-reference preparation and asynchronous generation integration implemented; verified with mocks. See `../qa/2026-10-04-motion-recreation.md` for exact limitations. This adds to the existing platform roadmap.
 
 ## Observed reference
 
@@ -17,7 +17,7 @@ Requested by the user on 2026-10-04 as the next capability set for LabIA. Status
 
 ## Official provider research
 
-[Genjutsu overview](https://open.higgsfield.ai/models/workflows/genjutsu/playground) shows a motion-transfer workflow accepting video, image references and a prompt. Its example model identifier contains a spelling inconsistency; verify the exact runnable endpoint and price before wiring production submission.
+[Genjutsu overview](https://open.higgsfield.ai/models/workflows/genjutsu/playground) shows a motion-transfer workflow accepting video, image references and a prompt. The specific [Motion Transfer API reference](https://open.higgsfield.ai/models/higgsfield/genjutsu/motion-transfer/v1.0/api-reference) resolves the earlier overview spelling inconsistency; implementation uses `higgsfield/genjutsu/motion-transfer/v1.0`.
 
 [Genjutsu Restyle API](https://open.higgsfield.ai/models/higgsfield/genjutsu/restyle/v1.0/api-reference) is a separate documented style workflow. It accepts a source video and up to five reference images; its style catalog requires authentication. It does not guarantee explicit person-to-reference mapping. Do not mistake its style catalog for the consumer site's viral-video gallery or assume either grants access to the parking clip.
 

@@ -1,5 +1,8 @@
 import { PageHeading } from "@/components/app/page-heading";
 import { googleConfigured } from "@/lib/auth-config";
+import { providerConfigured } from "@/lib/provider";
+import { MOTION_MODEL } from "@/lib/motion";
+import { localReferenceStorage, referenceStorageReady } from "@/lib/reference-storage";
 import { requireUserId } from "@/lib/session";
 export default async function ConnectionsPage() {
   await requireUserId();
@@ -21,10 +24,16 @@ export default async function ConnectionsPage() {
         : "Configuração presente",
     },
     {
-      title: "Armazenamento de mídia",
-      description: "Cópia durável dos arquivos e importação de referências.",
-      ready: false,
-      state: "Integração pendente",
+      title: "Higgsfield",
+      description: "Recriação de movimento com vídeo e referências de personagens.",
+      ready: providerConfigured(MOTION_MODEL),
+      state: mock ? "Modo de teste · sem geração real" : "Configuração presente",
+    },
+    {
+      title: "Armazenamento de referências",
+      description: "Importação privada de imagens e vídeos para suas produções.",
+      ready: referenceStorageReady(),
+      state: localReferenceStorage() ? "Armazenamento local de teste" : "Configuração presente",
     },
   ];
   return (
@@ -33,7 +42,7 @@ export default async function ConnectionsPage() {
         title="Conexões"
         description="Disponibilidade das integrações usadas pela LabIA. A configuração é gerenciada pela equipe durante a beta."
       />
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {items.map((item) => (
           <section
             key={item.title}
@@ -46,11 +55,7 @@ export default async function ConnectionsPage() {
             <p
               className={`text-caption ${item.ready ? "text-lab-success" : "text-lab-warning"}`}
             >
-              {item.ready
-                ? item.state
-                : item.title === "Armazenamento de mídia"
-                  ? item.state
-                  : "Configuração pendente"}
+              {item.ready ? item.state : "Configuração pendente"}
             </p>
           </section>
         ))}

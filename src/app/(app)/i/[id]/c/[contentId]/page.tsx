@@ -1,3 +1,4 @@
+import { MotionProduction } from "@/app/(app)/trends/motion-production";
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -71,6 +72,8 @@ export default async function ContentPage({
         </Link>
       </div>
     );
+
+  if (content.motion) return <MotionProduction userId={userId} contentId={contentId} />;
 
   const requestedView = (await searchParams).view;
   const preferences = requestedView

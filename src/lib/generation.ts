@@ -30,11 +30,11 @@ const round4 = (value: number) => Math.round(value * 10000) / 10000;
 const MAX_POLL_ERRORS = 3;
 
 export function quote(plan: PlanItem[]): Quote {
-  const provider = getProvider();
   const items = plan.map((item) => ({
     ...item,
     costBrl: round4(
-      provider.estimateCost(item.model, item.params).brl * (item.quantity ?? 1),
+      getProvider(item.model).estimateCost(item.model, item.params).brl *
+        (item.quantity ?? 1),
     ),
   }));
   return {
@@ -54,11 +54,14 @@ export async function startPlan(input: {
   plan: PlanItem[];
   expectedBrl: number;
 }) {
-  if (!providerConfigured())
+  if (
+    !input.plan.length ||
+    input.plan.some((item) => !providerConfigured(item.model))
+  )
     throw new UserError(
       "A geração ainda não está configurada. Nenhum valor foi reservado.",
     );
-  const provider = getProvider();
+  const provider = getProvider(input.plan[0].model);
   const priced = quote(input.plan);
   if (Math.abs(priced.totalBrl - input.expectedBrl) > 0.005) {
     throw new UserError(
@@ -170,7 +173,10 @@ export async function submit(step: Created) {
   });
   if (claimed.count !== 1) return;
   try {
-    const handle = await getProvider().generate(step.model, step.params);
+    const handle = await getProvider(step.model).generate(
+      step.model,
+      step.params,
+    );
     await prisma.step.update({
       where: { id: step.id },
       data: { submissionState: "submitted", falRequestId: handle.id },
@@ -226,6 +232,9 @@ async function refund(step: RunningStep, message: string) {
 }
 
 async function complete(step: RunningStep, result: GenerationResult) {
+  const unverified =
+    result.provider === "higgsfield" &&
+    !(result.raw as { billingVerified?: boolean })?.billingVerified;
   const actual = round4(result.cost.brl);
   await prisma.$transaction(async (tx) => {
     const claimed = await tx.step.updateMany({
@@ -236,9 +245,9 @@ async function complete(step: RunningStep, result: GenerationResult) {
       },
       data: {
         status: "DONE",
-        submissionState: "completed",
+        submissionState: unverified ? "cost_unknown" : "completed",
         completedAt: new Date(),
-        actualCostBrl: actual,
+        actualCostBrl: unverified ? null : actual,
         error: null,
         ...(step.kind === "VIDEO" && (result.raw as { clips?: unknown })?.clips
           ? {
@@ -300,7 +309,7 @@ async function complete(step: RunningStep, result: GenerationResult) {
     const diff = round4(
       Number(step.estimatedCostBrl?.toString() ?? 0) - actual,
     );
-    if (Math.abs(diff) > 0.0001) {
+    if (!unverified && Math.abs(diff) > 0.0001) {
       await tx.ledgerEntry.create({
         data: {
           userId: owner.userId,
@@ -321,7 +330,6 @@ export async function collectRunning(userId: string, influencerId: string) {
     select: { id: true },
   });
   if (!owned) return { running: 0 };
-  const provider = getProvider();
   const scope = { OR: [{ influencerId }, { content: { influencerId } }] };
   const steps = await prisma.step.findMany({
     where: {
@@ -333,6 +341,7 @@ export async function collectRunning(userId: string, influencerId: string) {
 
   await Promise.all(
     steps.map(async (step) => {
+      const provider = getProvider(step.model ?? undefined);
       const params = step.input as GenParams;
       if (step.submissionState === "not_submitted") {
         await submit({ id: step.id, model: step.model!, params });
@@ -361,7 +370,8 @@ export async function collectRunning(userId: string, influencerId: string) {
         );
         if (
           previous + 1 >= MAX_POLL_ERRORS &&
-          step.model === "fal-ai/ffmpeg-api/metadata"
+          (step.model === "fal-ai/ffmpeg-api/metadata" ||
+            step.provider === "higgsfield")
         ) {
           await prisma.step.updateMany({
             where: {
@@ -374,7 +384,7 @@ export async function collectRunning(userId: string, influencerId: string) {
               submissionState: "cost_unknown",
               completedAt: new Date(),
               error:
-                "Não foi possível verificar a duração do clipe. O saldo restante ficou reservado para conferência manual.",
+                "Não foi possível verificar o resultado e seu custo. O saldo restante ficou reservado para conferência manual.",
             },
           });
         } else if (previous + 1 >= MAX_POLL_ERRORS)
