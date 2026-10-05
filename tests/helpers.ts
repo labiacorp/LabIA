@@ -13,7 +13,8 @@ export const runPrefix = () => `e2e-${Date.now().toString(36)}-${randomBytes(3).
 export async function seedUser(email: string, options: { password?: string; role?: "USER" | "OWNER"; verified?: boolean } = {}) {
   const id = `e2e${randomBytes(10).toString("hex")}`;
   const hash = options.password ? await hashPassword(options.password) : null;
-  await sql`INSERT INTO users (id, email, role, password_hash) VALUES (${id}, ${email}, ${options.role ?? "USER"}::"UserRole", ${hash})`;
+  const verifiedAt = options.verified === false ? null : new Date();
+  await sql`INSERT INTO users (id, email, role, password_hash, email_verified_at) VALUES (${id}, ${email}, ${options.role ?? "USER"}::"UserRole", ${hash}, ${verifiedAt})`;
   return id;
 }
 
@@ -37,4 +38,24 @@ export async function signInPassword(page: Page, email: string, password: string
   await page.getByPlaceholder("Sua senha").fill(password);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page).toHaveURL(/\/painel/);
+}
+
+// In development, src/lib/email.ts writes messages to .handoff/outbox.jsonl instead of sending them.
+export async function lastEmail(to: string): Promise<{ subject: string; text: string }> {
+  const { readFile } = await import("node:fs/promises");
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const lines = (await readFile(".handoff/outbox.jsonl", "utf8").catch(() => "")).trim().split("\n").filter(Boolean);
+    const found = lines.map((line) => JSON.parse(line)).filter((m) => m.to === to).at(-1);
+    if (found) return found;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  throw new Error(`No e-mail to ${to}`);
+}
+export const linkIn = (text: string) => text.match(/https?:\/\/\S+/)![0].replace(/^https?:\/\/[^/]+/, "");
+export const codeIn = (text: string) => text.match(/Código: (\d{6})/)![1];
+
+// Rate limits are real and every run comes from the same local address ("unknown" without a proxy
+// header). Clears only that address's counters and the e2e accounts', never anyone else's.
+export async function resetLocalRateLimits() {
+  await sql`DELETE FROM rate_limit_events WHERE key LIKE '%:unknown' OR key LIKE '%:127.0.0.1' OR key LIKE '%:::1' OR key LIKE '%e2e-%'`;
 }

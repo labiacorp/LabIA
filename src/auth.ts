@@ -1,4 +1,4 @@
-import NextAuth, { type DefaultSession } from "next-auth";
+import NextAuth, { CredentialsSignin, type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 
@@ -37,6 +37,12 @@ export function isAllowed(email?: string | null) {
   return allowed.length === 0 || allowed.includes(email.toLowerCase());
 }
 
+// Right password, address never confirmed. Thrown only after the password matched, so the hint
+// reaches the account's owner and nobody else; the login form offers to resend the link.
+export class UnverifiedEmail extends CredentialsSignin {
+  code = "unverified";
+}
+
 // Dev-only e-mail login (no password) so the app can be driven without Google. Never registered in a production build.
 const devLogin = process.env.NODE_ENV === "development";
 
@@ -63,11 +69,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         const row = await prisma.user.findUnique({
           where: { email },
-          select: { id: true, passwordHash: true },
+          select: { id: true, passwordHash: true, emailVerifiedAt: true },
         });
-        return (await verifyPassword(password, row?.passwordHash)) && row
-          ? { id: row.id, email }
-          : null;
+        if (!(await verifyPassword(password, row?.passwordHash)) || !row) return null;
+        if (!row.emailVerifiedAt) throw new UnverifiedEmail();
+        return { id: row.id, email };
       },
     }),
     ...(devLogin
@@ -91,8 +97,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ account, profile, user }) {
       // The access code guards every entry point, including a direct hit on /api/auth/*.
       if (!(await hasPass())) return false;
-      if (account?.provider === "google")
-        return profile?.email_verified === true && isAllowed(profile.email);
+      if (account?.provider === "google") {
+        if (profile?.email_verified !== true || !isAllowed(profile.email)) return false;
+        // An address already bound to another Google account is not taken over by this one.
+        const bound = await prisma.user.findUnique({ where: { email: profile.email!.toLowerCase() }, select: { googleSub: true } });
+        const subOwner = await prisma.user.findUnique({ where: { googleSub: account.providerAccountId }, select: { id: true } });
+        return !bound?.googleSub || bound.googleSub === account.providerAccountId || subOwner !== null;
+      }
       return (devLogin || account?.provider === "password") && isAllowed(user.email);
     },
     async jwt({ token, user, account }) {
@@ -100,6 +111,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const row = await registerSignIn(
           { email: user.email, name: user.name, image: user.image },
           (await cookies()).get(REFERRAL_COOKIE)?.value,
+          account?.provider === "google" ? account.providerAccountId : undefined,
         );
         token.uid = row.id;
         token.tokenVersion = row.tokenVersion;

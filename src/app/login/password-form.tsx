@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,9 +32,11 @@ export function PasswordLogin() {
       </Button>
       {state.error ? (
         <p role="alert" className="text-body-sm text-lab-danger">
-          {state.error}
+          {state.error}{" "}
+          {state.unverified ? <Link href={`/verificar-email?email=${encodeURIComponent(state.unverified)}`} className="underline">Confirmar agora</Link> : null}
         </p>
       ) : null}
+      {create ? null : <Link href="/esqueci-senha" className="text-body-sm text-lab-text-dim underline">Esqueci minha senha</Link>}
       <button type="button" onClick={() => setCreate(!create)} className="text-left text-body-sm text-lab-text-dim underline">
         {create ? "Já tenho conta · entrar" : "Ainda não tenho conta · criar com senha"}
       </button>

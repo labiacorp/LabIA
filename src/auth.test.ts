@@ -9,11 +9,13 @@ vi.mock("next/headers", () => ({
   cookies: async () => ({ get: () => undefined }),
 }));
 vi.mock("next-auth", () => ({
+  CredentialsSignin: class extends Error {},
   default: (config: NextAuthConfig) => {
     mocks.config = config;
     return {};
   },
 }));
+vi.mock("@/lib/rate-limit", () => ({ hit: async () => true, clientIp: async () => "test" }));
 vi.mock("@/lib/prisma", () => ({
   prisma: { user: { findUnique: mocks.find, upsert: mocks.upsert } },
 }));
@@ -68,5 +70,18 @@ describe("JWT session revocation", () => {
         account: null,
       }),
     ).toBeNull();
+  });
+});
+
+describe("password sign-in", () => {
+  beforeEach(() => vi.clearAllMocks());
+  it("refuses an unconfirmed address only after the password matched", async () => {
+    const { hashPassword } = await import("@/lib/password");
+    const authorize = (mocks.config.providers.find((p) => (p as { options?: { id?: string } }).options?.id === "password") as unknown as { options: { authorize: (c: unknown) => Promise<unknown> } }).options.authorize;
+    mocks.find.mockResolvedValue({ id: "u1", passwordHash: await hashPassword("certa"), emailVerifiedAt: null });
+    expect(await authorize({ email: "a@example.com", password: "errada" })).toBeNull();
+    await expect(authorize({ email: "a@example.com", password: "certa" })).rejects.toMatchObject({ code: "unverified" });
+    mocks.find.mockResolvedValue({ id: "u1", passwordHash: await hashPassword("certa"), emailVerifiedAt: new Date() });
+    expect(await authorize({ email: "a@example.com", password: "certa" })).toEqual({ id: "u1", email: "a@example.com" });
   });
 });

@@ -50,3 +50,26 @@ describe("referral attribution", () => {
     ).toBeNull();
   });
 });
+
+describe("Google sign-in binding", () => {
+  it("drops a password nobody proved and revokes its sessions when Google proves the address", async () => {
+    const squatted = await prisma.user.create({ data: { email: email("squat"), passwordHash: "scrypt$1$a$b" } });
+    const row = await registerSignIn({ email: squatted.email }, undefined, "google-sub-squat");
+    expect(row.id).toBe(squatted.id);
+    expect(row.passwordHash).toBeNull();
+    expect(row.emailVerifiedAt).not.toBeNull();
+    expect(row.tokenVersion).toBe(squatted.tokenVersion + 1);
+    expect(row.googleSub).toBe("google-sub-squat");
+  });
+  it("keeps a verified password, and finds the account by Google id after an e-mail change", async () => {
+    const owner = await prisma.user.create({ data: { email: email("verified"), passwordHash: "scrypt$1$a$b", emailVerifiedAt: new Date() } });
+    const bound = await registerSignIn({ email: owner.email }, undefined, "google-sub-verified");
+    expect(bound.passwordHash).toBe("scrypt$1$a$b");
+    await prisma.user.update({ where: { id: owner.id }, data: { email: email("verified-new") } });
+    expect((await registerSignIn({ email: owner.email }, undefined, "google-sub-verified")).id).toBe(owner.id);
+  });
+  it("refuses an address already bound to a different Google account", async () => {
+    await prisma.user.create({ data: { email: email("bound"), googleSub: "google-sub-a" } });
+    await expect(registerSignIn({ email: email("bound") }, undefined, "google-sub-b")).rejects.toThrow();
+  });
+});

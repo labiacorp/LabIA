@@ -8,15 +8,23 @@ import { DevelopmentLogin } from "./dev-form";
 import { PasswordLogin } from "./password-form";
 import { loginGoogle } from "./actions";
 export const metadata = { title: "Entrar · LabIA" };
+const notices: Record<string, string> = {
+  verificado: "E-mail confirmado. Entre com sua senha.",
+  "email-alterado": "E-mail alterado. Entre com o novo endereço.",
+  "senha-redefinida": "Senha criada. Entre com a nova senha.",
+  "conta-excluida": "Sua conta foi excluída.",
+};
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; aviso?: string }>;
 }) {
   if ((await auth())?.user) redirect("/painel");
   if (!(await hasPass())) redirect("/acesso");
   const enabled = googleConfigured();
-  const message = loginErrorMessage((await searchParams).error);
+  const { error, aviso } = await searchParams;
+  const message = loginErrorMessage(error);
+  const notice = aviso ? notices[aviso] : undefined;
   return (
     <main className="mx-auto flex min-h-screen max-w-form flex-col justify-center gap-6 px-5 py-8">
       <div>
@@ -30,6 +38,7 @@ export default async function LoginPage({
         </p>
       </div>
       {message ? <Alert variant="error" title={message} /> : null}
+      {notice ? <Alert variant="success" title={notice} /> : null}
       <PasswordLogin />
       <p className="text-center text-caption text-lab-text-muted">ou</p>
       <form action={loginGoogle}>

@@ -1,6 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
-import { AuthError } from "next-auth";
+import { AuthError, CredentialsSignin } from "next-auth";
 import { z } from "zod";
 import { cookies } from "next/headers";
 import { isAllowed, signIn } from "@/auth";
@@ -10,6 +10,8 @@ import { prisma } from "@/lib/prisma";
 import { clientIp, hit, TOO_MANY_ATTEMPTS } from "@/lib/rate-limit";
 import { registerSignIn, REFERRAL_COOKIE } from "@/lib/referrals";
 import { googleConfigured } from "@/lib/auth-config";
+import { issueEmailToken } from "@/lib/email-tokens";
+import { sendAccountExists, sendVerifyEmail } from "@/lib/account-emails";
 export async function loginGoogle() {
   if (!googleConfigured()) return;
   try {
@@ -44,10 +46,12 @@ export async function loginDevelopment(
   return { error: "" };
 }
 
-export type PasswordState = { error: string };
+export type PasswordState = { error: string; unverified?: string };
 
 // Closed beta: signup needs the access pass and, when ALLOWED_EMAILS is set, a listed e-mail.
-// ponytail: no e-mail verification yet, so the pass + allowlist are what stop someone claiming another person's address. Add a mailed link before opening the beta.
+// Signup never signs in: it sends a confirmation link and code, and the password provider refuses an
+// unconfirmed address (src/auth.ts). An address that already has an account gets a "you already have
+// an account" e-mail instead, and the form answers identically, so it reveals nothing.
 export async function authenticatePassword(
   _previous: PasswordState,
   form: FormData,
@@ -64,21 +68,34 @@ export async function authenticatePassword(
       return { error: "Este e-mail não tem acesso à beta. Confira o convite que você recebeu." };
     if (!(await hit(`signup-ip:${await clientIp()}`, 5, 3600)))
       return { error: TOO_MANY_ATTEMPTS };
-    if (await prisma.user.findUnique({ where: { email: email.data }, select: { id: true } }))
-      return { error: "Já existe uma conta com este e-mail. Entre com a sua senha ou com o Google." };
-    const user = await registerSignIn({ email: email.data }, (await cookies()).get(REFERRAL_COOKIE)?.value);
-    // Only claims an account that still has no password, so a racing signup cannot overwrite another one.
-    const claimed = await prisma.user.updateMany({
-      where: { id: user.id, passwordHash: null },
-      data: { passwordHash: await hashPassword(password) },
-    });
-    if (claimed.count !== 1) return { error: "Já existe uma conta com este e-mail." };
+    try {
+      if (await prisma.user.findUnique({ where: { email: email.data }, select: { id: true } })) {
+        await sendAccountExists(email.data);
+      } else {
+        const user = await registerSignIn({ email: email.data }, (await cookies()).get(REFERRAL_COOKIE)?.value);
+        // Only claims an account that still has no password, so a racing signup cannot overwrite another one.
+        const claimed = await prisma.user.updateMany({
+          where: { id: user.id, passwordHash: null },
+          data: { passwordHash: await hashPassword(password) },
+        });
+        if (claimed.count === 1) {
+          const { token, code } = await issueEmailToken(user.id, "VERIFY");
+          await sendVerifyEmail(email.data, token, code!);
+        } else await sendAccountExists(email.data);
+      }
+    } catch {
+      return { error: "Não conseguimos enviar o e-mail de confirmação. Tente novamente em instantes." };
+    }
+    redirect(`/verificar-email?email=${encodeURIComponent(email.data)}`);
   }
   try {
     await signIn("password", { email: email.data, password, redirectTo: "/painel" });
   } catch (error) {
-    if (error instanceof AuthError)
-      return { error: create ? "Conta criada, mas não foi possível entrar. Tente entrar de novo." : "E-mail ou senha incorretos. Se ainda não tem conta, use a opção criar com senha abaixo." };
+    if (error instanceof AuthError) {
+      if (error instanceof CredentialsSignin && error.code === "unverified")
+        return { error: "Confirme seu e-mail para entrar. Enviamos um link quando você criou a conta.", unverified: email.data };
+      return { error: "E-mail ou senha incorretos. Se ainda não tem conta, use a opção criar com senha abaixo." };
+    }
     throw error;
   }
   return { error: "" };

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { deleteUsers, runPrefix, seedUser, signInDev, signInPassword, sql } from "./helpers";
+import { deleteUsers, runPrefix, seedUser, signInDev, signInPassword, sql, resetLocalRateLimits } from "./helpers";
 
 const prefix = runPrefix();
 const owner = `${prefix}-owner@example.com`;
@@ -8,6 +8,7 @@ test.beforeAll(async () => {
   await seedUser(owner, { role: "OWNER", password: "senha-owner" });
   await seedUser(member, { password: "senha-membro" });
 });
+test.beforeEach(resetLocalRateLimits);
 test.afterAll(() => deleteUsers(prefix));
 
 test("an owner on a Google-equivalent session tops up an account exactly once", async ({ page }, info) => {
