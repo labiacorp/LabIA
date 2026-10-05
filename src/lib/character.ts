@@ -47,3 +47,17 @@ export function portraitItem(role: (typeof PORTRAIT_ROLES)[number], card: Charac
   const prompt = `Using the character in the reference sheet (${identity(card)}), create ${spec.text}. Keep exactly the same face, hair and outfit as the sheet. No text, no watermark.`;
   return { role, model: PORTRAIT_MODEL, params: { prompt, image_urls: [sheetUrl], aspect_ratio: spec.aspect, resolution: "1K" } };
 }
+
+// Real cost of a kit step, once it is known. `unknown` means a charge may exist that nobody has verified yet (never shown as R$ 0).
+type CostStep = { status: string; submissionState: string; actualCostBrl: { toString(): string } | null };
+
+export function stepCost(step: CostStep): { state: "none" } | { state: "unknown" } | { state: "known"; brl: number } {
+  if (["submission_unknown", "cost_unknown"].includes(step.submissionState)) return { state: "unknown" };
+  if (!["DONE", "APPROVED"].includes(step.status)) return { state: "none" };
+  return step.actualCostBrl === null ? { state: "unknown" } : { state: "known", brl: Number(step.actualCostBrl.toString()) };
+}
+
+export function kitSpent(steps: CostStep[]): { unknown: boolean; brl: number } {
+  const costs = steps.map(stepCost);
+  return { unknown: costs.some((cost) => cost.state === "unknown"), brl: costs.reduce((sum, cost) => sum + (cost.state === "known" ? cost.brl : 0), 0) };
+}

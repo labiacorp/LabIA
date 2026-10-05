@@ -29,6 +29,7 @@ Genjutsu Motion Transfer uses the shared reservation/operation-key coordinator a
 ## How generation works (`src/lib/generation.ts`)
 
 Character kit = step 1 sheet (nano-banana-2, 2K, 3:2) then step 2 portraits front/profile/detail (nano-banana-2/edit, 1K, using the approved sheet as reference). Rules:
+- the character tab shows the real cost of each finished kit step and the kit total (`stepCost`/`kitSpent` in `src/lib/character.ts`); an unverified cost reads "indisponível", never R$ 0;
 - the price is quoted by the provider layer (`src/lib/providers/`), shown in R$, and sent back with the approval; a changed price charges nothing;
 - one `operationKey` per intent: a double submit or parallel requests never charge or send twice;
 - the ledger reserves the price in the same transaction that creates the step (row lock per user, so no overspend); refund on failure;

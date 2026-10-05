@@ -2,7 +2,8 @@ import { randomUUID } from "node:crypto";
 
 import { Alert } from "@/components/ui/alert";
 import { Badge, stepStatus } from "@/components/ui/badge";
-import { PORTRAIT_ROLES, ROLE_LABEL } from "@/lib/character";
+import { CostChip } from "@/components/ui/cost-chip";
+import { kitSpent, PORTRAIT_ROLES, ROLE_LABEL, stepCost } from "@/lib/character";
 import { currency } from "@/lib/platform";
 import { quote } from "@/lib/generation";
 import { cardOf, loadKit, planFor, type KitStep } from "@/lib/kit";
@@ -15,10 +16,15 @@ import { KitWatcher } from "./kit-watcher";
 
 function StepBadge({ step }: { step: KitStep }) {
   const [variant, label] = stepStatus[step.status];
+  const cost = stepCost(step);
   return (
-    <Badge variant={variant} dot>
-      {label}
-    </Badge>
+    <span className="flex items-center gap-2">
+      {cost.state === "known" ? <CostChip state="actual" value={cost.brl} size="sm" /> : null}
+      {cost.state === "unknown" ? <CostChip state="unavailable" size="sm" /> : null}
+      <Badge variant={variant} dot>
+        {label}
+      </Badge>
+    </span>
   );
 }
 
@@ -69,6 +75,7 @@ export async function CharacterTab({
     getBalanceBrl(userId),
   ]);
   const card = cardOf(influencer);
+  const spent = kitSpent(kit.steps);
 
   const sheetQuote = quote(planFor("SHEET", card, kit));
   const portraitPlan = kit.sheetUrl ? planFor("PORTRAITS", card, kit) : [];
@@ -89,6 +96,15 @@ export async function CharacterTab({
   return (
     <div className="grid gap-6">
       <KitWatcher influencerId={influencerId} active={kit.running} />
+      {kit.steps.some((step) => stepCost(step).state !== "none") ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <CostChip
+            state={spent.unknown ? "unavailable" : "actual"}
+            value={spent.unknown ? undefined : spent.brl}
+            prefix="gasto apurado no kit"
+          />
+        </div>
+      ) : null}
 
       <section className="grid gap-4 rounded-lab border border-lab-border bg-lab-surface-1 p-5">
         <div className="flex items-start justify-between gap-4">
