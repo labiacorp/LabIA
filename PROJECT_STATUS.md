@@ -1,6 +1,6 @@
 # LabIA: current state
 
-Branch `v2`, rewritten from scratch on 2026-10-03. Describes what exists, nothing else. If this file and the code disagree, the code wins; fix this file in the same commit as the change.
+Production is `main`; integration is `dev` (see the branch rule in `CLAUDE.md`). V2 was rewritten from scratch on 2026-10-03. Describes what exists, nothing else. If this file and the code disagree, the code wins; fix this file in the same commit as the change.
 
 ## What it is
 
