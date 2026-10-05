@@ -1,0 +1,63 @@
+name: Checks
+
+# Everything the AGENTS.md go-ahead list asks for (typecheck, tests, build), plus lint, the
+# production dependency audit and the Playwright suite, on every branch push and pull request.
+# The database is a throwaway Postgres service: no Neon, provider or production secret is ever
+# passed to this job, and FAL_MOCK=1 keeps every generation fake.
+on:
+  pull_request:
+  push:
+    branches: [main, v2, 'diego/**', 'felipe/**']
+  schedule:
+    # Catches advisories published against dependencies already in the lockfile.
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: labia
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      FAL_MOCK: '1'
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/labia
+      DIRECT_URL: postgresql://ci:ci@localhost:5432/labia
+      AUTH_SECRET: ci-only-placeholder-secret-at-least-32-characters
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      # High or critical in a production dependency fails the job; moderate/low arrive as Dependabot PRs.
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npx prisma migrate deploy
+      - run: npx vitest run
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results/
+          retention-days: 7

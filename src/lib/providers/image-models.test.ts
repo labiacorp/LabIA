@@ -5,6 +5,8 @@ import { FalProvider } from "./fal";
 import { prepareImage } from "./image-models";
 import { getImageOptions, sceneItem } from "../content-generation";
 
+// Prices are asserted at the default rate; a USD_BRL_RATE in .env.local must not move them.
+vi.stubEnv("USD_BRL_RATE", "5.4");
 const params = { prompt: "The same person holding a product", image_urls: ["https://fixture/owned-front.png"], resolution: "2K", aspect_ratio: "9:16" };
 const provider = () => new FalProvider({ apiKey: "fixture-no-network", usdBrlRate: 5.4 });
 describe("reference image model contracts", () => {

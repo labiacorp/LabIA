@@ -1,11 +1,16 @@
 import { randomBytes } from "node:crypto";
 import { expect, type Page } from "@playwright/test";
-import { neon } from "@neondatabase/serverless";
+import { Pool } from "pg";
 import { hashPassword } from "../src/lib/password";
 
 // Raw SQL, not the Prisma client: Prisma 7's generated client is ESM-only and Playwright loads specs
-// as CommonJS. Setup is also deliberately independent of the app code under test.
-export const sql = neon(process.env.DATABASE_URL!);
+// as CommonJS. Setup is also deliberately independent of the app code under test. Plain pg works
+// against Neon and against the CI job's local Postgres alike.
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 2, allowExitOnIdle: true });
+export async function sql(strings: TemplateStringsArray, ...values: unknown[]) {
+  const text = strings.reduce((query, part, i) => query + part + (i < values.length ? `$${i + 1}` : ""), "");
+  return (await pool.query(text, values)).rows;
+}
 
 // Every spec seeds its own accounts under one prefix and deletes them in afterAll. Never a real one.
 export const runPrefix = () => `e2e-${Date.now().toString(36)}-${randomBytes(3).toString("hex")}`;

@@ -9,7 +9,8 @@ import { getVideoOptions } from "../video-options";
 
 const provider = () => new FalProvider({ apiKey: "mock-only-no-network", usdBrlRate: 5.4 });
 const input = { prompt: "The creator waves", image_url: "https://fixture/image.png", duration: 5, resolution: "720p", generate_audio: true, image_width: 1280, image_height: 720 };
-beforeEach(() => { vi.clearAllMocks(); sdk.submit.mockResolvedValue({ request_id: "mock-video" }); });
+// Prices are asserted at the default rate; a USD_BRL_RATE in .env.local must not move them.
+beforeEach(() => { vi.stubEnv("USD_BRL_RATE", "5.4"); vi.clearAllMocks(); sdk.submit.mockResolvedValue({ request_id: "mock-video" }); });
 afterEach(() => vi.unstubAllEnvs());
 
 describe("selectable fal video model contracts", () => {
