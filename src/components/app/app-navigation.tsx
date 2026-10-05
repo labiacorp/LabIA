@@ -26,7 +26,7 @@ import { CostChip } from "@/components/ui/cost-chip";
 const links = [
   { href: "/painel", label: "Painel", icon: LayoutDashboard },
   { href: "/", label: "Estúdio", icon: Sparkles },
-  { href: "/influenciadores", label: "Influenciadores", icon: Users },
+  { href: "/influenciadores", label: "Personagens", icon: Users },
   { href: "/conteudos", label: "Conteúdos", icon: Film },
   { href: "/trends", label: "Trends", icon: Sparkles },
   { href: "/modelos", label: "Modelos", icon: BookOpen },
@@ -83,7 +83,7 @@ export function AppNavigation({
       >
         Lab<span>IA</span>
       </Link>
-      <span className="hidden border-l border-lab-border pl-4 text-caption text-lab-text-muted md:block">Seu laboratório criativo</span>
+      <span className="hidden border-l border-lab-border pl-4 text-caption text-lab-text-muted md:block">{pathname === "/conta" ? "Conta" : pathname === "/saldo" ? "Saldo e extrato" : links.find(link => active(link.href))?.label ?? "Produção"}</span>
       <div className="ml-auto flex items-center gap-3">
         <ThemeToggle />
         <Link
@@ -112,8 +112,8 @@ export function AppNavigation({
       </div>
       </div>
       <div className="shell-navigation-row">
-        <nav aria-label="Navegação principal" className="shell-navigation">{menuLinks()}</nav>
-        <span className="hidden items-center gap-2 whitespace-nowrap text-caption text-lab-text-muted lg:flex"><span className="lab-status-dot bg-lab-reagent" />Beta</span>
+        <p className="shell-nav-caption">SEU ESPAÇO</p><nav aria-label="Navegação principal" className="shell-navigation">{menuLinks()}</nav><div className="shell-nav-footer"><Link href="/saldo" className={itemClass}><Wallet className="size-4" />Saldo e extrato</Link><Link href="/conta" className={itemClass}><UserRound className="size-4" />Conta</Link></div>
+        <span className="shell-beta"><span className="lab-status-dot bg-lab-reagent" />Beta</span>
       </div>
       <dialog ref={create} className="app-menu-dialog shell-create-dialog" aria-labelledby="create-title" onClick={(event) => { if(event.target === event.currentTarget) create.current?.close(); }}>
         <div className="flex items-center justify-between border-b border-lab-border p-5"><div><p className="mb-1 text-caption text-lab-text-muted">UMA IDEIA, VÁRIOS CAMINHOS</p><h2 id="create-title" className="font-display text-xl">O que vamos criar?</h2></div><button className="lab-hit-target" aria-label="Fechar menu criar" onClick={() => create.current?.close()}><X className="mx-auto size-5" /></button></div>

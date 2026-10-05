@@ -20,7 +20,6 @@ import {
   DEFAULT_LIBRARY_FILTERS,
   type LibraryFilters,
 } from "@/lib/library";
-import { useMobile } from "@/lib/use-mobile";
 import { currency, dateLabel } from "@/lib/platform";
 import type { LibraryAsset } from "@/lib/library-data";
 
@@ -135,14 +134,13 @@ export function LibraryView({
   page: number;
   filters: LibraryFilters;
 }) {
-  const mobile = useMobile();
   const [selected, setSelected] = useState<LibraryAsset | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const filtered = libraryHref(filters, { page: 1 }) !== "/biblioteca";
   return (
     <>
+      <div className="library-toolbar"><nav aria-label="Tipos de arquivo" className="library-type-tabs">{([{kind:"all",label:"Todos"},{kind:"IMAGE",label:"Imagens"},{kind:"VIDEO",label:"Vídeos"},{kind:"AUDIO",label:"Áudios"}] as const).map(item => <Link key={item.kind} href={libraryHref(filters,{kind:item.kind,page:1})} aria-current={filters.kind === item.kind ? "page" : undefined}>{item.label}</Link>)}</nav><form action="/biblioteca" className="library-search"><input type="hidden" name="kind" value={filters.kind} /><input type="hidden" name="influencer" value={filters.influencer} /><input type="hidden" name="role" value={filters.role} /><input type="hidden" name="period" value={filters.period} /><Input name="q" aria-label="Buscar na biblioteca" placeholder="Buscar arquivos…" defaultValue={filters.q} /><Button variant="secondary" aria-label="Buscar arquivos">Buscar</Button></form></div>
       <details
-        open={!mobile}
         className="mb-6 rounded-lab border border-lab-border bg-lab-surface-1"
       >
         <summary className="cursor-pointer p-4 text-body-sm font-medium">
@@ -156,7 +154,7 @@ export function LibraryView({
             Buscar
             <Input
               name="q"
-              placeholder="Personagem ou conteúdo"
+              placeholder="Arquivo, personagem ou conteúdo"
               defaultValue={filters.q}
             />
           </label>
@@ -212,7 +210,7 @@ export function LibraryView({
           </div>
         </form>
       </details>
-      <p className="mb-4 text-body-sm text-lab-text-dim">{total} arquivo(s)</p>
+      <p className="mb-4 text-body-sm text-lab-text-dim">{total} {total === 1 ? "arquivo" : "arquivos"}</p>
       {assets.length ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {assets.map((asset) => {
@@ -227,7 +225,7 @@ export function LibraryView({
                 key={asset.id}
                 className="overflow-hidden rounded-lab border border-lab-border bg-lab-surface-1"
               >
-                <MediaPreview asset={asset} />
+                {asset.kind === "IMAGE" ? <button type="button" className="library-image-preview" aria-label={`Abrir ${asset.title}`} onClick={() => {setSelected(asset);dialog.current?.showModal();}}><MediaPreview asset={asset} /></button> : <div className="library-media-preview"><MediaPreview asset={asset} /></div>}
                 <div className="grid gap-3 p-4">
                   <div className="flex items-start gap-2">
                     <Icon className="mt-1 size-4 shrink-0 text-lab-text-dim" />
@@ -256,7 +254,7 @@ export function LibraryView({
                       dialog.current?.showModal();
                     }}
                   >
-                    Ver detalhes
+                    Abrir arquivo
                   </Button>
                 </div>
               </article>

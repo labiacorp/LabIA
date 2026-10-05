@@ -5,9 +5,9 @@
 
 :root {
   /* Base — MANTIDO */
-  --lab-bg: #0A0B0E;                 /* MANTIDO */
-  --lab-surface-1: #12141A;          /* MANTIDO */
-  --lab-surface-2: #1A1D26;          /* MANTIDO */
+  --lab-bg: #101113;                 /* MANTIDO */
+  --lab-surface-1: #18191C;          /* MANTIDO */
+  --lab-surface-2: #232428;          /* MANTIDO */
   --lab-border: #262A35;             /* MANTIDO */
   --lab-border-strong: #343947;      /* MANTIDO */
   --lab-text: #E9ECF2;               /* MANTIDO */
@@ -16,11 +16,11 @@
   --lab-text-disabled: #5D6577;      /* NOVO · o antigo muted vira só "desabilitado" (nunca texto informativo) */
 
   /* Reagente — MANTIDO (regra de raridade: ver tabela "o que pode ser verde") */
-  --lab-reagent: #10B981;            /* MANTIDO · fundo de CTA primário/Executar, foco, porta ativa */
-  --lab-reagent-bright: #3DDFA6;     /* MANTIDO · números de custo, "IA" do wordmark — nunca fundo */
-  --lab-reagent-dim: rgba(16, 185, 129, 0.12); /* MANTIDO · fundo do chip de custo */
-  --lab-reagent-line: rgba(16, 185, 129, 0.28); /* NOVO · borda do chip de custo (substitui border-lab-reagent/20 solto) */
-  --lab-on-reagent: #0A0B0E;         /* NOVO · texto sobre reagente (era regra só documentada) */
+  --lab-reagent: #526CF5;            /* MANTIDO · fundo de CTA primário/Executar, foco, porta ativa */
+  --lab-reagent-bright: #A6B5FF;     /* MANTIDO · números de custo, "IA" do wordmark — nunca fundo */
+  --lab-reagent-dim: rgba(82, 108, 245, 0.09); /* MANTIDO · fundo do chip de custo */
+  --lab-reagent-line: rgba(82, 108, 245, 0.22); /* NOVO · borda do chip de custo (substitui border-lab-reagent/20 solto) */
+  --lab-on-reagent: #FFFFFF;         /* NOVO · texto sobre reagente (era regra só documentada) */
 
   /* Semânticas — MANTIDO + fundos tênues NOVOS */
   --lab-success: #4ADE80;            /* MANTIDO */
@@ -257,10 +257,10 @@
 }
 html[data-theme="light"] {
   color-scheme:light;
-  --lab-bg:#F5F7FA; --lab-surface-1:#FFFFFF; --lab-surface-2:#EDF1F6;
+  --lab-bg:#F8F9FB; --lab-surface-1:#FFFFFF; --lab-surface-2:#F0F2F6;
   --lab-border:#DCE2EB; --lab-border-strong:#BBC6D5;
   --lab-text:#172334; --lab-text-dim:#526174; --lab-text-muted:#607086;
-  --lab-text-disabled:#8A96A6; --lab-reagent:#087A56; --lab-reagent-bright:#087A56;
+  --lab-text-disabled:#8A96A6; --lab-reagent:#445EDC; --lab-reagent-bright:#344DCA;
   --lab-on-reagent:#FFFFFF; --lab-success:#187540; --lab-warning:#946000;
   --lab-danger:#BE2446; --lab-info:#086B9A;
   --lab-node-image:#6653C6; --lab-node-video:#087B9C; --lab-node-copy:#9D641C;
@@ -279,3 +279,77 @@ html[data-theme="light"] {
 .section-eyebrow { font-size:.625rem; letter-spacing:.14em; color:var(--lab-text-muted); margin-bottom:.75rem; }
 
 .character-card-portrait { display:grid; place-items:center; height:12rem; overflow:hidden; border-radius:.75rem; margin-bottom:1.25rem; background:radial-gradient(ellipse at 50% 10%,var(--lab-reagent-dim),var(--lab-surface-2)); }
+
+/* Account settings: identity first, grouped actions, edit on demand. */
+.account-settings { max-width:38rem; margin:0 auto; padding:0 0 2rem; }
+.account-page-title { font-family:var(--font-inter),sans-serif; font-size:1.75rem; font-weight:600; letter-spacing:-.04em; }
+.account-identity { display:flex; flex-direction:column; align-items:center; text-align:center; padding:2rem 0 2.25rem; }
+.account-photo-button { position:relative; border-radius:50%; }
+.account-photo-button:focus-visible,.account-edit-link:focus-visible { outline:2px solid var(--lab-reagent); outline-offset:4px; }
+.account-photo-badge { position:absolute; right:0; bottom:0; display:grid; place-items:center; height:1.75rem; width:1.75rem; border-radius:50%; border:3px solid var(--lab-bg); background:var(--lab-surface-2); color:var(--lab-text-dim); }
+.account-identity h2 { max-width:100%; overflow-wrap:anywhere; font-size:1.5rem; font-weight:600; letter-spacing:-.025em; margin-top:1rem; }
+.account-identity > p { color:var(--lab-text-dim); overflow-wrap:anywhere; max-width:100%; font-size:.875rem; margin-top:.35rem; }
+.account-edit-link { min-height:2.75rem; padding:.5rem .75rem; color:var(--lab-reagent-bright); font-size:.875rem; margin-top:.25rem; border-radius:.5rem; }
+.account-settings-section { margin-bottom:1.5rem; }
+.account-settings-section > h2 { color:var(--lab-text-muted); font-size:.75rem; font-weight:500; margin:0 1rem .625rem; }
+.account-settings-group { overflow:hidden; border:1px solid var(--lab-border); border-radius:.875rem; background:var(--lab-surface-1); }
+.account-settings-row { display:flex; width:100%; align-items:center; text-align:left; gap:.875rem; min-height:4rem; padding:.75rem 1rem; position:relative; transition:background var(--lab-dur-micro); }
+.account-settings-row + .account-settings-row::before { content:""; position:absolute; left:3.75rem; right:0; top:0; border-top:1px solid var(--lab-border); }
+.account-settings-row:hover { background:var(--lab-surface-2); }
+.account-settings-row:focus-visible { outline:2px solid var(--lab-reagent); outline-offset:-3px; }
+.account-row-icon { display:grid; place-items:center; width:1.875rem; height:1.875rem; flex-shrink:0; color:var(--lab-text-dim); }
+.account-row-label { flex:1; min-width:0; font-size:.875rem; font-weight:500; }
+.account-row-value { font-size:.75rem; color:var(--lab-text-muted); }
+.account-chevron { width:1rem; height:1rem; flex-shrink:0; color:var(--lab-text-muted); }
+.account-group-caption { font-size:.75rem; color:var(--lab-text-muted); line-height:1.6; margin:.625rem 1rem 0; }
+.account-signout { margin-top:2rem; }
+.account-signout button { display:flex; gap:.625rem; align-items:center; justify-content:center; min-height:3rem; width:100%; border:1px solid var(--lab-border); border-radius:.875rem; color:var(--lab-danger); font-size:.875rem; background:var(--lab-surface-1); }
+.account-signout button:hover { background:var(--lab-danger-dim); }
+.account-settings-dialog { position:fixed; inset:0; margin:auto; width:min(28rem,calc(100vw - 2rem)); max-height:calc(100dvh - 2rem); padding:0; overflow:auto; border:1px solid var(--lab-border-strong); border-radius:1.125rem; color:var(--lab-text); background:var(--lab-surface-1); box-shadow:var(--lab-shadow-modal); }
+.account-settings-dialog::backdrop { background:var(--lab-scrim); }
+.account-dialog-heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.875rem 1.25rem; border-bottom:1px solid var(--lab-border); }
+.account-dialog-heading h2 { font-size:1rem; font-weight:600; }
+.account-dialog-heading button { display:grid; place-items:center; width:2.75rem; height:2.75rem; border-radius:50%; color:var(--lab-text-dim); }
+.account-dialog-heading button:hover { background:var(--lab-surface-2); }
+.account-dialog-body { padding:1.5rem; }
+.account-readonly-email { margin-top:1.5rem; padding-top:1.25rem; border-top:1px solid var(--lab-border); }
+.account-readonly-email span { color:var(--lab-text-muted); font-size:.75rem; }
+.account-readonly-email p { font-size:.875rem; margin-top:.5rem; overflow-wrap:anywhere; }
+@media(max-width:640px) { .account-page-title { font-size:1.5rem; } .account-identity { padding:1.5rem 0 1.75rem; } .account-settings-dialog { align-self:end; margin:auto auto 1rem; } }
+
+/* Quiet workspace navigation and neutral visual foundations. */
+.shell-toolbar { min-height:4rem; }
+.shell-nav-caption,.shell-nav-footer { display:none; }
+.shell-beta { display:none; }
+.shell-create:hover { background:var(--lab-reagent); filter:brightness(1.08); }
+@media(min-width:1024px) {
+ .shell-navigation-row { position:fixed; top:4rem; bottom:0; left:0; width:13rem; display:flex; flex-direction:column; align-items:stretch; justify-content:flex-start; padding:1.5rem .75rem; gap:.75rem; border-right:1px solid var(--lab-border); background:var(--lab-bg); }
+ .shell-nav-caption { display:block; padding:0 .75rem; font-size:.625rem; letter-spacing:.12em; color:var(--lab-text-muted); }
+ .shell-navigation { flex-direction:column; overflow-y:auto; }
+ .shell-navigation > a { border:0; border-radius:.625rem; padding:.75rem; font-size:.8125rem; min-height:2.75rem; }
+ .shell-navigation > a[aria-current="page"] { background:var(--lab-surface-2); color:var(--lab-text); }
+ .shell-nav-footer { display:grid; gap:.25rem; margin-top:auto; padding-top:1rem; border-top:1px solid var(--lab-border); color:var(--lab-text-dim); }
+ .shell-beta { display:flex; align-items:center; gap:.5rem; padding:.5rem .75rem; font-size:.6875rem; color:var(--lab-text-muted); }
+ .workspace-main { margin-left:13rem; width:calc(100% - 13rem); max-width:none; padding:2.5rem; }
+}
+.account-identity { padding:1.5rem 0; }
+.account-identity h2 { font-size:1.375rem; }
+.account-settings { padding-top:.25rem; }
+html[data-theme="light"] .workspace-panel,html[data-theme="light"] .account-settings-group { box-shadow:0 2px 8px rgba(23,35,52,.025); }
+@media(prefers-reduced-motion:reduce) { .shell-create { filter:none; } }
+
+.library-toolbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1.25rem; }
+.library-type-tabs { display:flex; gap:.25rem; padding:.25rem; border:1px solid var(--lab-border); background:var(--lab-surface-2); border-radius:.75rem; }
+.library-type-tabs a { display:flex; align-items:center; justify-content:center; min-height:2.5rem; padding:.5rem .875rem; border-radius:.5rem; font-size:.8125rem; color:var(--lab-text-dim); }
+.library-type-tabs a[aria-current="page"] { background:var(--lab-surface-1); color:var(--lab-text); box-shadow:0 1px 4px rgba(0,0,0,.08); }
+.library-search { display:flex; gap:.5rem; width:min(100%,22rem); }
+.library-image-preview { display:block; width:100%; aspect-ratio:4/3; overflow:hidden; background:var(--lab-surface-2); }
+.library-image-preview img { width:100%; height:100%; max-height:none; object-fit:cover; transition:transform .2s ease; }
+.library-image-preview:hover img { transform:scale(1.025); }
+.library-media-preview { display:grid; place-items:center; aspect-ratio:4/3; background:var(--lab-bg); overflow:hidden; }
+.library-media-preview video { height:100%; max-height:none; }
+@media(prefers-reduced-motion:reduce) { .library-image-preview img { transition:none; } .library-image-preview:hover img { transform:none; } }
+
+.library-search > button { flex-shrink:0; white-space:nowrap; height:2.75rem; }
+.library-search input { min-width:0; }
+@media(min-width:1024px) and (max-width:1279px) { :root { --lab-studio-panel-width:18rem; } .studio-card-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }

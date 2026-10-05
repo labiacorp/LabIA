@@ -70,6 +70,7 @@ export function libraryWhere(
     ...(filters.q
       ? {
           OR: [
+            { fileName: { contains: filters.q, mode: "insensitive" } },
             {
               influencer: {
                 name: { contains: filters.q, mode: "insensitive" },

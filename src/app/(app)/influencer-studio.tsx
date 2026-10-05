@@ -69,7 +69,7 @@ export function InfluencerStudio({ influencers, history, initialBuilderOpen = fa
         <div className="studio-panel-header">
           <Button type="button" variant="ghost" size="sm" className="studio-mobile-toggle mb-2" onClick={() => setMobileOpen(false)}><X />Voltar à galeria</Button>
           <p className="text-caption text-lab-text-dim">Dê vida ao seu personagem</p>
-          <h1 className="font-display text-h2 font-bold tracking-tight">ESTÚDIO DE INFLUENCERS</h1>
+          <h1 className="font-display text-h2 font-bold tracking-tight">Estúdio de personagens</h1>
           <div className="studio-segmented" role="tablist" aria-label="Modo de criação">
             <button id="character-mode" role="tab" aria-selected={mode === "character"} aria-controls="character-panel" onClick={() => setMode("character")}><UserRound size={16} />Personagem</button>
             <button id="motion-mode" role="tab" aria-selected={mode === "motion"} aria-controls="motion-panel" onClick={() => setMode("motion")}><Clapperboard size={16} />Movimento</button>
@@ -88,7 +88,7 @@ export function InfluencerStudio({ influencers, history, initialBuilderOpen = fa
               </div>
               <input type="hidden" name="selections" value={JSON.stringify(selections)} />
               {STUDIO_GROUPS.map((category, index) => (
-                <details key={category.id} className="studio-category" open={index < 3}>
+                <details key={category.id} className="studio-category" open={index === 0}>
                   <summary><span>{category.label}<small> · {category.options.length}</small></span><ChevronDown size={16} /></summary>
                   <div className={category.id === "character" ? "studio-character-types" : "studio-options"} role="group" aria-label={category.label}>
                     {category.options.map((option) => (

@@ -35,7 +35,7 @@ export default async function AppLayout({
       </header>
       <main
         id="app-content"
-        className="mx-auto w-full max-w-wide px-4 pb-16 pt-6 md:px-8 md:pt-8"
+        className="workspace-main mx-auto w-full max-w-wide px-4 pb-16 pt-6 md:px-8 md:pt-8"
       >
         {children}
       </main>

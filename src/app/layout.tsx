@@ -11,8 +11,8 @@ export const metadata: Metadata = { title: "LabIA", description: "Esteira de con
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className="dark" suppressHydrationWarning>
-      <head><script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem("labia-theme");if(t==="light"){document.documentElement.dataset.theme="light";document.documentElement.classList.remove("dark")}}catch(e){}` }} /></head>
+    <html lang="pt-BR" data-theme="light" suppressHydrationWarning>
+      <head><script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem("labia-theme");if(t==="dark"){document.documentElement.dataset.theme="dark";document.documentElement.classList.add("dark")}}catch(e){}` }} /></head>
       <body className={`${inter.variable} ${spaceGrotesk.variable} ${jetBrainsMono.variable}`}>{children}</body>
     </html>
   );
