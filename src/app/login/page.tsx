@@ -5,6 +5,7 @@ import { googleConfigured, loginErrorMessage } from "@/lib/auth-config";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DevelopmentLogin } from "./dev-form";
+import { PasswordLogin } from "./password-form";
 import { loginGoogle } from "./actions";
 export const metadata = { title: "Entrar · LabIA" };
 export default async function LoginPage({
@@ -29,6 +30,8 @@ export default async function LoginPage({
         </p>
       </div>
       {message ? <Alert variant="error" title={message} /> : null}
+      <PasswordLogin />
+      <p className="text-center text-caption text-lab-text-muted">ou</p>
       <form action={loginGoogle}>
         <Button
           size="lg"

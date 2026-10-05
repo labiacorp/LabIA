@@ -64,6 +64,7 @@ model User {
   avatar Bytes?
   avatarUpdatedAt DateTime? @map("avatar_updated_at")
   tokenVersion Int @default(0) @map("token_version")
+  passwordHash String? @map("password_hash")
   createdAt   DateTime      @default(now()) @map("created_at")
   influencers Influencer[]
   assets      Asset[]
