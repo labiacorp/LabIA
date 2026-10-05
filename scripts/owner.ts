@@ -18,7 +18,9 @@ async function main() {
     const user = await prisma.user.findUnique({ where: { email: (arg ?? "").trim().toLowerCase() } });
     if (!user) throw new Error(`No user with e-mail ${arg}. They need to sign in once first.`);
     await prisma.$transaction([
-      prisma.user.update({ where: { id: user.id }, data: { role } }),
+      // Granting also confirms the address: whoever runs this has the production database and is
+      // vouching for the account (needed while e-mail is off and no link can be mailed).
+      prisma.user.update({ where: { id: user.id }, data: { role, ...(role === "OWNER" && !user.emailVerifiedAt ? { emailVerifiedAt: new Date() } : {}) } }),
       prisma.adminAction.create({ data: { action: command === "grant" ? "ROLE_GRANT" : "ROLE_REVOKE", targetUserId: user.id, data: { via: "scripts/owner.ts" } } }),
     ]);
     console.log(`${user.email}: ${role}`);

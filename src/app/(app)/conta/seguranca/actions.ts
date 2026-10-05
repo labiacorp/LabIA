@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/session";
 import { hashPassword, passwordError } from "@/lib/password";
 import { confirmIdentity, identityMessages } from "@/lib/reauth";
+import { emailEnabled } from "@/lib/email";
 import { issueEmailToken } from "@/lib/email-tokens";
 import { sendEmailChangeConfirm } from "@/lib/account-emails";
 import { removeReference } from "@/lib/reference-storage";
@@ -43,6 +44,7 @@ export async function setPassword(_previous: SecurityState, form: FormData): Pro
 // lock anyone out). Taken addresses get the same vague answer as any other failure.
 export async function requestEmailChange(_previous: SecurityState, form: FormData): Promise<SecurityState> {
   const userId = await requireUserId();
+  if (!emailEnabled()) return { error: "A troca de e-mail ainda não está disponível." };
   const email = z.email().safeParse(String(form.get("newEmail") ?? "").trim().toLowerCase());
   if (!email.success) return { error: "Digite um e-mail válido." };
   if (!(await hit(`email-change:${userId}`, 3, 3600))) return { error: TOO_MANY_ATTEMPTS };

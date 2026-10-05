@@ -34,7 +34,7 @@ function Row({ icon, label, value, locked, onOpen }: { icon: ReactNode; label: s
   return <button type="button" className="account-settings-row" onClick={onOpen}><span className="account-row-icon">{icon}</span><span className="account-row-label" style={value ? { flex: "none" } : undefined}>{label}</span>{value ? <span className="account-row-value account-row-value-wide" title={value}>{value}</span> : null}{locked ? <Lock className="account-chevron" aria-label="Pede confirmação" /> : <ChevronRight className="account-chevron" />}</button>;
 }
 
-export function SecurityPanel({ email, hasPassword, googleBound, googleReady, locked, notice }: { email: string; hasPassword: boolean; googleBound: boolean; googleReady: boolean; locked: boolean; notice?: string }) {
+export function SecurityPanel({ email, hasPassword, googleBound, googleReady, emailChange, locked, notice }: { email: string; hasPassword: boolean; googleBound: boolean; googleReady: boolean; emailChange: boolean; locked: boolean; notice?: string }) {
   const gate = useRef<HTMLDialogElement>(null);
   const emailDialog = useRef<HTMLDialogElement>(null);
   const passwordDialog = useRef<HTMLDialogElement>(null);
@@ -52,7 +52,9 @@ export function SecurityPanel({ email, hasPassword, googleBound, googleReady, lo
     <section className="account-settings-section" aria-labelledby="security-access">
       <h2 id="security-access">Como você entra</h2>
       <div className="account-settings-group">
-        <Row icon={<Mail className="size-5" />} label="E-mail" value={email} locked={locked} onOpen={() => open(emailDialog)} />
+        {emailChange
+          ? <Row icon={<Mail className="size-5" />} label="E-mail" value={email} locked={locked} onOpen={() => open(emailDialog)} />
+          : <div className="account-settings-row" data-static><span className="account-row-icon"><Mail className="size-5" /></span><span className="account-row-label" style={{ flex: "none" }}>E-mail</span><span className="account-row-value account-row-value-wide" title={email}>{email}</span></div>}
         <Row icon={<KeyRound className="size-5" />} label="Senha" value={hasPassword ? "Definida" : "Não definida"} locked={locked} onOpen={() => open(passwordDialog)} />
         <div className="account-settings-row" data-static><span className="account-row-icon"><span aria-hidden className="text-caption font-bold">G</span></span><span className="account-row-label">Google</span><span className="account-row-value">{googleBound ? "Conectado" : "Não conectado"}</span></div>
       </div>

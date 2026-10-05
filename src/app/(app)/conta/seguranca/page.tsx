@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { googleConfigured } from "@/lib/auth-config";
+import { emailEnabled } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { recentlySignedIn } from "@/lib/reauth";
 import { requireUserId } from "@/lib/session";
@@ -14,5 +15,5 @@ export default async function SecurityPage({ searchParams }: { searchParams: Pro
   const { aviso } = await searchParams;
   // Accounts with a password prove themselves by typing it, so only Google-only ones can be locked.
   const locked = !user.passwordHash && !recentlySignedIn(await auth());
-  return <SecurityPanel email={user.email} hasPassword={!!user.passwordHash} googleBound={!!user.googleSub} googleReady={googleConfigured()} locked={locked} notice={aviso ? notices[aviso] : undefined} />;
+  return <SecurityPanel email={user.email} hasPassword={!!user.passwordHash} googleBound={!!user.googleSub} googleReady={googleConfigured()} emailChange={emailEnabled()} locked={locked} notice={aviso ? notices[aviso] : undefined} />;
 }

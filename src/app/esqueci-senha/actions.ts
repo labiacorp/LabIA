@@ -2,6 +2,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { clientIp, hit, TOO_MANY_ATTEMPTS } from "@/lib/rate-limit";
+import { emailEnabled } from "@/lib/email";
 import { issueEmailToken } from "@/lib/email-tokens";
 import { sendResetEmail } from "@/lib/account-emails";
 
@@ -12,6 +13,7 @@ export type ForgotState = { error: string; sent?: boolean };
 export async function requestPasswordReset(_previous: ForgotState, form: FormData): Promise<ForgotState> {
   const email = z.email().safeParse(String(form.get("email") ?? "").trim().toLowerCase());
   if (!email.success) return { error: "Digite um e-mail válido." };
+  if (!emailEnabled()) return { error: "A recuperação de senha por e-mail ainda não está disponível. Fale com a equipe." };
   if (!(await hit(`reset-email:${email.data}`, 3, 900)) || !(await hit(`reset-ip:${await clientIp()}`, 10, 900)))
     return { error: TOO_MANY_ATTEMPTS };
   const user = await prisma.user.findUnique({ where: { email: email.data }, select: { id: true } });

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { clientIp, hit, TOO_MANY_ATTEMPTS } from "@/lib/rate-limit";
+import { emailEnabled } from "@/lib/email";
 import { consumeEmailToken, consumeVerifyCode, issueEmailToken } from "@/lib/email-tokens";
 import { sendEmailChangedNotice, sendVerifyEmail } from "@/lib/account-emails";
 
@@ -25,6 +26,7 @@ export async function verifyCode(_previous: VerifyState, form: FormData): Promis
 export async function resendVerification(_previous: VerifyState, form: FormData): Promise<VerifyState> {
   const email = emailSchema.safeParse(String(form.get("email") ?? "").trim().toLowerCase());
   if (!email.success) return { error: "Digite um e-mail válido." };
+  if (!emailEnabled()) return { error: "O envio de e-mails ainda não está disponível. Fale com a equipe." };
   if (!(await hit(`verify-resend:${email.data}`, 3, 900)) || !(await hit(`verify-resend-ip:${await clientIp()}`, 10, 900)))
     return { error: TOO_MANY_ATTEMPTS };
   const user = await prisma.user.findUnique({ where: { email: email.data }, select: { id: true, emailVerifiedAt: true, passwordHash: true } });

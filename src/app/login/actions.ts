@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { clientIp, hit, TOO_MANY_ATTEMPTS } from "@/lib/rate-limit";
 import { registerSignIn, REFERRAL_COOKIE } from "@/lib/referrals";
 import { googleConfigured } from "@/lib/auth-config";
+import { emailEnabled } from "@/lib/email";
 import { issueEmailToken } from "@/lib/email-tokens";
 import { CONSENT_FIELD, consentAcceptedNow } from "@/lib/consent";
 import { sendAccountExists, sendVerifyEmail } from "@/lib/account-emails";
@@ -63,6 +64,7 @@ export async function authenticatePassword(
   if (!email.success) return { error: "Digite um e-mail válido." };
   if (!(await hasPass())) redirect("/acesso");
   if (create) {
+    if (!emailEnabled()) return { error: "O cadastro com senha ainda não está disponível." };
     const invalid = passwordError(password);
     if (invalid) return { error: invalid };
     if (form.get(CONSENT_FIELD) !== "on")
@@ -96,7 +98,9 @@ export async function authenticatePassword(
   } catch (error) {
     if (error instanceof AuthError) {
       if (error instanceof CredentialsSignin && error.code === "unverified")
-        return { error: "Confirme seu e-mail para entrar. Enviamos um link quando você criou a conta.", unverified: email.data };
+        return emailEnabled()
+          ? { error: "Confirme seu e-mail para entrar. Enviamos um link quando você criou a conta.", unverified: email.data }
+          : { error: "Este e-mail ainda não foi confirmado. Fale com a equipe da LabIA." };
       return { error: "E-mail ou senha incorretos. Se ainda não tem conta, use a opção criar com senha abaixo." };
     }
     throw error;

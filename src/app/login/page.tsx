@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { hasPass } from "@/lib/access";
 import { googleConfigured, loginErrorMessage } from "@/lib/auth-config";
+import { emailEnabled } from "@/lib/email";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DevelopmentLogin } from "./dev-form";
@@ -40,7 +41,7 @@ export default async function LoginPage({
       </div>
       {message ? <Alert variant="error" title={message} /> : null}
       {notice ? <Alert variant="success" title={notice} /> : null}
-      <PasswordLogin />
+      <PasswordLogin signup={emailEnabled()} />
       <p className="text-center text-caption text-lab-text-muted">ou</p>
       <form action={loginGoogle}>
         <Button

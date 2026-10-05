@@ -1,6 +1,13 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import { headers } from "next/headers";
 
+// Off in production until both RESEND_API_KEY and EMAIL_FROM exist (there is no sending domain yet).
+// While off, everything that depends on a mailed link is hidden or refused: password sign-up, password
+// reset, e-mail change. Password sign-in, Google, and the rest of the account page keep working.
+// Development always counts as on, because it writes to the outbox below.
+export const emailEnabled = () =>
+  process.env.NODE_ENV !== "production" || Boolean(process.env.RESEND_API_KEY?.trim() && process.env.EMAIL_FROM?.trim());
+
 // Transactional e-mail through Resend's HTTP API (no SDK: one POST). Production needs RESEND_API_KEY
 // and EMAIL_FROM. Without them, development writes each message to .handoff/outbox.jsonl (gitignored)
 // so the flows can be driven locally and by Playwright; production refuses to pretend it sent.

@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { CONSENT_FIELD } from "@/lib/consent";
 import { PASSWORD_MAX, PASSWORD_MIN } from "@/lib/password-rules";
 import { authenticatePassword } from "./actions";
-export function PasswordLogin() {
+// signup=false while e-mail is off: no way to create an account or recover a password by e-mail yet.
+export function PasswordLogin({ signup }: { signup: boolean }) {
   const [create, setCreate] = useState(false);
   const [state, action, pending] = useActionState(authenticatePassword, { error: "" });
   return (
@@ -43,10 +44,10 @@ export function PasswordLogin() {
           {state.unverified ? <Link href={`/verificar-email?email=${encodeURIComponent(state.unverified)}`} className="underline">Confirmar agora</Link> : null}
         </p>
       ) : null}
-      {create ? null : <Link href="/esqueci-senha" className="text-body-sm text-lab-text-dim underline">Esqueci minha senha</Link>}
-      <button type="button" onClick={() => setCreate(!create)} className="text-left text-body-sm text-lab-text-dim underline">
+      {create || !signup ? null : <Link href="/esqueci-senha" className="text-body-sm text-lab-text-dim underline">Esqueci minha senha</Link>}
+      {signup ? <button type="button" onClick={() => setCreate(!create)} className="text-left text-body-sm text-lab-text-dim underline">
         {create ? "Já tenho conta · entrar" : "Ainda não tenho conta · criar com senha"}
-      </button>
+      </button> : null}
     </form>
   );
 }
