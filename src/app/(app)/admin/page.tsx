@@ -9,6 +9,12 @@ import { ReconcileForm, TopUpForm } from "./admin-forms";
 
 const PAGE = 50;
 const actionLabels: Record<string, string> = { TOPUP: "Recarga", RECONCILE: "Reconciliação", ROLE_GRANT: "Acesso de owner concedido", ROLE_REVOKE: "Acesso de owner removido" };
+function actionDetail(action: string, raw: unknown) {
+  const data = (raw ?? {}) as Record<string, unknown>;
+  if (action === "TOPUP") return `${currency(Number(data.amount))} · ${String(data.note ?? "")}`;
+  if (action === "RECONCILE") return `custo ${currency(Number(data.actualBrl))} · ajuste ${currency(Number(data.adjustmentBrl))}`;
+  return data.via ? `via ${String(data.via)}` : "";
+}
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   await requireOwner();
@@ -28,7 +34,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 id="admin-accounts" className="font-display text-xl">Contas</h2><span className="text-caption text-lab-text-muted">{users.length < total ? `${users.length} de ${total}` : `${total}`} {total === 1 ? "conta" : "contas"}</span></div>
       <form className="mb-4" role="search"><label className="sr-only" htmlFor="admin-search">Buscar conta</label><Input id="admin-search" name="q" defaultValue={q} placeholder="Buscar por e-mail ou nome" /></form>
       <ul className="divide-y divide-lab-border overflow-hidden rounded-lab border border-lab-border bg-lab-surface-1">{users.map((user) => <li key={user.id} className="p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><p className="break-words text-body-sm font-medium">{user.name || user.email}{user.role === "OWNER" ? <Badge className="ml-2">Owner</Badge> : null}</p><p className="mt-1 break-words text-caption text-lab-text-dim">{user.email} · desde {dateLabel(user.createdAt)}{user.referredBy ? ` · indicado por ${user.referredBy.email}` : ""}</p></div><span className="font-mono text-body-sm">{currency(balances.get(user.id) ?? 0)}</span></div>
+        <div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><p className="break-words text-body-sm font-medium">{user.name || user.email}{user.role === "OWNER" ? <Badge className="ml-2">Owner</Badge> : null}</p><p className="mt-1 break-words text-caption text-lab-text-dim">{user.name ? `${user.email} · ` : ""}desde {dateLabel(user.createdAt)}{user.referredBy ? ` · indicado por ${user.referredBy.email}` : ""}</p></div><span className="font-mono text-body-sm">{currency(balances.get(user.id) ?? 0)}</span></div>
         <details className="mt-2 text-body-sm"><summary className="cursor-pointer py-2 text-lab-text-dim">Adicionar saldo</summary><TopUpForm userId={user.id} email={user.email} /></details>
       </li>)}</ul>
     </section>
@@ -39,7 +45,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     </section>
     <section aria-labelledby="admin-log">
       <h2 id="admin-log" className="mb-4 font-display text-xl">Registro</h2>
-      {recent.length ? <ul className="divide-y divide-lab-border overflow-hidden rounded-lab border border-lab-border bg-lab-surface-1">{recent.map((entry) => <li key={entry.id} className="p-4 text-caption"><p className="text-body-sm">{actionLabels[entry.action] ?? entry.action}{entry.targetUserId ? ` · ${emails.get(entry.targetUserId) ?? "conta excluída"}` : ""}</p><p className="mt-1 break-words text-lab-text-dim">{entry.actor?.email ?? "terminal"} · {dateLabel(entry.createdAt)} · <span className="font-mono">{JSON.stringify(entry.data)}</span></p></li>)}</ul> : <p className="text-body-sm text-lab-text-dim">Nenhuma ação registrada ainda.</p>}
+      {recent.length ? <ul className="divide-y divide-lab-border overflow-hidden rounded-lab border border-lab-border bg-lab-surface-1">{recent.map((entry) => <li key={entry.id} className="p-4 text-caption"><p className="text-body-sm">{actionLabels[entry.action] ?? entry.action}{entry.targetUserId ? ` · ${emails.get(entry.targetUserId) ?? "conta excluída"}` : ""}</p><p className="mt-1 break-words text-lab-text-dim">{entry.actor?.email ?? "terminal"} · {dateLabel(entry.createdAt)}{actionDetail(entry.action, entry.data) ? ` · ${actionDetail(entry.action, entry.data)}` : ""}</p></li>)}</ul> : <p className="text-body-sm text-lab-text-dim">Nenhuma ação registrada ainda.</p>}
     </section>
     <p className="mt-8 text-caption text-lab-text-muted"><Link href="/conta" className="underline">Voltar para a conta</Link></p>
   </div>;

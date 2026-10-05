@@ -1,0 +1,22 @@
+import { config } from "dotenv";
+import { defineConfig, devices } from "@playwright/test";
+
+config({ path: ".env.local" });
+
+// Port 3100, not 3000: a `next dev` someone already has open on 3000 must never be the one a run
+// drives. The run starts its own dev server (or reuses one already on 3100) with FAL_MOCK=1, so no
+// spec can reach a paid provider. Specs seed their own accounts (tests/helpers.ts) and delete them.
+const port = Number(process.env.PLAYWRIGHT_PORT ?? 3100);
+
+export default defineConfig({
+  testDir: "./tests",
+  timeout: 60_000,
+  workers: 1,
+  reporter: "list",
+  use: { baseURL: `http://localhost:${port}`, locale: "pt-BR", trace: "retain-on-failure" },
+  projects: [
+    { name: "desktop", use: { ...devices["Desktop Chrome"] } },
+    { name: "mobile", use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 }, hasTouch: true } },
+  ],
+  webServer: { command: `npx next dev -p ${port}`, port, reuseExistingServer: true, timeout: 120_000, env: { FAL_MOCK: "1" } },
+});

@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { reconcileStep, topUp, type AdminState } from "./actions";
@@ -10,15 +10,17 @@ const Result = ({ state }: { state: AdminState }) =>
 
 export function TopUpForm({ userId, email }: { userId: string; email: string }) {
   const [state, action, pending] = useActionState(topUp, initial);
-  // One key per intended top-up: a double click or a retry of the same submit reuses it.
-  const [key, setKey] = useState("");
-  useEffect(() => setKey(crypto.randomUUID()), [state]);
-  return <form action={action} onSubmit={(event) => { const amount = new FormData(event.currentTarget).get("amount"); if (!confirm(`Adicionar R$ ${amount} ao saldo de ${email}?`)) event.preventDefault(); }} className="mt-3 grid gap-2 sm:grid-cols-[8rem_1fr_auto] sm:items-end">
-    <input type="hidden" name="userId" value={userId} /><input type="hidden" name="key" value={key} />
-    <label className="grid gap-1 text-caption">Valor (R$)<Input name="amount" type="number" inputMode="decimal" step="0.01" min="0.01" max="1000" required /></label>
-    <label className="grid gap-1 text-caption">Nota<Input name="note" required minLength={3} maxLength={200} placeholder="Ex.: crédito de teste da beta" /></label>
-    <Button type="submit" variant="secondary" loading={pending} disabled={!key}>Adicionar</Button>
-    <div className="sm:col-span-3"><Result state={state} /></div>
+  // Two steps: "Revisar" restates amount and account and mints the operation key; "Confirmar" sends.
+  // A double click or retry of that same confirmation reuses the key, so the server credits once.
+  // The review belongs to the result it was opened after, so a new result closes it on its own.
+  const [opened, setOpened] = useState<{ amount: string; key: string; after: AdminState } | null>(null);
+  const review = opened?.after === state ? opened : null;
+  return <form action={action} onSubmit={(event) => { if (!review) { event.preventDefault(); setOpened({ amount: String(new FormData(event.currentTarget).get("amount")), key: crypto.randomUUID(), after: state }); } }} className="mt-3 grid gap-2 sm:grid-cols-[8rem_1fr_auto] sm:items-end">
+    <input type="hidden" name="userId" value={userId} /><input type="hidden" name="key" value={review?.key ?? ""} />
+    <label className="grid gap-1 text-caption">Valor (R$)<Input name="amount" type="number" inputMode="decimal" step="0.01" min="0.01" max="1000" required readOnly={!!review} /></label>
+    <label className="grid gap-1 text-caption">Nota<Input name="note" required minLength={3} maxLength={200} placeholder="Ex.: crédito de teste da beta" readOnly={!!review} /></label>
+    <Button type="submit" variant={review ? "primary" : "secondary"} loading={pending}>{review ? "Confirmar" : "Revisar"}</Button>
+    <div className="sm:col-span-3">{review ? <p className="text-caption text-lab-text-dim">Adicionar R$ {review.amount} ao saldo de {email}? <button type="button" className="underline" onClick={() => setOpened(null)}>Editar</button></p> : <Result state={state} />}</div>
   </form>;
 }
 

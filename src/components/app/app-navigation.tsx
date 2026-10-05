@@ -86,7 +86,7 @@ export function AppNavigation({
       >
         Lab<span>IA</span>
       </Link>
-      <span className="hidden border-l border-lab-border pl-4 text-caption text-lab-text-muted md:block">{pathname === "/conta" ? "Conta" : pathname === "/saldo" ? "Saldo e extrato" : links.find(link => active(link.href))?.label ?? "Produção"}</span>
+      <span className="hidden border-l border-lab-border pl-4 text-caption text-lab-text-muted md:block">{pathname.startsWith("/conta") ? "Conta" : pathname === "/saldo" ? "Saldo e extrato" : pathname.startsWith("/admin") ? "Admin" : links.find(link => active(link.href))?.label ?? "Produção"}</span>
       <div className="ml-auto flex items-center gap-3">
         <ThemeToggle />
         <Link

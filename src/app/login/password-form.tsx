@@ -2,7 +2,7 @@
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PASSWORD_MAX, PASSWORD_MIN } from "@/lib/password";
+import { PASSWORD_MAX, PASSWORD_MIN } from "@/lib/password-rules";
 import { authenticatePassword } from "./actions";
 export function PasswordLogin() {
   const [create, setCreate] = useState(false);
