@@ -1,6 +1,6 @@
 # LabIA: current state
 
-Branch `v2`, rewritten from scratch on 2026-10-03. Describes what exists, nothing else. If this file and the code disagree, the code wins; fix this file in the same commit as the change.
+Production is `main`; integration is `dev` (see the branch rule in `CLAUDE.md`). V2 was rewritten from scratch on 2026-10-03. Describes what exists, nothing else. If this file and the code disagree, the code wins; fix this file in the same commit as the change.
 
 ## What it is
 
@@ -54,7 +54,7 @@ Full plan and reasoning: `docs/account-and-owner-plan.md`; the audit it answers:
 
 ## Data (`prisma/schema.prisma`)
 
-User, Influencer (with `visualSignature`), Content, Step (`kind CHARACTER` belongs to an influencer; content IMAGE uses the existing contentId relation; `operationKey`, `submissionState`), Asset (`role` SHEET/FRONT/PROFILE/DETAIL), LedgerEntry, RateLimitEvent. Balance = sum of `LedgerEntry.deltaBrl`; top-ups are manual: `npx tsx scripts/ledger.ts topup <email> <brl>`.
+User, Influencer (with `visualSignature`), Content, Step (`kind CHARACTER` belongs to an influencer; content IMAGE uses the existing contentId relation; `operationKey`, `submissionState`), Asset (`role` SHEET/FRONT/PROFILE/DETAIL), LedgerEntry, RateLimitEvent. Balance = sum of `LedgerEntry.deltaBrl`; top-ups are manual: `npx tsx scripts/ledger.ts topup <email> <brl>`. `UNLIMITED_EMAILS` (the founders) skip the balance check; their spends are still recorded, and the header and `/saldo` show the real fal.ai credit instead (needs an ADMIN-scoped `FAL_ADMIN_KEY`, otherwise "Indisponível").
 
 ## Roadmap to a finished V2
 

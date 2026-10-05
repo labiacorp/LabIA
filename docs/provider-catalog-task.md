@@ -56,6 +56,8 @@ Deployment, Blob/uploads, voice/lip-sync workflow, general UI redesign, manageme
 
 ## Cost and release constraints
 
+Historical (task closed and merged into `main` on 2026-10-05). Current permissions live in `CLAUDE.md`.
+
 Documentation inspection and local mock verification do not authorize paid calls. A real generation requires Felipe's explicit approval for that action and an R$ estimate first; record the actual cost afterward. No automatic paid fallback. Push, merge and deployment require the owner's go-ahead under `AGENTS.md`.
 
 ## Review handoff — 2026-10-05

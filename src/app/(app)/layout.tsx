@@ -1,5 +1,6 @@
 import { AppNavigation } from "@/components/app/app-navigation";
-import { getBalanceBrl } from "@/lib/ledger";
+import { getBalanceBrl, getFalCreditsUsd } from "@/lib/ledger";
+import { videoUsdBrlRate } from "@/lib/video-options";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
@@ -16,6 +17,8 @@ export default async function AppLayout({
   const balance = await getBalanceBrl(userId)
     .then((value) => ({ ok: true as const, value }))
     .catch(() => ({ ok: false as const }));
+  // Founders (unlimited) see the real fal.ai credit instead of the ledger.
+  const falUsd = balance.ok && balance.value === Infinity ? await getFalCreditsUsd() : undefined;
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
     select: { name: true, email: true, avatarUpdatedAt: true, role: true, createdAt: true, consentAcceptedAt: true },
@@ -38,7 +41,7 @@ export default async function AppLayout({
           name={user.name}
           email={user.email}
           avatarVersion={user.avatarUpdatedAt?.getTime()}
-          balance={balance.ok ? balance.value : null}
+          balance={falUsd !== undefined ? (falUsd === null ? null : falUsd * videoUsdBrlRate()) : balance.ok ? balance.value : null}
           owner={owner}
         />
       </header>

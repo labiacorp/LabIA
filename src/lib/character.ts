@@ -3,8 +3,8 @@ import type { AssetRole } from "@/generated/prisma/enums";
 export type CharacterCard = { name: string; role: string; mood: string; visualSignature: string; persona: string };
 export type KitItem = { role: AssetRole; model: string; params: Record<string, unknown> };
 
-export const SHEET_MODEL = "fal-ai/nano-banana-2";
-export const PORTRAIT_MODEL = "fal-ai/nano-banana-2/edit";
+const SHEET_MODEL = "fal-ai/nano-banana-2";
+const PORTRAIT_MODEL = "fal-ai/nano-banana-2/edit";
 export const PORTRAIT_ROLES = ["FRONT", "PROFILE", "DETAIL"] as const;
 
 export const ROLE_LABEL: Record<AssetRole, string> = {

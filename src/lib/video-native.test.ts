@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const boundary = vi.hoisted(() => ({
   prisma: {
     $transaction: vi.fn(), $queryRaw: vi.fn(),
+    user: { findUnique: vi.fn() },
     influencer: { findFirst: vi.fn(), findUniqueOrThrow: vi.fn() },
     content: { findFirst: vi.fn(), update: vi.fn() },
     step: { findFirst: vi.fn(), findMany: vi.fn(), count: vi.fn(), update: vi.fn(), updateMany: vi.fn() },

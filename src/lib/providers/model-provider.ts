@@ -2,28 +2,7 @@ export type ModelKind = "image" | "video" | "text";
 
 export type PricingUnit = "image" | "megapixel" | "second" | "clip" | "token";
 
-export type BillingMode = "api" | "subscription" | "local";
-
-export function billingModeFromProvider(providerId: string): BillingMode {
-  if (providerId === "openai") return "subscription";
-  if (providerId === "labia/ffmpeg") return "local";
-  if (providerId === "fal") return "api";
-  throw new Error(`Provider desconhecido para billingMode: ${providerId}`);
-}
-
-export function assertBillingMode(value: unknown): BillingMode {
-  if (value === "api" || value === "subscription" || value === "local") return value;
-  throw new Error(`billingMode desconhecido: ${String(value)}`);
-}
-
-export function normalizeBillingMode(value: unknown, providerId: string): BillingMode {
-  const providerMode = billingModeFromProvider(providerId);
-  const billingMode = assertBillingMode(value);
-  if (billingMode !== providerMode) {
-    throw new Error(`billingMode ${billingMode} incompatível com provider ${providerId}`);
-  }
-  return billingMode;
-}
+type BillingMode = "api" | "subscription" | "local";
 
 export type CostLineItem = {
   label: string;

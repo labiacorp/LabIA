@@ -106,6 +106,17 @@ describe.skipIf(!process.env.DATABASE_URL)("character kit money path", () => {
     expect(await getBalanceBrl(who.userId)).toBeCloseTo(0.1, 4);
   });
 
+  it("lets an UNLIMITED_EMAILS user generate with no balance and still records the spend", async () => {
+    const who = await seed(0);
+    const { email } = await prisma.user.findUniqueOrThrow({ where: { id: who.userId } });
+    vi.stubEnv("UNLIMITED_EMAILS", ` other@labia.test, ${email.toUpperCase()} `);
+    expect((await start(who)).started).toBe(1);
+    expect(await getBalanceBrl(who.userId)).toBe(Infinity);
+    expect(await prisma.ledgerEntry.count({ where: { userId: who.userId, reason: "SPEND" } })).toBe(1);
+    vi.stubEnv("UNLIMITED_EMAILS", "");
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(-0.648, 4);
+  });
+
   it("refuses when the price shown is not the price now", async () => {
     const who = await seed(10);
     await expect(start(who, sheetPlan(), randomUUID(), 0.01)).rejects.toThrow(/preço mudou/);
