@@ -13,12 +13,17 @@ import { clientIp, hit } from "@/lib/rate-limit";
 declare module "next-auth" {
   interface Session {
     user: { id: string } & DefaultSession["user"];
+    // How and when this session signed in: owner powers and sensitive account changes depend on both.
+    authMethod?: string;
+    authAt?: number;
   }
 }
 declare module "@auth/core/jwt" {
   interface JWT {
     uid?: string;
     tokenVersion?: number;
+    authMethod?: string;
+    authAt?: number;
   }
 }
 
@@ -90,7 +95,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return profile?.email_verified === true && isAllowed(profile.email);
       return (devLogin || account?.provider === "password") && isAllowed(user.email);
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user?.email) {
         const row = await registerSignIn(
           { email: user.email, name: user.name, image: user.image },
@@ -98,6 +103,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
         token.uid = row.id;
         token.tokenVersion = row.tokenVersion;
+        token.authMethod = account?.provider;
+        token.authAt = Date.now();
         return token;
       }
       if (!token.uid) return null;
@@ -111,6 +118,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       if (token.uid) session.user.id = token.uid;
+      session.authMethod = token.authMethod;
+      session.authAt = token.authAt;
       return session;
     },
   },

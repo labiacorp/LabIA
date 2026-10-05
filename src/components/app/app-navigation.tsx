@@ -17,6 +17,7 @@ import {
   BookOpen,
   Plus,
   ArrowUpRight,
+  ShieldCheck,
 } from "lucide-react";
 import { logout } from "@/app/(app)/actions";
 import { AccountAvatar } from "@/components/app/account-avatar";
@@ -40,11 +41,13 @@ export function AppNavigation({
   email,
   balance,
   avatarVersion,
+  owner = false,
 }: {
   name: string | null;
   email: string;
   balance: number | null;
   avatarVersion?: number;
+  owner?: boolean;
 }) {
   const pathname = usePathname();
   const navigation = useRef<HTMLDialogElement>(null);
@@ -112,7 +115,7 @@ export function AppNavigation({
       </div>
       </div>
       <div className="shell-navigation-row">
-        <p className="shell-nav-caption">SEU ESPAÇO</p><nav aria-label="Navegação principal" className="shell-navigation">{menuLinks()}</nav><div className="shell-nav-footer"><Link href="/saldo" aria-current={pathname === "/saldo" ? "page" : undefined} className={itemClass}><Wallet className="size-4" />Saldo e extrato</Link><Link href="/conta" aria-current={pathname === "/conta" ? "page" : undefined} className={itemClass}><UserRound className="size-4" />Conta</Link></div>
+        <p className="shell-nav-caption">SEU ESPAÇO</p><nav aria-label="Navegação principal" className="shell-navigation">{menuLinks()}</nav><div className="shell-nav-footer"><Link href="/saldo" aria-current={pathname === "/saldo" ? "page" : undefined} className={itemClass}><Wallet className="size-4" />Saldo e extrato</Link><Link href="/conta" aria-current={pathname === "/conta" ? "page" : undefined} className={itemClass}><UserRound className="size-4" />Conta</Link>{owner ? <Link href="/admin" aria-current={pathname.startsWith("/admin") ? "page" : undefined} className={itemClass}><ShieldCheck className="size-4" />Admin</Link> : null}</div>
         <span className="shell-beta"><span className="lab-status-dot bg-lab-reagent" />Beta</span>
       </div>
       <dialog ref={create} className="app-menu-dialog shell-create-dialog" aria-labelledby="create-title" onClick={(event) => { if(event.target === event.currentTarget) create.current?.close(); }}>
@@ -166,6 +169,7 @@ export function AppNavigation({
             <Wallet className="size-4" />
             Saldo e extrato
           </Link>
+          {owner ? <Link href="/admin" className={itemClass} onClick={() => navigation.current?.close()}><ShieldCheck className="size-4" />Admin</Link> : null}
         </nav>
       </dialog>
       <dialog
@@ -211,6 +215,7 @@ export function AppNavigation({
             Saldo e extrato
             <span className="ml-auto text-caption">{balance === null ? "Indisponível" : balance.toLocaleString("pt-BR", {style:"currency",currency:"BRL"})}</span>
           </Link>
+          {owner ? <Link href="/admin" className={itemClass} onClick={() => account.current?.close()}><ShieldCheck className="size-4" />Admin</Link> : null}
           <form action={logout}>
             <button
               type="submit"

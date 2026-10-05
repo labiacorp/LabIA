@@ -29,7 +29,7 @@ describe("JWT session revocation", () => {
         account: null,
         user: { email: "owner@example.com" },
       }),
-    ).toEqual({ uid: "owner", tokenVersion: 4 });
+    ).toMatchObject({ uid: "owner", tokenVersion: 4 });
   });
   it("rejects revoked and deleted users on the next request", async () => {
     mocks.find.mockResolvedValue({ tokenVersion: 1 });

@@ -1,6 +1,8 @@
 import { AppNavigation } from "@/components/app/app-navigation";
 import { getBalanceBrl } from "@/lib/ledger";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import { ownerSession } from "@/lib/owner";
 import { requireUserId } from "@/lib/session";
 
 export default async function AppLayout({
@@ -14,8 +16,10 @@ export default async function AppLayout({
     .catch(() => ({ ok: false as const }));
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { name: true, email: true, avatarUpdatedAt: true },
+    select: { name: true, email: true, avatarUpdatedAt: true, role: true },
   });
+  // Only decides whether the Admin link shows; /admin checks again on its own (requireOwner).
+  const owner = user.role === "OWNER" && ownerSession(await auth());
 
   return (
     <>
@@ -31,6 +35,7 @@ export default async function AppLayout({
           email={user.email}
           avatarVersion={user.avatarUpdatedAt?.getTime()}
           balance={balance.ok ? balance.value : null}
+          owner={owner}
         />
       </header>
       <main
