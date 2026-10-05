@@ -179,7 +179,7 @@ describe.skipIf(!process.env.DATABASE_URL)("content scene money path", () => {
     }
     return { ...who, contentId: content.id };
   }
-  const runScene = async (who: Awaited<ReturnType<typeof contentSeed>>, overrides: Partial<{ intentId: string; prompt: string; expectedBrl: number }> = {}) => {
+  const runScene = async (who: Awaited<ReturnType<typeof contentSeed>>, overrides: Partial<{ intentId: string; prompt: string; expectedBrl: number; selection: import("./content-generation").ImageSelection }> = {}) => {
     const { startContentImage, sceneQuote } = await import("./content-generation");
     return startContentImage({ ...who, intentId: randomUUID(), prompt: "A creator holding a product", expectedBrl: sceneQuote().totalBrl, ...overrides });
   };
@@ -201,6 +201,25 @@ describe.skipIf(!process.env.DATABASE_URL)("content scene money path", () => {
     expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.432, 4);
     expect((await prisma.influencer.findUniqueOrThrow({ where: { id: who.influencerId } })).faceAssetId).toBe(influencer.faceAssetId);
     expect((await prisma.content.findUniqueOrThrow({ where: { id: who.contentId } })).status).toBe("IN_PROGRESS");
+  });
+
+  it("persists a selected scene model, reserves its quote once and collects a mock image", async () => {
+    const who = await contentSeed();
+    const selection = { model: "bytedance/seedream/v5/lite/edit", resolution: "2K" };
+    await runScene(who, { selection, expectedBrl: .189 });
+    const running = await image(who.contentId);
+    expect(running.model).toBe(selection.model);
+    expect(running.input).toMatchObject({ image_urls: ["/mock/portrait.svg"], resolution: "2K", imagePricing: { unitUsd: .035, usdBrlRate: 5.4 } });
+    await collectRunning(who.userId, who.influencerId);
+    expect((await image(who.contentId)).status).toBe("DONE");
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(9.811, 4);
+  });
+
+  it("rejects an unregistered image endpoint without reserving funds", async () => {
+    const who = await contentSeed();
+    await expect(runScene(who, { selection: { model: "unregistered", resolution: "1K" } })).rejects.toThrow(UserError);
+    expect(await getBalanceBrl(who.userId)).toBe(10);
+    expect((await image(who.contentId)).status).toBe("PENDING");
   });
 
   it("refuses a scene without a completed front portrait", async () => {

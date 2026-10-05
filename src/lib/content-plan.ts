@@ -5,7 +5,7 @@ import { getProvider } from "@/lib/provider";
 // Kling 2.5 turbo matches the 5s block from the meeting; Hailuo 2.3 is cheaper per clip but only does 6s or 10s.
 export const REEL = {
   image: { model: "fal-ai/nano-banana-2/edit", params: { prompt: "estimate", image_urls: ["https://estimate"], resolution: "1K" } },
-  video: { model: "fal-ai/kling-video/v2.5-turbo/pro/image-to-video", params: { prompt: "estimate", duration: "5" }, blocks: 3 },
+  video: { model: "fal-ai/kling-video/v2.5-turbo/pro/image-to-video", params: { prompt: "estimate", image_url: "https://estimate", duration: "5", generate_audio: false }, blocks: 3 },
 } as const;
 
 // null = no price yet (the script step has no model chosen). Voice and lip sync are not priced yet either.

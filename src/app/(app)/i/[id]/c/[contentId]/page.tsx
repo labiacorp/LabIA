@@ -6,15 +6,14 @@ import { notFound } from "next/navigation";
 import { Badge, stepStatus } from "@/components/ui/badge";
 import { CostChip } from "@/components/ui/cost-chip";
 import { Alert } from "@/components/ui/alert";
-import { sceneQuote } from "@/lib/content-generation";
+import { getImageOptions } from "@/lib/content-generation";
 import { getBalanceBrl } from "@/lib/ledger";
-import { formatBrlValue } from "@/lib/money";
 import { estimateReel } from "@/lib/content-plan";
 import { PIPELINE } from "@/lib/pipeline";
 import { providerConfigured } from "@/lib/provider";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/session";
-import { videoQuote } from "@/lib/video-chain";
+import { getVideoOptions } from "@/lib/video-options";
 import type { VideoChain } from "@/lib/video-chain";
 import { KitForm } from "../../personagem/kit-form";
 import { KitWatcher } from "../../personagem/kit-watcher";
@@ -28,6 +27,7 @@ import { ReviewForm } from "./review-form";
 import { DownloadAsset } from "@/app/(app)/biblioteca/library-view";
 import { contentStatusLabels } from "@/lib/platform";
 import { SceneForm } from "./scene-form";
+import { VideoForm } from "./video-form";
 
 export const dynamic = "force-dynamic";
 
@@ -102,9 +102,8 @@ export default async function ContentPage({
   ) =>
     steps.reduce((sum, step) => sum + Number(pick(step)?.toString() ?? 0), 0);
   const reel = estimateReel();
-  const estimated = reel.totalBrl;
   const spent = total((step) => step.actualCostBrl);
-  const price = sceneQuote().totalBrl;
+  const imageOptions = getImageOptions(content.aspectRatio);
   const [balance, front] = await Promise.all([
     getBalanceBrl(userId),
     prisma.asset.findFirst({
@@ -123,27 +122,16 @@ export default async function ContentPage({
     ? "A geração ainda precisa ser configurada pela equipe."
     : !front
       ? "Gere o retrato de frente na aba Personagem antes de criar a cena."
-      : balance + 1e-9 < price
-        ? `Saldo insuficiente: você tem ${formatBrlValue(balance)} e precisa de ${formatBrlValue(price)}.`
-        : undefined;
-  const videoPrice = videoQuote().totalBrl;
-  const sceneReady = steps.some(
-    (step) =>
-      step.kind === "IMAGE" && step.status === "DONE" && step.assets.length > 0,
-  );
-  const videoReady = steps.some(
-    (step) =>
-      step.kind === "VIDEO" &&
-      step.status === "DONE" &&
-      step.assets.length === 3,
-  );
+      : undefined;
+  const sceneAsset = steps.find((step) => step.kind === "IMAGE" && step.status === "DONE")?.assets[0];
+  const videoOptions = getVideoOptions(sceneAsset ? { width: sceneAsset.width, height: sceneAsset.height } : undefined);
+  const sceneReady = steps.some((step) => step.kind === "IMAGE" && step.status === "DONE" && step.assets.length > 0);
+  const videoReady = steps.some((step) => step.kind === "VIDEO" && step.status === "DONE" && step.assets.length > 0);
   const videoBlocked = !configured
     ? "A geração ainda precisa ser configurada pela equipe."
     : !sceneReady
       ? "Disponível depois que a imagem da cena estiver pronta."
-      : balance + 1e-9 < videoPrice
-        ? `Saldo insuficiente: você tem ${formatBrlValue(balance)} e precisa de ${formatBrlValue(videoPrice)}.`
-        : undefined;
+      : undefined;
 
   return (
     <div className="grid gap-6">
@@ -182,11 +170,6 @@ export default async function ContentPage({
           </p>
         ) : null}
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <CostChip
-            state="estimated"
-            value={estimated}
-            prefix="reel de 15s (sem voz)"
-          />
           <CostChip
             state={unknownCost ? "unavailable" : "actual"}
             value={unknownCost ? undefined : spent}
@@ -262,6 +245,7 @@ export default async function ContentPage({
                   {label}
                 </Badge>
                 {(() => {
+                  if ((step.kind === "VIDEO" || step.kind === "IMAGE") && !step.estimatedCostBrl) return null;
                   const planned = reel.perStep[step.kind];
                   if (step.actualCostBrl)
                     return (
@@ -292,131 +276,47 @@ export default async function ContentPage({
               </div>
               {step.kind === "SCRIPT" ? (
                 <div className="w-full">
-                  <ScriptForm
-                    influencerId={id}
-                    contentId={contentId}
-                    script={script}
-                  />
+                  <ScriptForm influencerId={id} contentId={contentId} script={script} />
                 </div>
               ) : null}
-              {step.kind === "IMAGE" ? (
-                <div className="w-full min-w-0">
-                  {step.status === "PENDING" || step.status === "QUOTED" ? (
-                    <SceneForm
-                      action={generateScene.bind(null, id, contentId)}
-                      intent={randomUUID()}
-                      expectedBrl={price}
-                      prompt={script || content.idea || content.title}
-                      blockedReason={blockedReason}
-                    />
-                  ) : null}
-                  {step.status === "RUNNING" ? (
-                    <p
-                      role="status"
-                      className="mt-3 text-body-sm text-lab-text-dim"
-                    >
-                      Gerando imagem… O custo está reservado.
-                    </p>
-                  ) : null}
-                  {step.status === "FAILED" ? (
-                    <Alert variant="error" title="Esta geração falhou">
-                      {["submission_unknown", "cost_unknown"].includes(
-                        step.submissionState,
-                      )
-                        ? "O custo ainda precisa de conferência. Nada será reenviado automaticamente."
-                        : "A geração não foi concluída. Confira o saldo e tente outra produção enquanto verificamos a falha."}
-                    </Alert>
-                  ) : null}
-                  {step.assets.map((asset) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      key={asset.id}
-                      src={asset.url}
-                      alt="Imagem da cena com o influencer"
-                      className="mt-4 max-h-[32rem] max-w-full rounded-control border border-lab-border object-contain"
-                    />
-                  ))}
-                </div>
-              ) : null}
-              {step.kind === "VIDEO" ? (
-                <div className="w-full min-w-0">
-                  {step.status === "PENDING" || step.status === "QUOTED" ? (
-                    <SceneForm
-                      action={generateVideo.bind(null, id, contentId)}
-                      intent={randomUUID()}
-                      expectedBrl={videoPrice}
-                      prompt={script || content.idea || content.title}
-                      blockedReason={videoBlocked}
-                      fieldLabel="Movimento"
-                      label="Aprovar custo e gerar 3 clipes"
-                      description="Três blocos de 5s. Cada continuação começa no último quadro do clipe anterior."
-                    />
-                  ) : null}
-                  {step.status === "RUNNING" ? (
-                    <p role="status" className="text-body-sm text-lab-text-dim">
-                      Gerando vídeo…{" "}
-                      {(step.input as { chain?: VideoChain }).chain?.clips
-                        .length ?? 0}{" "}
-                      de 3 clipes verificados. O custo total está reservado.
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-              {step.kind === "ASSEMBLY" &&
-              (step.status === "PENDING" || step.status === "QUOTED") ? (
-                <div className="w-full">
-                  <KitForm
-                    action={assembleVideo.bind(null, id, contentId)}
-                    intent={randomUUID()}
-                    expectedBrl={0}
-                    label="Montar vídeo final"
-                    blockedReason={
-                      !configured
-                        ? "A geração ainda precisa ser configurada pela equipe."
-                        : videoReady
-                          ? undefined
-                          : "Disponível depois dos três clipes."
-                    }
-                  />
-                </div>
-              ) : null}
-              {step.kind !== "IMAGE" && step.status === "FAILED" ? (
-                <div className="w-full">
-                  <Alert variant="error" title="Esta etapa falhou">
-                    {["submission_unknown", "cost_unknown"].includes(
-                      step.submissionState,
-                    )
-                      ? "O custo ainda precisa de conferência. Nada será reenviado automaticamente."
-                      : "A geração não foi concluída. Confira o saldo e tente outra produção enquanto verificamos a falha."}
-                  </Alert>
-                </div>
-              ) : null}
-              {step.assets
-                .filter((asset) => asset.kind === "VIDEO")
-                .sort((a, b) => {
-                  const clips =
-                    (step.input as { chain?: VideoChain }).chain?.clips ?? [];
-                  return (
-                    clips.findIndex((clip) => clip.url === a.url) -
-                    clips.findIndex((clip) => clip.url === b.url)
-                  );
-                })
-                .map((asset, clipIndex) => (
-                  <figure key={asset.id} className="grid w-full max-w-xs gap-2">
-                    <video
-                      controls
-                      preload="metadata"
-                      src={asset.url}
-                      className="max-h-[28rem] w-full rounded-control border border-lab-border"
-                    />
-                    <DownloadAsset id={asset.id} />
-                    <figcaption className="text-caption text-lab-text-dim">
-                      {step.kind === "ASSEMBLY"
-                        ? "Vídeo final"
-                        : `Clipe ${clipIndex + 1} · ${asset.durationSec?.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}s`}
-                    </figcaption>
-                  </figure>
+              {step.kind === "IMAGE" ? <div className="w-full min-w-0">
+                {step.status === "PENDING" || step.status === "QUOTED" ? <SceneForm
+                  action={generateScene.bind(null, id, contentId)} intent={randomUUID()} options={imageOptions} balanceBrl={balance}
+                  prompt={script || content.idea || content.title} blockedReason={blockedReason}
+                /> : null}
+                {step.status === "RUNNING" ? <p role="status" className="mt-3 text-body-sm text-lab-text-dim">Gerando imagem… O custo está reservado.</p> : null}
+                {step.status === "FAILED" ? <Alert variant="error" title="Esta geração falhou">{["submission_unknown", "cost_unknown"].includes(step.submissionState)
+                  ? "O custo ainda precisa de conferência. Nada será reenviado automaticamente."
+                  : "A geração não foi concluída. Confira o saldo e tente outra produção enquanto verificamos a falha."}</Alert> : null}
+                {step.assets.map((asset) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={asset.id} src={asset.url} alt="Imagem da cena com o influencer" className="mt-4 max-h-[32rem] max-w-full rounded-control border border-lab-border object-contain" />
                 ))}
+              </div> : null}
+              {step.kind === "VIDEO" ? <div className="w-full min-w-0">
+                {step.status === "PENDING" || step.status === "QUOTED" ? <VideoForm
+                  action={generateVideo.bind(null, id, contentId)} intent={randomUUID()} balanceBrl={balance} options={videoOptions}
+                  prompt={script || content.idea || content.title} blockedReason={videoBlocked}
+                /> : null}
+                {step.status === "RUNNING" ? <p role="status" className="text-body-sm text-lab-text-dim">
+                  Gerando vídeo… {(step.input as { chain?: VideoChain }).chain?.clips.length ?? 0} de {(step.input as { chain?: VideoChain }).chain?.recipe?.blocks ?? 3} clipes verificados. O custo está reservado.
+                </p> : null}
+              </div> : null}
+              {step.kind === "ASSEMBLY" && (step.status === "PENDING" || step.status === "QUOTED") ? <div className="w-full">
+                <KitForm action={assembleVideo.bind(null, id, contentId)} intent={randomUUID()} expectedBrl={0}
+                  label="Finalizar vídeo" blockedReason={!configured ? "A geração ainda precisa ser configurada pela equipe." : videoReady ? undefined : "Disponível depois da geração do vídeo."} />
+              </div> : null}
+              {step.kind !== "IMAGE" && step.status === "FAILED" ? <div className="w-full"><Alert variant="error" title="Esta etapa falhou">{["submission_unknown", "cost_unknown"].includes(step.submissionState)
+                  ? "O custo ainda precisa de conferência. Nada será reenviado automaticamente."
+                  : "A geração não foi concluída. Confira o saldo e tente outra produção enquanto verificamos a falha."}</Alert></div> : null}
+              {step.assets.filter((asset) => asset.kind === "VIDEO").sort((a, b) => {
+                const clips = (step.input as { chain?: VideoChain }).chain?.clips ?? [];
+                return clips.findIndex((clip) => clip.url === a.url) - clips.findIndex((clip) => clip.url === b.url);
+              }).map((asset, clipIndex) => <figure key={asset.id} className="grid w-full max-w-xs gap-2">
+                <video controls preload="metadata" src={asset.url} className="max-h-[28rem] w-full rounded-control border border-lab-border" />
+                <DownloadAsset id={asset.id} />
+                <figcaption className="text-caption text-lab-text-dim">{step.kind === "ASSEMBLY" ? "Vídeo final" : `Clipe ${clipIndex + 1} · ${asset.durationSec?.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}s`}</figcaption>
+              </figure>)}
             </li>
           );
         })}

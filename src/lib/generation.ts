@@ -1,6 +1,6 @@
 import { Prisma } from "@/generated/prisma/client";
 import type { AssetRole } from "@/generated/prisma/enums";
-import { getProvider, providerConfigured } from "@/lib/provider";
+import { getProvider, mockEnabled, providerConfigured } from "@/lib/provider";
 import { prisma } from "@/lib/prisma";
 import type {
   GenParams,
@@ -62,6 +62,13 @@ export async function startPlan(input: {
       "A geração ainda não está configurada. Nenhum valor foi reservado.",
     );
   const provider = getProvider(input.plan[0].model);
+  try {
+    for (const item of input.plan) provider.validate?.(item.model, item.params);
+  } catch (error) {
+    throw new UserError(
+      error instanceof Error ? error.message : "Configuração de geração inválida.",
+    );
+  }
   const priced = quote(input.plan);
   if (Math.abs(priced.totalBrl - input.expectedBrl) > 0.005) {
     throw new UserError(
@@ -173,14 +180,12 @@ export async function submit(step: Created) {
   });
   if (claimed.count !== 1) return;
   try {
-    const handle = await getProvider(step.model).generate(
-      step.model,
-      step.params,
-    );
-    await prisma.step.update({
-      where: { id: step.id },
-      data: { submissionState: "submitted", falRequestId: handle.id },
-    });
+    const handle = await getProvider(step.model ?? undefined).generate(step.model, step.params);
+    const recorded = await prisma.step.updateMany({ where: { id: step.id, status: "RUNNING", submissionState: "submitting" }, data: { submissionState: "submitted", falRequestId: handle.id, model: handle.model, provider: handle.provider } });
+    if (!recorded.count) {
+      // A late response after expiration still supplies a request ID for manual reconciliation.
+      await prisma.step.updateMany({ where: { id: step.id, submissionState: { in: ["submission_unknown", "cost_unknown"] } }, data: { falRequestId: handle.id, model: handle.model, provider: handle.provider } });
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     // We cannot know whether fal accepted it: keep the reservation, never resend, flag for reconciliation.
@@ -331,13 +336,12 @@ export async function collectRunning(userId: string, influencerId: string) {
   });
   if (!owned) return { running: 0 };
   const scope = { OR: [{ influencerId }, { content: { influencerId } }] };
-  const steps = await prisma.step.findMany({
-    where: {
-      ...scope,
-      status: "RUNNING",
-      submissionState: { in: ["submitted", "not_submitted"] },
-    },
-  });
+  // A crash between claim and request recording becomes reconcilable, never an automatic resend.
+  await prisma.step.updateMany({ where: { ...scope, status: "RUNNING", submissionState: "submitting", startedAt: { lt: new Date(Date.now() - 5 * 60_000) } }, data: {
+    status: "FAILED", submissionState: "submission_unknown", completedAt: new Date(),
+    error: "Não foi possível confirmar o envio. O valor continua reservado para conferência; nada será reenviado sozinho.",
+  } });
+  const steps = await prisma.step.findMany({ where: { ...scope, status: "RUNNING", submissionState: { in: ["submitted", "not_submitted"] } } });
 
   await Promise.all(
     steps.map(async (step) => {
@@ -387,8 +391,19 @@ export async function collectRunning(userId: string, influencerId: string) {
                 "Não foi possível verificar o resultado e seu custo. O saldo restante ficou reservado para conferência manual.",
             },
           });
-        } else if (previous + 1 >= MAX_POLL_ERRORS)
+        } else if (previous + 1 >= MAX_POLL_ERRORS && mockEnabled())
           await refund(step, `A geração falhou: ${message}`);
+        else if (previous + 1 >= MAX_POLL_ERRORS)
+          // A failed read or billable policy rejection is not proof of zero provider cost.
+          await prisma.step.updateMany({
+            where: { id: step.id, status: "RUNNING", falRequestId: step.falRequestId },
+            data: {
+              status: "FAILED",
+              submissionState: "cost_unknown",
+              completedAt: new Date(),
+              error: `Não foi possível conferir o resultado e o custo (${message}). O valor continua reservado para conferência; nada será reenviado sozinho.`,
+            },
+          });
         else
           await prisma.step.updateMany({
             where: {
