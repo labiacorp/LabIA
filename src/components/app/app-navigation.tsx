@@ -14,11 +14,13 @@ import {
   UserRound,
   LogOut,
   Library,
-  Plug,
   BookOpen,
+  Plus,
+  ArrowUpRight,
 } from "lucide-react";
 import { logout } from "@/app/(app)/actions";
 import { AccountAvatar } from "@/components/app/account-avatar";
+import { ThemeToggle } from "@/components/app/theme-toggle";
 import { CostChip } from "@/components/ui/cost-chip";
 
 const links = [
@@ -31,7 +33,7 @@ const links = [
   { href: "/biblioteca", label: "Biblioteca", icon: Library },
 ];
 const itemClass =
-  "flex min-h-11 items-center gap-3 rounded-control px-3 text-body-sm hover:bg-lab-surface-2 focus-visible:outline-none focus-visible:shadow-lab-focus";
+  "flex min-h-11 items-center gap-3 rounded-control px-3 text-body-sm transition-colors hover:bg-lab-surface-2 focus-visible:outline-none focus-visible:shadow-lab-focus";
 
 export function AppNavigation({
   name,
@@ -47,6 +49,7 @@ export function AppNavigation({
   const pathname = usePathname();
   const navigation = useRef<HTMLDialogElement>(null);
   const account = useRef<HTMLDialogElement>(null);
+  const create = useRef<HTMLDialogElement>(null);
   const displayName = name || email.split("@")[0];
   const active = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -64,9 +67,10 @@ export function AppNavigation({
     ));
   return (
     <>
+      <div className="shell-toolbar">
       <button
         type="button"
-        className="lab-hit-target rounded-control xl:hidden"
+        className="lab-hit-target rounded-control md:hidden"
         aria-label="Abrir navegação"
         onClick={() => navigation.current?.showModal()}
       >
@@ -79,17 +83,13 @@ export function AppNavigation({
       >
         Lab<span>IA</span>
       </Link>
-      <nav
-        aria-label="Navegação principal"
-        className="ml-4 hidden gap-1 xl:flex"
-      >
-        {menuLinks()}
-      </nav>
+      <span className="hidden border-l border-lab-border pl-4 text-caption text-lab-text-muted md:block">Seu laboratório criativo</span>
       <div className="ml-auto flex items-center gap-3">
+        <ThemeToggle />
         <Link
           href="/saldo"
           aria-label="Ver saldo e extrato"
-          className="rounded-control focus-visible:outline-none focus-visible:shadow-lab-focus"
+          className="hidden rounded-control focus-visible:outline-none focus-visible:shadow-lab-focus sm:block"
         >
           <CostChip
             state={balance === null ? "unavailable" : "actual"}
@@ -98,6 +98,9 @@ export function AppNavigation({
             prefix="saldo"
           />
         </Link>
+        <button type="button" onClick={() => create.current?.showModal()} className="shell-create" aria-label="Criar nova produção">
+          <Plus className="size-4" aria-hidden /><span className="hidden sm:inline">Criar</span>
+        </button>
         <button
           type="button"
           onClick={() => account.current?.showModal()}
@@ -107,6 +110,17 @@ export function AppNavigation({
           <AccountAvatar name={displayName} version={avatarVersion} />
         </button>
       </div>
+      </div>
+      <div className="shell-navigation-row">
+        <nav aria-label="Navegação principal" className="shell-navigation">{menuLinks()}</nav>
+        <span className="hidden items-center gap-2 whitespace-nowrap text-caption text-lab-text-muted lg:flex"><span className="lab-status-dot bg-lab-reagent" />Beta</span>
+      </div>
+      <dialog ref={create} className="app-menu-dialog shell-create-dialog" aria-labelledby="create-title" onClick={(event) => { if(event.target === event.currentTarget) create.current?.close(); }}>
+        <div className="flex items-center justify-between border-b border-lab-border p-5"><div><p className="mb-1 text-caption text-lab-text-muted">UMA IDEIA, VÁRIOS CAMINHOS</p><h2 id="create-title" className="font-display text-xl">O que vamos criar?</h2></div><button className="lab-hit-target" aria-label="Fechar menu criar" onClick={() => create.current?.close()}><X className="mx-auto size-5" /></button></div>
+        <div className="grid gap-2 p-3">
+          {[{href:"/",title:"Um personagem",description:"Defina a identidade e monte suas referências.",icon:Users},{href:"/conteudos/novo",title:"Uma produção",description:"Transforme seu briefing em conteúdo.",icon:Film},{href:"/trends",title:"Recriar um movimento",description:"Combine um vídeo com seus personagens.",icon:Sparkles}].map(({href,title,description,icon:Icon}) => <Link key={href} href={href} onClick={() => create.current?.close()} className="shell-create-option"><span className="shell-option-icon"><Icon className="size-5" /></span><span className="min-w-0 flex-1"><span className="block font-medium">{title}</span><span className="mt-1 block text-body-sm text-lab-text-dim">{description}</span></span><ArrowUpRight className="size-4 shrink-0 text-lab-text-muted" /></Link>)}
+        </div>
+      </dialog>
       <dialog
         ref={navigation}
         className="app-menu-dialog app-navigation-dialog"
@@ -195,14 +209,7 @@ export function AppNavigation({
           >
             <Wallet className="size-4" />
             Saldo e extrato
-          </Link>
-          <Link
-            href="/conexoes"
-            className={itemClass}
-            onClick={() => account.current?.close()}
-          >
-            <Plug className="size-4" />
-            Conexões
+            <span className="ml-auto text-caption">{balance === null ? "Indisponível" : balance.toLocaleString("pt-BR", {style:"currency",currency:"BRL"})}</span>
           </Link>
           <form action={logout}>
             <button

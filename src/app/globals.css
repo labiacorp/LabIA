@@ -231,3 +231,51 @@
 #app-content { min-width: 0; overflow-wrap: anywhere; }
 #app-content :where(h1, h2, h3, p, span, a, dd) { overflow-wrap: anywhere; }
 #app-content :where(input, textarea, select) { min-width: 0; max-width: 100%; }
+
+/* Shared shell: separate navigation from account and creation actions. */
+.shell-header { border-bottom: 1px solid var(--lab-border); background: var(--lab-bg); }
+.shell-toolbar { display:flex; align-items:center; gap:1rem; min-height:4.5rem; padding:0 2rem; }
+.shell-navigation-row { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0 2rem; }
+.shell-navigation { display:flex; gap:.25rem; overflow-x:auto; min-width:0; scrollbar-width:none; }
+.shell-navigation > a { white-space:nowrap; border-radius:.625rem .625rem 0 0; padding:.875rem 1rem; border-bottom:2px solid transparent; }
+.shell-navigation > a[aria-current="page"] { border-bottom-color:var(--lab-reagent); background:var(--lab-surface-1); color:var(--lab-text); }
+.shell-theme { display:grid; place-items:center; width:2.75rem; height:2.75rem; border-radius:50%; color:var(--lab-text-dim); }
+.shell-theme:hover { background:var(--lab-surface-2); color:var(--lab-text); }
+.shell-create { display:flex; align-items:center; justify-content:center; gap:.5rem; min-width:2.75rem; min-height:2.75rem; padding:0 1rem; background:var(--lab-reagent); color:var(--lab-on-reagent); border-radius:.75rem; font-size:.875rem; font-weight:600; }
+.shell-create:hover { background:var(--lab-reagent-bright); }
+.shell-create-dialog { inset:0; margin:auto; width:min(32rem,calc(100vw - 2rem)); }
+.shell-create-option { display:flex; align-items:center; gap:1rem; padding:1rem; border-radius:.75rem; }
+.shell-create-option:hover { background:var(--lab-surface-2); }
+.shell-option-icon { display:grid; place-items:center; height:3rem; width:3rem; flex-shrink:0; border:1px solid var(--lab-border); border-radius:1rem; background:var(--lab-surface-2); }
+.shell-theme:focus-visible,.shell-create:focus-visible,.shell-create-option:focus-visible { outline:2px solid var(--lab-reagent); outline-offset:3px; }
+@media(max-width:767px) {
+  .shell-toolbar { min-height:4rem; gap:.5rem; padding:0 1rem; }
+  .shell-toolbar > div { gap:.375rem; }
+  .shell-create { padding:0; }
+  .shell-navigation-row { padding:0 .5rem; }
+  .shell-navigation > a { font-size:.75rem; gap:.375rem; padding:.75rem; }
+}
+html[data-theme="light"] {
+  color-scheme:light;
+  --lab-bg:#F5F7FA; --lab-surface-1:#FFFFFF; --lab-surface-2:#EDF1F6;
+  --lab-border:#DCE2EB; --lab-border-strong:#BBC6D5;
+  --lab-text:#172334; --lab-text-dim:#526174; --lab-text-muted:#607086;
+  --lab-text-disabled:#8A96A6; --lab-reagent:#087A56; --lab-reagent-bright:#087A56;
+  --lab-on-reagent:#FFFFFF; --lab-success:#187540; --lab-warning:#946000;
+  --lab-danger:#BE2446; --lab-info:#086B9A;
+  --lab-node-image:#6653C6; --lab-node-video:#087B9C; --lab-node-copy:#9D641C;
+  --lab-node-design:#B03985; --lab-node-publish:#187540; --lab-node-utility:#526174;
+  --lab-canvas-dot:#CBD4E1; --lab-canvas-mask:rgba(245,247,250,.72);
+  --lab-scrim:rgba(245,247,250,.9); --lab-edge:#BBC6D5;
+  --lab-shadow-popover:0 0 0 1px var(--lab-border),0 16px 40px rgba(23,35,52,.12);
+  --lab-shadow-modal:0 0 0 1px var(--lab-border),0 24px 64px rgba(23,35,52,.16);
+}
+
+.dashboard-hero { background:radial-gradient(ellipse at 100% 0%,var(--lab-reagent-dim),transparent 65%),var(--lab-surface-1); }
+.dashboard-shortcut { display:flex; align-items:center; gap:1rem; border:1px solid var(--lab-border); border-radius:1rem; padding:1.25rem; background:var(--lab-surface-1); transition:border-color var(--lab-dur-micro); }
+.dashboard-shortcut:hover { border-color:var(--lab-border-strong); }
+
+.workspace-panel { border:1px solid var(--lab-border); border-radius:1rem; padding:1.5rem; background:var(--lab-surface-1); }
+.section-eyebrow { font-size:.625rem; letter-spacing:.14em; color:var(--lab-text-muted); margin-bottom:.75rem; }
+
+.character-card-portrait { display:grid; place-items:center; height:12rem; overflow:hidden; border-radius:.75rem; margin-bottom:1.25rem; background:radial-gradient(ellipse at 50% 10%,var(--lab-reagent-dim),var(--lab-surface-2)); }

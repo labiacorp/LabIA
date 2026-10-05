@@ -23,7 +23,7 @@ describe("account profile update", () => {
     form.set("email", "forged@example.com");
     return form;
   };
-  it("only updates the authenticated user's profile fields despite forged identity fields", async () => {
+  it("updates only the name when omitted fields must retain existing preferences", async () => {
     expect(
       (await updateAccount({ message: "", ok: false }, input("  Ana  "))).ok,
     ).toBe(true);
@@ -31,9 +31,6 @@ describe("account profile update", () => {
       where: { id: "signed-in-user" },
       data: {
         name: "Ana",
-        bio: "",
-        defaultAspectRatio: "9:16",
-        defaultContentView: "steps",
       },
     });
     expect(mocks.revalidate).toHaveBeenCalledWith("/", "layout");

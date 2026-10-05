@@ -24,7 +24,7 @@ export function SessionControls() {
         <input
           type="checkbox"
           required
-          className="mt-1 size-5 shrink-0 accent-lab-accent"
+          className="mt-1 size-5 shrink-0 accent-lab-reagent"
         />
         Quero sair de todos os navegadores, incluindo este.
       </label>

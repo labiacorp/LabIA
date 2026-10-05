@@ -44,7 +44,7 @@ export function BriefForm({
             maxLength={2000}
             rows={4}
             disabled={running}
-            className="w-full rounded-lab border border-lab-border bg-lab-surface-0 p-3"
+            className="w-full rounded-lab border border-lab-border bg-lab-surface-2 p-3"
           />
         </label>
         <p className="text-body-sm text-lab-text-muted">

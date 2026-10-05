@@ -147,7 +147,7 @@ export default async function ContentPage({
 
   return (
     <div className="grid gap-6">
-      <div className="flex flex-wrap justify-end gap-3">
+      <details className="justify-self-end"><summary className="cursor-pointer rounded-control border border-lab-border px-4 py-3 text-body-sm">Opções da produção</summary><div className="mt-3 flex flex-wrap justify-end gap-3">
         <Link
           href={`/conteudos/novo?copy=${contentId}&influencer=${id}`}
           className="rounded-control border border-lab-border px-4 py-3 text-body-sm"
@@ -156,7 +156,7 @@ export default async function ContentPage({
         </Link>
         <SaveTemplate contentId={contentId} />
         <ArchiveControl id={contentId} archived={false} />
-      </div>
+      </div></details>
       <KitWatcher
         influencerId={id}
         active={steps.some((step) => step.status === "RUNNING")}

@@ -18,9 +18,9 @@ export default async function LibraryPage({
     <div className="mx-auto max-w-content">
       <PageHeading
         title="Biblioteca"
-        description="Imagens, clipes e vídeos finais dos seus personagens, com origem e custo da etapa."
+        description="Seus arquivos e referências, prontos para encontrar e reutilizar."
       />
-      <UploadReference ready={referenceStorageReady()} local={localReferenceStorage()} />
+      <details className="mb-6 rounded-lab border border-lab-border bg-lab-surface-1 p-4"><summary className="cursor-pointer text-body-sm font-medium">Importar imagem ou vídeo</summary><div className="mt-4"><UploadReference ready={referenceStorageReady()} local={localReferenceStorage()} /></div></details>
       <LibraryView {...data} filters={{ ...filters, page: data.page }} />
     </div>
   );

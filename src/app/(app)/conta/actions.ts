@@ -13,16 +13,16 @@ export async function updateAccount(
   const result = z
     .object({
       name: z.string().trim().min(1).max(80),
-      bio: z.string().trim().max(240).default(""),
-      defaultAspectRatio: z.enum(["9:16", "16:9", "1:1"]).default("9:16"),
-      defaultContentView: z.enum(["steps", "canvas"]).default("steps"),
+      bio: z.string().trim().max(240).optional(),
+      defaultAspectRatio: z.enum(["9:16", "16:9", "1:1"]).optional(),
+      defaultContentView: z.enum(["steps", "canvas"]).optional(),
     })
     .safeParse(Object.fromEntries(form));
   if (!result.success)
     return {
       ok: false,
       message:
-        "Use um nome entre 1 e 80 caracteres, uma bio de até 240 e preferências válidas.",
+        "Confira o nome e os valores informados.",
     };
   try {
     await prisma.user.update({

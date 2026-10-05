@@ -17,7 +17,7 @@ const tabs = [
   { key: "conteudos", label: "Conteúdos" },
   { key: "personagem", label: "Personagem" },
   { key: "biblioteca", label: "Biblioteca" },
-  { key: "perfil", label: "Perfil" },
+  { key: "perfil", label: "Identidade" },
 ] as const;
 
 export default async function InfluencerPage({
@@ -62,18 +62,18 @@ export default async function InfluencerPage({
         >
           ← Influenciadores
         </Link>
-        <h1 className="mt-2 font-display text-h1">{influencer.name}</h1>
+        <h1 className="mt-2 break-words font-display text-h1">{influencer.name}</h1>
         <p className="mt-1 text-body-sm text-lab-text-dim">
           {influencer.niche} · {influencer.tone}
         </p>
       </div>
-      <nav aria-label="Seções do influencer" className="flex flex-wrap gap-1">
+      <nav aria-label="Seções do influencer" className="flex gap-1 overflow-x-auto">
         {tabs.map((tab) => (
           <Link
             key={tab.key}
             href={`/i/${id}?aba=${tab.key}`}
             aria-current={aba === tab.key ? "page" : undefined}
-            className={`flex h-8 items-center rounded-control px-3 text-body-sm font-medium transition-colors ${aba === tab.key ? "bg-lab-surface-2 text-lab-text" : "text-lab-text-dim hover:bg-lab-surface-2 hover:text-lab-text"}`}
+            className={`flex min-h-11 shrink-0 items-center rounded-control px-3 text-body-sm font-medium transition-colors ${aba === tab.key ? "bg-lab-surface-2 text-lab-text" : "text-lab-text-dim hover:bg-lab-surface-2 hover:text-lab-text"}`}
           >
             {tab.label}
           </Link>
@@ -89,7 +89,7 @@ export default async function InfluencerPage({
           references={references.map((asset) => ({
             id: asset.id,
             url: asset.url,
-            label: `Retrato de ${asset.createdAt.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })} · ${asset.id.slice(-5)}`,
+            label: `Retrato de ${asset.createdAt.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}`,
           }))}
         />
       ) : (

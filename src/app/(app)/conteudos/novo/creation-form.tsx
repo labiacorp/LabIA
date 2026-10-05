@@ -77,8 +77,9 @@ export function CreationForm({
           <option value="1:1">Quadrado · 1:1</option>
         </select>
       </label>
-      <label className="grid gap-2 text-body-sm">
-        Roteiro inicial (opcional)
+      <details open={Boolean(initial?.script)} className="border-t border-lab-border pt-4"><summary className="cursor-pointer py-2 text-body-sm font-medium">Já tem um roteiro? (opcional)</summary>
+      <label className="mt-3 grid gap-2 text-body-sm">
+        Roteiro inicial
         <textarea
           name="script"
           defaultValue={initial?.script ?? ""}
@@ -91,6 +92,7 @@ export function CreationForm({
           editado depois.
         </span>
       </label>
+      </details>
       <p className="text-body-sm text-lab-text-dim">
         Criar o rascunho é gratuito. Cada geração será confirmada separadamente,
         com a estimativa em reais.

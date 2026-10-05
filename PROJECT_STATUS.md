@@ -91,3 +91,13 @@ User token versions invalidate JWT sessions on every authenticated request after
 Content archival is soft: media and ledger are retained. It uses the same per-user row lock as generation starts, rejects RUNNING steps and prevents new paid starts while archived. The dashboard shows active production only; account production counts show active items. Character tabs link to the single creation form and the paginated filtered content list.
 
 Connections now distinguishes Higgsfield and private reference-storage configuration from verified live availability.
+
+## Shared UI refresh
+
+The header now separates creation/account actions from horizontally scrollable page navigation, with persistent light/dark theme switching and an accessible native creation dialog linking to characters, production and Trends. The dashboard prioritizes the studio, new productions, Trends and templates. Mobile retains the full navigation sheet; balance is accessible through the account menu on narrow screens. Theme changes reuse shared tokens and local browser storage.
+
+## Simplification audit
+
+Account now focuses on name/photo/email and a compact referral card. Removed duplicated dashboard counts, rolling reservation totals, private-only bio and production defaults from the account UI. Existing stored preferences are preserved when saving only the name. Session revocation/export remain available through disclosures. No destructive schema changes. Character cards show selected portraits; identity editing separates optional visual details. Blank production creation hides optional script; library import is secondary; production actions are grouped. Shared inputs and character tabs meet 44px touch targets. Balance history now paginates 25 owned entries instead of truncating at 100.
+
+Validation for the simplification pass: 103 tests in the full suite plus the new rendered balance-pagination integration test passed (104 total); typecheck, lint and production build passed. Browser review covered 14 authenticated route/view combinations at desktop and 390px. No real generation or charges.

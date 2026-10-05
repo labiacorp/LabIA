@@ -86,6 +86,7 @@ export function ProfileForm({
           className="font-sans text-body-sm"
         />
       </Field>
+      <details className="rounded-control border border-lab-border p-4"><summary className="cursor-pointer text-body-sm font-medium">Detalhes visuais</summary><p className="my-3 text-body-sm text-lab-text-dim">Características que devem se repetir nas próximas gerações.</p>
       <Field label="Assinatura visual" htmlFor="profile-signature">
         <Textarea
           id="profile-signature"
@@ -96,6 +97,7 @@ export function ProfileForm({
           className="font-sans text-body-sm"
         />
       </Field>
+      </details>
       {references.length > 0 && (
         <label className="grid gap-2 text-body-sm">
           Retrato de referência
@@ -130,7 +132,7 @@ export function ProfileForm({
         />
       )}
       <Button size="lg" className="justify-self-start" loading={pending}>
-        Salvar perfil
+        Salvar identidade
       </Button>
       {state.error || state.message ? (
         <p

@@ -106,14 +106,14 @@ export default async function ContentsPage({
           Arquivados
         </Link>
       </nav>
-      <form className="mb-6 flex flex-wrap gap-2">
+      <form className="mb-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
         {archived && <input type="hidden" name="archive" value="1" />}
         <Input
           name="q"
           aria-label="Buscar conteúdo pelo título"
           placeholder="Buscar pelo título"
           defaultValue={q}
-          className="max-w-sm"
+          className="min-w-0"
         />
         <select
           name="status"
@@ -148,7 +148,7 @@ export default async function ContentsPage({
         </button>
       </form>
       <p className="mb-4 text-body-sm text-lab-text-muted">
-        {count} conteúdo(s) · Página {page} de {pages}
+        {count} {count === 1 ? "conteúdo" : "conteúdos"}{pages > 1 ? ` · Página ${page} de ${pages}` : ""}
       </p>
       {items.length ? (
         <>
@@ -169,7 +169,7 @@ export default async function ContentsPage({
                   {item.influencer.name} · {item.aspectRatio}
                 </p>
                 <p className="mt-4 text-caption text-lab-text-muted">
-                  {item._count.steps} etapa(s) concluída(s) ·{" "}
+                  {item._count.steps} {item._count.steps === 1 ? "etapa concluída" : "etapas concluídas"} ·{" "}
                   {dateLabel(item.updatedAt)}
                 </p>
               </Link>
@@ -213,10 +213,10 @@ export default async function ContentsPage({
           }
           action={
             <Link
-              href="/conteudos/novo"
+              href={q || status || influencer ? (archived ? "/conteudos?archive=1" : "/conteudos") : "/conteudos/novo"}
               className={buttonVariants({ size: "lg" })}
             >
-              Criar conteúdo
+              {q || status || influencer ? "Limpar filtros" : "Criar conteúdo"}
             </Link>
           }
         />

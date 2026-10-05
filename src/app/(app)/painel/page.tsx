@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowUpRight, Film, Users, ImageIcon, Sparkles } from "lucide-react";
-import { PageHeading } from "@/components/app/page-heading";
 import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { prisma } from "@/lib/prisma";
@@ -24,18 +23,15 @@ export default async function DashboardPage() {
   ]);
   return (
     <div className="mx-auto max-w-content">
-      <PageHeading
-        title="Seu próximo conteúdo começa aqui"
-        description="Crie personagens, acompanhe a produção e encontre o que você já fez."
-      />
-      <section className="mb-6 grid gap-6 rounded-lab border border-lab-border-strong bg-lab-surface-1 p-6 md:grid-cols-[1fr_auto] md:p-8">
+      <div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><p className="mb-3 text-caption uppercase tracking-widest text-lab-text-muted">Seu espaço de criação</p><h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">Ideias em movimento.</h1><p className="mt-3 text-body-sm text-lab-text-dim">Do primeiro personagem ao próximo vídeo. Tudo no seu laboratório.</p></div><Link href="/conteudos/novo" className={buttonVariants({variant:"secondary"})}>Nova produção <ArrowUpRight className="size-4" /></Link></div>
+      <section className="dashboard-hero mb-6 grid gap-6 rounded-lab border border-lab-border-strong p-6 md:grid-cols-[1fr_auto] md:p-10">
         <div>
           <div className="mb-3 inline-flex items-center gap-2 rounded-control border border-lab-border bg-lab-surface-2 px-3 py-1 text-caption text-lab-text-dim">
             <Sparkles className="size-4" />
-            Ferramenta principal
+            COMECE POR AQUI
           </div>
-          <h2 className="font-display text-2xl font-semibold">
-            Estúdio de influencers
+          <h2 className="max-w-lg font-display text-3xl font-semibold leading-tight md:text-4xl">
+            Dê identidade à sua próxima ideia.
           </h2>
           <p className="mt-3 max-w-xl text-body-sm leading-6 text-lab-text-dim">
             Defina a aparência do seu personagem, monte seu kit de referências e
@@ -48,7 +44,7 @@ export default async function DashboardPage() {
           </Link>
         </div>
       </section>
-      <div className="mb-9 grid gap-3 sm:grid-cols-3">
+      <div className="mb-6 grid gap-3 sm:grid-cols-3">
         {[
           {
             label: "Influenciadores",
@@ -86,6 +82,10 @@ export default async function DashboardPage() {
             ) : null}
           </Link>
         ))}
+      </div>
+      <div className="mb-9 grid gap-3 md:grid-cols-2">
+        <Link href="/trends" className="dashboard-shortcut"><span className="shell-option-icon"><Sparkles className="size-5" /></span><span className="flex-1"><span className="block font-medium">Um movimento. Seus personagens.</span><span className="mt-1 block text-body-sm text-lab-text-dim">Prepare referências e recrie um vídeo em Trends.</span></span><ArrowUpRight className="size-5 shrink-0" /></Link>
+        <Link href="/modelos" className="dashboard-shortcut"><span className="shell-option-icon"><Film className="size-5" /></span><span className="flex-1"><span className="block font-medium">Não comece do zero.</span><span className="mt-1 block text-body-sm text-lab-text-dim">Escolha um modelo e adapte ao seu próximo conteúdo.</span></span><ArrowUpRight className="size-5 shrink-0" /></Link>
       </div>
       <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="font-display text-xl">Continue de onde parou</h2>

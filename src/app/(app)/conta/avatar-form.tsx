@@ -41,7 +41,7 @@ export function AvatarForm({
           </p>
         </div>
       </div>
-      <div className="grid gap-2">
+      <div className="grid justify-items-start gap-2">
         <input
           ref={input}
           type="file"
@@ -60,13 +60,12 @@ export function AvatarForm({
           disabled={pending}
           onClick={() => input.current?.click()}
         >
-          Selecionar arquivo
+          Alterar foto
         </Button>
-        <p className="text-caption text-lab-text-muted">
-          {filename || "Nenhum arquivo selecionado"}
-        </p>
+        {filename && <p className="break-all text-caption text-lab-text-muted">{filename}</p>}
       </div>
-      <div className="flex flex-wrap gap-2">
+      {(filename || version) && <div className="flex flex-wrap gap-2">
+        {filename && (
         <Button
           name="intent"
           value="upload"
@@ -77,6 +76,7 @@ export function AvatarForm({
         >
           Salvar foto
         </Button>
+        )}
         {version && (
           <Button
             name="intent"
@@ -89,7 +89,7 @@ export function AvatarForm({
             Remover foto
           </Button>
         )}
-      </div>
+      </div>}
       {state.error || state.message ? (
         <p
           role={state.error ? "alert" : "status"}

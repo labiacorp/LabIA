@@ -25,7 +25,7 @@ export default async function AppLayout({
       >
         Ir para o conteúdo
       </a>
-      <header className="sticky top-0 z-header flex h-header items-center gap-2 border-b border-lab-border bg-lab-surface-1 px-3 md:px-6">
+      <header className="shell-header sticky top-0 z-header">
         <AppNavigation
           name={user.name}
           email={user.email}
@@ -35,7 +35,7 @@ export default async function AppLayout({
       </header>
       <main
         id="app-content"
-        className="mx-auto w-full max-w-wide px-3 pb-16 pt-4 md:px-6"
+        className="mx-auto w-full max-w-wide px-4 pb-16 pt-6 md:px-8 md:pt-8"
       >
         {children}
       </main>
