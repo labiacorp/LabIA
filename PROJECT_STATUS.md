@@ -85,6 +85,8 @@ Unverified until the founders run real generations by hand: real fal outputs and
 
 Listed in `.env.example`. `DIRECT_URL` (unpooled) is used by Prisma migrations, `DATABASE_URL` (pooled) by the app. Sign-in: Google, or e-mail + password (scrypt, `users.password_hash`; signup is open unless `LABIA_ACCESS_CODE` or `ALLOWED_EMAILS` is set; min password 4, no e-mail verification yet; login and signup rate-limited). The passwordless e-mail login exists only when `NODE_ENV=development`.
 
+Databases (Neon, org LabIA): project "LabIA Prod" (green-pine-20802172) is Vercel Production only; "LabIA Dev" (wandering-fog-36140443) is Vercel Preview. Vercel env: DATABASE_URL (pooled) and DIRECT_URL per environment as above; FAL_KEY only in Production; V1 leftovers (Supabase, LABIA_LOCAL_*, cookie/admin/MCP vars) were removed on 2026-10-05. Pending: BLOB_READ_WRITE_TOKEN (private Blob store), Google OAuth, HF_CREDENTIALS; Production needs a redeploy to pick up env changes.
+
 ## Run and check
 
 `npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (103 tests; the money-path ones run against the database with their own seeded user, deleted afterwards), `npm run build`.
