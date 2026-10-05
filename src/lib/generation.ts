@@ -2,6 +2,7 @@ import { Prisma } from "@/generated/prisma/client";
 import type { AssetRole } from "@/generated/prisma/enums";
 import { getProvider, mockEnabled, providerConfigured } from "@/lib/provider";
 import { prisma } from "@/lib/prisma";
+import { hasUnlimitedBalance } from "@/lib/ledger";
 import type {
   GenParams,
   GenerationResult,
@@ -80,7 +81,7 @@ export async function startPlan(input: {
   try {
     created = await prisma.$transaction(async (tx) => {
       // Serialize spends per user so two requests cannot both pass the balance check.
-      await tx.$queryRaw`SELECT id FROM users WHERE id = ${input.userId} FOR UPDATE`;
+      const [me] = await tx.$queryRaw<{ email: string }[]>`SELECT email FROM users WHERE id = ${input.userId} FOR UPDATE`;
       const owned = await tx.influencer.findFirst({
         where: { id: input.influencerId, userId: input.userId },
       });
@@ -117,7 +118,7 @@ export async function startPlan(input: {
         _sum: { deltaBrl: true },
       });
       const balance = Number(_sum.deltaBrl?.toString() ?? 0);
-      if (balance + 1e-9 < priced.totalBrl) {
+      if (!hasUnlimitedBalance(me?.email) && balance + 1e-9 < priced.totalBrl) {
         throw new UserError(
           `Saldo insuficiente: você tem R$ ${balance.toFixed(2)} e precisa de R$ ${priced.totalBrl.toFixed(2)}.`,
         );
