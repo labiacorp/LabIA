@@ -1,5 +1,5 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { loginDevelopment } from "./actions";
@@ -7,6 +7,7 @@ export function DevelopmentLogin() {
   const [state, action, pending] = useActionState(loginDevelopment, {
     error: "",
   });
+  const [email, setEmail] = useState("");
   return (
     <form
       action={action}
@@ -23,6 +24,8 @@ export function DevelopmentLogin() {
           required
           autoComplete="email"
           placeholder="voce@exemplo.com"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
         />
       </label>
       <Button variant="secondary" size="lg" loading={pending}>

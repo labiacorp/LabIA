@@ -3,25 +3,30 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { CONSENT_FIELD } from "@/lib/consent";
 import { PASSWORD_MAX, PASSWORD_MIN } from "@/lib/password-rules";
 import { authenticatePassword } from "./actions";
 // signup=false while e-mail is off: no way to create an account or recover a password by e-mail yet.
 export function PasswordLogin({ signup }: { signup: boolean }) {
   const [create, setCreate] = useState(false);
+  // Controlled: React 19 clears an uncontrolled form after every action, so a wrong password would wipe the e-mail too.
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [state, action, pending] = useActionState(authenticatePassword, { error: "" });
   return (
     <form action={action} className="grid gap-3">
       <input type="hidden" name="mode" value={create ? "signup" : "login"} />
       <label className="grid gap-2 text-caption">
         E-mail
-        <Input name="email" type="email" required autoComplete="email" placeholder="voce@exemplo.com" />
+        <Input name="email" type="email" required autoComplete="email" placeholder="voce@exemplo.com" value={email} onChange={(event) => setEmail(event.target.value)} />
       </label>
       <label className="grid gap-2 text-caption">
         Senha
-        <Input
+        <PasswordInput
           name="password"
-          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
           required
           minLength={create ? PASSWORD_MIN : undefined}
           maxLength={PASSWORD_MAX}
