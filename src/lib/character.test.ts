@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { type CharacterCard, kitSpent, portraitItem, PORTRAIT_ROLES, sheetItem, stepCost } from "./character";
+import { type CharacterCard, getSheetOptions, kitSpent, portraitItem, PORTRAIT_ROLES, sheetItem, stepCost } from "./character";
 import { quote } from "./generation";
 
 const card: CharacterCard = { name: "Iara", role: "TikTok Shop Creator", mood: "Confident, warm, upbeat", visualSignature: "soft shag haircut, silver hoops, navy tee", persona: "" };
@@ -48,5 +48,20 @@ describe("kit cost after generation", () => {
   it("sums the known costs and flags the total when any is unknown", () => {
     expect(kitSpent([done, { ...done, actualCostBrl: "0.432" }])).toEqual({ unknown: false, brl: expect.closeTo(1.08, 4) });
     expect(kitSpent([done, { ...done, actualCostBrl: null }])).toMatchObject({ unknown: true, brl: 0.648 });
+  });
+});
+
+describe("sheet model options", () => {
+  it("prices every text-to-image model server-side and drops pairs the prompt cannot use", () => {
+    const options = getSheetOptions(card);
+    expect(options.map((option) => option.name)).toContain("Nano Banana Pro");
+    expect(options.find((option) => option.name === "Nano Banana 2")?.configurations.find((item) => item.resolution === "2K")?.brl).toBeCloseTo(0.648, 4);
+    // The sheet prompt is longer than Qwen Image Max accepts (800 characters).
+    expect(options.find((option) => option.name === "Qwen Image Max")?.configurations).toEqual([]);
+  });
+
+  it("rejects an unknown model or quality before anything is charged", () => {
+    expect(() => sheetItem(card, { model: "unregistered", resolution: "2K" })).toThrow();
+    expect(() => sheetItem(card, { model: "fal-ai/nano-banana-pro", resolution: "0.5K" })).toThrow();
   });
 });

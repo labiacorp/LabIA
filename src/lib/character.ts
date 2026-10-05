@@ -1,9 +1,12 @@
 import type { AssetRole } from "@/generated/prisma/enums";
+import { quote } from "@/lib/generation";
+import { prepareImage, SHEET_DEFINITIONS } from "@/lib/providers/image-models";
 
 export type CharacterCard = { name: string; role: string; mood: string; visualSignature: string; persona: string };
 export type KitItem = { role: AssetRole; model: string; params: Record<string, unknown> };
 
-const SHEET_MODEL = "fal-ai/nano-banana-2";
+export type SheetSelection = { model: string; resolution: string };
+export const DEFAULT_SHEET: SheetSelection = { model: "fal-ai/nano-banana-2", resolution: "2K" };
 const PORTRAIT_MODEL = "fal-ai/nano-banana-2/edit";
 export const PORTRAIT_ROLES = ["FRONT", "PROFILE", "DETAIL"] as const;
 
@@ -22,7 +25,7 @@ function identity(card: CharacterCard) {
 }
 
 // One image with the whole kit, in the layout the founders use (turnaround, hero, poses, expressions, details, ID block).
-export function sheetItem(card: CharacterCard): KitItem {
+export function sheetItem(card: CharacterCard, selection: SheetSelection = DEFAULT_SHEET): KitItem {
   const prompt = [
     "Character reference sheet for a social-media creator on a warm beige paper background, thin rust-colored section dividers and small-caps rust headings.",
     `The same single character appears in every panel: ${identity(card)}.`,
@@ -32,7 +35,22 @@ export function sheetItem(card: CharacterCard): KitItem {
     `and a CHARACTER ID text block reading exactly: NAME: ${card.name} / ROLE: ${card.role} / CORE MOOD: ${card.mood} / VISUAL SIGNATURE: ${card.visualSignature || "-"} (write the values in English).`,
     "Photorealistic, natural skin, identical face, hair and outfit in all panels, sharp legible text, no watermark.",
   ].join(" ");
-  return { role: "SHEET", model: SHEET_MODEL, params: { prompt, aspect_ratio: "3:2", resolution: "2K" } };
+  const item: KitItem = { role: "SHEET", model: selection.model, params: { prompt, aspect_ratio: "3:2", resolution: selection.resolution } };
+  // Validates the model/quality pair and captures the per-image price used to settle the step.
+  item.params.imagePricing = prepareImage(item.model, item.params, Number(process.env.USD_BRL_RATE) || 5.4).snapshot;
+  return item;
+}
+
+// Every text-to-image model and quality that can take this sheet prompt, priced by the server (invalid pairs are left out).
+export function getSheetOptions(card: CharacterCard) {
+  return SHEET_DEFINITIONS.map((model) => ({
+    model: model.id,
+    name: model.name,
+    configurations: Object.keys(model.rates).flatMap((resolution) => {
+      try { return [{ resolution, brl: quote([sheetItem(card, { model: model.id, resolution })]).totalBrl }]; } catch { return []; }
+    }),
+    source: `https://fal.ai/models/${model.id}`,
+  }));
 }
 
 const PORTRAIT_SPEC: Record<(typeof PORTRAIT_ROLES)[number], { text: string; aspect: string }> = {

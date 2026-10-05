@@ -29,6 +29,7 @@ Genjutsu Motion Transfer uses the shared reservation/operation-key coordinator a
 ## How generation works (`src/lib/generation.ts`)
 
 Character kit = step 1 sheet (nano-banana-2, 2K, 3:2) then step 2 portraits front/profile/detail (nano-banana-2/edit, 1K, using the approved sheet as reference). Rules:
+- the sheet (step 1) has a model/quality selector over seven text-to-image endpoints (`SHEET_DEFINITIONS` in `src/lib/providers/image-models.ts`, priced and validated on the server); the generated sheet shows its model and exact prompt. The text-to-image ids other than Nano Banana 2 are inferred from the audited edit ids and not yet confirmed against fal.ai (`npm run prices:check`); portraits still use Nano Banana 2 `/edit`;
 - the character tab shows the real cost of each finished kit step and the kit total (`stepCost`/`kitSpent` in `src/lib/character.ts`); an unverified cost reads "indisponível", never R$ 0;
 - the price is quoted by the provider layer (`src/lib/providers/`), shown in R$, and sent back with the approval; a changed price charges nothing;
 - one `operationKey` per intent: a double submit or parallel requests never charge or send twice;

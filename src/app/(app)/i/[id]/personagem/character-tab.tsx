@@ -3,7 +3,8 @@ import { randomUUID } from "node:crypto";
 import { Alert } from "@/components/ui/alert";
 import { Badge, stepStatus } from "@/components/ui/badge";
 import { CostChip } from "@/components/ui/cost-chip";
-import { kitSpent, PORTRAIT_ROLES, ROLE_LABEL, stepCost } from "@/lib/character";
+import { DEFAULT_SHEET, getSheetOptions, kitSpent, PORTRAIT_ROLES, ROLE_LABEL, sheetItem, stepCost } from "@/lib/character";
+import { findImageDefinition } from "@/lib/providers/image-models";
 import { currency } from "@/lib/platform";
 import { quote } from "@/lib/generation";
 import { cardOf, loadKit, planFor, type KitStep } from "@/lib/kit";
@@ -13,6 +14,7 @@ import { prisma } from "@/lib/prisma";
 import { startKit } from "../kit-actions";
 import { KitForm } from "./kit-form";
 import { KitWatcher } from "./kit-watcher";
+import { SheetForm } from "./sheet-form";
 
 function StepBadge({ step }: { step: KitStep }) {
   const [variant, label] = stepStatus[step.status];
@@ -36,6 +38,21 @@ function Failure({ step }: { step: KitStep }) {
         ? "O custo precisa de conferência. Nada será reenviado automaticamente."
         : "A geração não foi concluída. Confira o saldo antes de tentar novamente."}
     </Alert>
+  );
+}
+
+// Which model made this image and the exact prompt it received, so models can be compared.
+function Provenance({ step }: { step: KitStep }) {
+  const input = step.input as { prompt?: string; resolution?: string } | null;
+  if (!step.model || step.status === "PENDING") return null;
+  return (
+    <details className="text-caption text-lab-text-dim">
+      <summary className="cursor-pointer">
+        Feita com {findImageDefinition(step.model)?.name ?? step.model}
+        {input?.resolution ? ` · ${input.resolution === "default" ? "qualidade do modelo" : input.resolution}` : ""}
+      </summary>
+      {input?.prompt ? <p className="mt-2 whitespace-pre-wrap break-words">{input.prompt}</p> : null}
+    </details>
   );
 }
 
@@ -77,7 +94,8 @@ export async function CharacterTab({
   const card = cardOf(influencer);
   const spent = kitSpent(kit.steps);
 
-  const sheetQuote = quote(planFor("SHEET", card, kit));
+  const sheetOptions = getSheetOptions(card);
+  const sheetPrompt = String(sheetItem(card).params.prompt);
   const portraitPlan = kit.sheetUrl ? planFor("PORTRAITS", card, kit) : [];
   const portraitQuote = quote(portraitPlan);
   const sheetDone =
@@ -122,17 +140,21 @@ export async function CharacterTab({
           {kit.sheet ? <StepBadge step={kit.sheet} /> : null}
         </div>
         {kit.sheet ? <Preview step={kit.sheet} aspect="aspect-[3/2]" /> : null}
+        {kit.sheet ? <Provenance step={kit.sheet} /> : null}
         {kit.sheet ? <Failure step={kit.sheet} /> : null}
         {!kit.sheet ||
         kit.sheet.status === "FAILED" ||
         kit.sheet.status === "DONE" ? (
-          <KitForm
+          <SheetForm
             action={startKit.bind(null, influencerId, "SHEET")}
             intent={randomUUID()}
-            expectedBrl={sheetQuote.totalBrl}
+            options={sheetOptions}
+            initial={DEFAULT_SHEET}
+            prompt={sheetPrompt}
             label={kit.sheet ? "Gerar outra ficha" : "Aprovar e gerar ficha"}
             variant={kit.sheet?.status === "DONE" ? "secondary" : "primary"}
-            blockedReason={short(sheetQuote.totalBrl)}
+            blockedReason={providerConfigured() ? undefined : "A geração ainda precisa ser configurada pela equipe."}
+            balanceBrl={balance}
           />
         ) : null}
       </section>
