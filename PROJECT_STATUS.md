@@ -154,7 +154,7 @@ Creation-home checks: 105 tests across 31 files pass, typecheck/lint/build pass.
 ## Session 2026-10-06 (redesign, subscription, closed access)
 
 - **Business model**: subscription only, R$ 49,90/month, credits (Higgsfield-style). The app shows credits, never reais per generation (`CostChip`, header, Início, forms, errors, statement); reais only on the plan price. Admin stays in R$.
-- **Closed to the public**: in production only OWNER accounts sign in (`ownersOnly` in `src/auth.ts`, `LABIA_OPEN_SIGNUP=1` reopens); no sign-up; the landing asks for an invite (no code CTA). Locally and in tests sign-in works as before.
+- **Closed to the public**: in production only OWNER accounts sign in (`ownersOnly` in `src/auth.ts`, `LABIA_OPEN_SIGNUP=1` reopens). While closed nobody sees a sign-in: the landing has no "Entrar" (it reads `accessOpen()`, the same rule), and `/login` sends anyone without the team pass back to `/`. The team enters the code `LABIA_ACCESS_CODE` at `/acesso` (unlisted, noindex), then signs in; without that variable nobody gets in (fails closed). Locally and in tests sign-in works as before.
 - **Landing**: copy for the subscription, numbers from `estimateReel()` on the server (`lp/page.tsx`, revalidate 1h); 4 real steps (voice and lip sync "em breve"); og:image restored (it was missing in production).
 - **Brand**: link card is only the lime I and the wordmark; favicon/app icons are the real I glyph; brand kit (guide PDF/HTML, wordmark, I mark, SVGs in outlines) in `LabIA Graphics/` (gitignored, like Leaner Graphics).
 - **Legal drafts**: terms section 5 describes subscription and credits; privacy names Stripe; `CURRENT_TERMS_VERSION` 2026-10-06. Still need the MEI name/CNPJ as controller and a lawyer's read.

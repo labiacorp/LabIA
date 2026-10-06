@@ -52,7 +52,7 @@ function Wordmark({ size, style }: { size: number | string; style?: CSSPropertie
   return <span style={{ fontFamily: display, fontWeight: 900, fontSize: size, lineHeight: 1, ...trim, ...style }}>LAB<span style={{ color: T.cost }}>I</span>A</span>;
 }
 
-export function Landing({ numbers }: { numbers: LandingNumbers }) {
+export function Landing({ numbers, open }: { numbers: LandingNumbers; open: boolean }) {
   const STEPS = steps(numbers);
   const FAQS = faqs(numbers);
   const { plan, image, video, reels, price } = numbers;
@@ -125,7 +125,7 @@ export function Landing({ numbers }: { numbers: LandingNumbers }) {
           </nav>
         )}
         <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-          <Link href="/login" className="lp-nav" style={{ ...pill({ height: 44, padding: "0 14px", fontSize: 15, fontWeight: 500 }), color: T.ink, textDecoration: "none" }}>Entrar</Link>
+          {open ? <Link href="/login" className="lp-nav" style={{ ...pill({ height: 44, padding: "0 14px", fontSize: 15, fontWeight: 500 }), color: T.ink, textDecoration: "none" }}>Entrar</Link> : null}
           <a href="#convite" style={ctaLight} onClick={() => track("landing_cta", { place: "header" })}>Pedir convite</a>
         </span>
       </header>

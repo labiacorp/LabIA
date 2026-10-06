@@ -41,6 +41,8 @@ export function isAllowed(email?: string | null) {
 // Closed to the public: in production only owner accounts (granted with scripts/owner.ts) sign in, on any
 // provider; nobody else can sign in or create an account. LABIA_OPEN_SIGNUP=1 reopens it. Fails closed.
 export const ownersOnly = () => process.env.NODE_ENV === "production" && process.env.LABIA_OPEN_SIGNUP !== "1";
+// What the public pages read to decide whether to offer sign-in at all: the same rule, never a copy of it.
+export const accessOpen = () => !ownersOnly();
 async function isOwnerAccount(email?: string | null, googleSub?: string) {
   if (!email) return false;
   const owner = await prisma.user.findFirst({
