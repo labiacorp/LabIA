@@ -19,7 +19,6 @@ const DARK = {
 const display = "var(--font-display), 'Big Shoulders Display', sans-serif";
 const mono = "var(--font-mono), ui-monospace, monospace";
 const trim = { textBox: "trim-both cap alphabetic" } as CSSProperties;
-const eyebrow: CSSProperties = { fontFamily: mono, fontSize: 12, letterSpacing: ".1em", textTransform: "uppercase", color: T.ink2 };
 const h2: CSSProperties = { margin: 0, fontFamily: display, fontWeight: 900, fontSize: "clamp(44px,6vw,80px)", lineHeight: 0.9, textTransform: "uppercase" };
 const lead: CSSProperties = { margin: 0, fontSize: 17, lineHeight: 1.55, color: T.ink2 };
 const section: CSSProperties = { maxWidth: 1280, margin: "0 auto", padding: "clamp(80px,10vw,140px) clamp(16px,4vw,40px)" };
@@ -49,7 +48,6 @@ const FAQS: [string, string][] = [
 function Wordmark({ size, style }: { size: number | string; style?: CSSProperties }) {
   return <span style={{ fontFamily: display, fontWeight: 900, fontSize: size, lineHeight: 1, ...trim, ...style }}>LAB<span style={{ color: T.cost }}>I</span>A</span>;
 }
-const Eyebrow = ({ children }: { children: string }) => <span style={eyebrow}>{children}</span>;
 
 export function Landing() {
   const [lp, setLp] = useState(0);
@@ -205,7 +203,6 @@ export function Landing() {
       <section id="como" style={{ ...section, paddingTop: 0, display: "flex", flexDirection: "column", gap: 40 }}>
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 24 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 640 }}>
-            <Eyebrow>01 · Como funciona</Eyebrow>
             <h2 style={h2}>Seis etapas. Cada uma com preço.</h2>
             <p style={lead}>Influencer, conteúdo, etapas. Você aprova uma etapa de cada vez e vê quanto ela custa antes de apertar.</p>
           </div>
@@ -234,7 +231,6 @@ export function Landing() {
       <section id="preco" style={{ background: T.surface, borderTop: `1px solid ${T.line}`, borderBottom: `1px solid ${T.line}` }}>
         <div style={{ ...section, display: "flex", flexDirection: "column", gap: 48 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 760 }}>
-            <Eyebrow>02 · Transparência</Eyebrow>
             <h2 style={h2}>Você vê o preço duas vezes.</h2>
             <p style={lead}>Uma antes de gerar, outra quando termina. Se sair mais barato, a diferença volta na hora. Se falhar, volta tudo.</p>
           </div>
@@ -269,7 +265,6 @@ export function Landing() {
 
       <section style={{ ...section, display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,420px),1fr))", gap: 48, alignItems: "center" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <Eyebrow>03 · Faça a conta</Eyebrow>
           <h2 style={h2}>Quanto custa um mês de reels?</h2>
           <p style={lead}>Estimativa com o fluxo padrão: vídeo 9:16 de 15s com lip sync. O valor real depende do modelo e aparece em cada etapa.</p>
         </div>
@@ -291,7 +286,6 @@ export function Landing() {
       <section id="telas" style={{ borderTop: `1px solid ${T.line}`, padding: "clamp(80px,10vw,140px) 0", overflow: "hidden" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 clamp(16px,4vw,40px)", display: "flex", flexDirection: "column", gap: 48 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 760 }}>
-            <Eyebrow>04 · Produto</Eyebrow>
             <h2 style={h2}>Feito pro celular. Igual ao seu feed.</h2>
           </div>
           <div style={{ display: "flex", gap: 24, overflowX: "auto", padding: "8px 4px 24px", scrollSnapType: "x mandatory" }}>
