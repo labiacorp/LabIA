@@ -151,11 +151,12 @@ Creation-home checks: 105 tests across 31 files pass, typecheck/lint/build pass.
 
 ## Open items (2026-10-06)
 - **Stripe card top-ups** are built (`src/lib/stripe.ts`, `/api/stripe/webhook`, `saldo/topup.ts`) but never run against real Stripe: needs `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` on Vercel and the webhook registered (`checkout.session.completed`). Not handled yet: refunds/disputes (a refunded charge does not debit the ledger).
-- **Production migrations to deploy** before using the features: `20261006120000_mcp_tokens`, `20261006150000_stripe_topup_unique`, `20261006160000_invite_requests` (`npx prisma migrate deploy` against LabIA Prod; the build does not migrate).
-- **MCP** (`/api/mcp`, tokens by `scripts/mcp-token.ts`): read tools + free drafts only; paid generation stays a human confirmation. A per-token spend cap is needed before it can generate.
+- **Migrations**: `vercel.json` runs `prisma migrate deploy` on every production build, so the MCP, Stripe-index and invite-request migrations go out with the deploy.
+- **MCP** (`/api/mcp`, tokens by `scripts/mcp-token.ts`): read tools + free drafts only (cap 50 drafts per token per 24h); paid generation stays a human confirmation, so no spend cap is needed yet.
 - **PostHog** off until `NEXT_PUBLIC_POSTHOG_KEY` is set. No server-side events yet; LGPD consent for analytics undecided.
-- **Invite requests** are stored in `invite_requests`; there is no admin screen or e-mail to answer them yet (query the table).
-- **Video estimate vs real** (`scripts/eval-costs.ts`): Kling reel runs cost +20% to +33% above the shown estimate when the measured clips come out at ~6s instead of 5s (`settleVideo` prices measured duration). Needs a check against the fal invoice: if fal bills the requested 5s, the settlement overcharges users; if it bills measured seconds, the estimate needs an allowance.
-- **Model suggestion**: the landing says Seedance 2.5; the app default is Kling 2.5 Turbo Pro and `fal-models.ts` has only Seedance 2.0.
+- **Invite requests** are listed in /admin (mailto link); there is no automatic e-mail yet (e-mail is off in production).
+- **Video estimate vs real** (`scripts/eval-costs.ts`): the Kling reel is now reserved at 6s/clip (x1.2, `KLING_REEL_ALLOWANCE`) and the difference is returned on settlement. Still worth one check against a fal invoice to confirm fal bills measured seconds.
+- **FX**: prices follow the live USD→BRL quote (`src/lib/fx.ts`, 5 min cache, AwesomeAPI then open.er-api, sane-range guard; `/api/fx` shows the rate in use). Pin with `USD_BRL_RATE_FIXED`, add a margin with `USD_BRL_SPREAD_PCT` (IOF/spread of the card is not included: decide a %). Vercel has an old `USD_BRL_RATE` (now only the fallback).
+- **Default video model** is MiniMax H3 Max Turbo (the form pre-selects it); `REEL`/`estimateReel` (landing numbers, kit estimates) still use the Kling reel recipe. Landing example prices were not recomputed for MiniMax.
 - **Not covered by tests**: real Google sign-in under the CSP, in-app browser bar on a real phone, mobile e2e project (skipped on purpose), refunds.
 - `design/reference/handoff` is the old design and stale.

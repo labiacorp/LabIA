@@ -36,3 +36,12 @@ test("the legal pages are public", async ({ page }) => {
   await page.goto("/privacidade");
   await expect(page.locator("h1")).toHaveText("Política de Privacidade");
 });
+
+test("the login page asks for the terms before the Google button, not after the account exists", async ({ page }) => {
+  await page.goto("/login");
+  const box = page.getByRole("checkbox", { name: /Li e aceito/ }).last();
+  await expect(box).toBeVisible();
+  await expect(page.getByRole("button", { name: "Continuar com Google" })).toBeDisabled();
+  await page.goto("/login?error=consent");
+  await expect(page.getByRole("alert").first()).toContainText("aceite os Termos de Uso");
+});

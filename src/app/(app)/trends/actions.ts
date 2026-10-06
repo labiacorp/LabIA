@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { refreshRate } from "@/lib/fx";
 import { requireUserId } from "@/lib/session";
 import { motionSchema, MOTION_MODEL, type MotionBrief } from "@/lib/motion";
 import { startPlan, UserError } from "@/lib/generation";
@@ -47,6 +48,7 @@ async function ownedInputs(userId: string, brief: MotionBrief) {
 }
 export async function createMotion(_previous: string, form: FormData) {
   const userId = await requireUserId();
+  await refreshRate(); // quote on a fresh USD→BRL rate
   const referenceIds = form.getAll("referenceIds");
   while (referenceIds.length && !referenceIds.at(-1)) referenceIds.pop();
   if (referenceIds.some((id) => !id))
@@ -97,6 +99,7 @@ export async function generateMotion(
   form: FormData,
 ) {
   const userId = await requireUserId();
+  await refreshRate(); // quote on a fresh USD→BRL rate
   const intentId = String(form.get("intent") ?? "");
   const expectedBrl = Number(form.get("expectedBrl"));
   if (!/^[0-9a-f-]{36}$/.test(intentId) || !Number.isFinite(expectedBrl))

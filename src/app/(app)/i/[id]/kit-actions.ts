@@ -5,12 +5,14 @@ import { revalidatePath } from "next/cache";
 import { startPlan, UserError } from "@/lib/generation";
 import { cardOf, loadKit, planFor } from "@/lib/kit";
 import { prisma } from "@/lib/prisma";
+import { refreshRate } from "@/lib/fx";
 import { requireUserId } from "@/lib/session";
 
 export type KitState = { error?: string };
 
 export async function startKit(influencerId: string, phase: "SHEET" | "PORTRAITS", _previous: KitState, data: FormData): Promise<KitState> {
   const userId = await requireUserId();
+  await refreshRate(); // quote on a fresh USD→BRL rate
   const intentId = String(data.get("intent") ?? "");
   const expectedBrl = Number(data.get("expectedBrl"));
   if (!/^[0-9a-f-]{36}$/.test(intentId) || !Number.isFinite(expectedBrl)) return { error: "Pedido inválido. Recarregue a página." };

@@ -12,10 +12,14 @@ import { registerSignIn, REFERRAL_COOKIE } from "@/lib/referrals";
 import { googleConfigured } from "@/lib/auth-config";
 import { emailEnabled } from "@/lib/email";
 import { issueEmailToken } from "@/lib/email-tokens";
-import { CONSENT_FIELD, consentAcceptedNow } from "@/lib/consent";
+import { CONSENT_FIELD, consentAcceptedNow, GOOGLE_TERMS_COOKIE } from "@/lib/consent";
 import { sendAccountExists, sendVerifyEmail } from "@/lib/account-emails";
-export async function loginGoogle() {
+// Terms are accepted BEFORE the Google account is created: the checkbox is required here, and the cookie
+// carries the acceptance across the OAuth round trip so the new account is recorded as having accepted.
+export async function loginGoogle(form: FormData) {
   if (!googleConfigured()) return;
+  if (form.get(CONSENT_FIELD) !== "on") redirect("/login?error=consent");
+  (await cookies()).set(GOOGLE_TERMS_COOKIE, "1", { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", maxAge: 900, path: "/" });
   try {
     await signIn("google", { redirectTo: "/painel" });
   } catch (error) {

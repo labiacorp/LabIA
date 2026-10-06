@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 
 import { cookies } from "next/headers";
+import { consentAcceptedNow, GOOGLE_TERMS_COOKIE } from "@/lib/consent";
 import { registerSignIn, REFERRAL_COOKIE } from "@/lib/referrals";
 import { z } from "zod";
 import { hasPass } from "@/lib/access";
@@ -114,6 +115,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           (await cookies()).get(REFERRAL_COOKIE)?.value,
           account?.provider === "google" ? account.providerAccountId : undefined,
         );
+        // Accepted on the login page before the Google round trip (see loginGoogle): record it on the account.
+        if (account?.provider === "google" && (await cookies()).get(GOOGLE_TERMS_COOKIE)?.value === "1")
+          await prisma.user.updateMany({ where: { id: row.id, consentAcceptedAt: null }, data: consentAcceptedNow() });
         token.uid = row.id;
         token.tokenVersion = row.tokenVersion;
         token.authMethod = account?.provider;

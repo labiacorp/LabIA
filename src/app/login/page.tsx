@@ -6,10 +6,10 @@ import { googleConfigured, loginErrorMessage } from "@/lib/auth-config";
 import { emailEnabled } from "@/lib/email";
 import { AuthShell } from "@/components/app/auth-shell";
 import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { DevelopmentLogin } from "./dev-form";
 import { PasswordLogin } from "./password-form";
 import { loginGoogle } from "./actions";
+import { GoogleSignIn } from "./google-form";
 export const metadata = { title: "Entrar · LabIA" };
 const notices: Record<string, string> = {
   verificado: "E-mail confirmado. Entre com sua senha.",
@@ -34,22 +34,7 @@ export default async function LoginPage({
       {notice ? <Alert variant="success" title={notice} /> : null}
       <PasswordLogin signup={emailEnabled()} />
       <p className="text-center text-body-sm text-lab-text-dim">ou</p>
-      <form action={loginGoogle}>
-        <Button
-          size="lg"
-          variant="secondary"
-          disabled={!enabled}
-          className="w-full"
-        >
-          <span
-            aria-hidden
-            className="flex size-5 items-center justify-center rounded-full bg-lab-text text-xs font-bold text-lab-bg"
-          >
-            G
-          </span>
-          Continuar com Google
-        </Button>
-      </form>
+      <GoogleSignIn action={loginGoogle} enabled={enabled} />
       {!enabled ? (
         <Alert
           variant="info"

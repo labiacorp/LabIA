@@ -39,8 +39,8 @@ export async function signInDev(page: Page, email: string) {
   await form.getByRole("button").click();
   // The URL passes through /painel before the layout sends a new account on to /consentimento,
   // so wait for what actually rendered, not for the address.
-  await page.locator("#app-content, input[name=acceptTerms]").first().waitFor();
-  if (await page.locator("input[name=acceptTerms]").count()) await acceptConsent(page);
+  await page.locator("#app-content, h1:has-text('Antes de começar')").first().waitFor();
+  if (await page.getByRole("heading", { name: "Antes de começar" }).count()) await acceptConsent(page);
 }
 
 // What a Google-created account sees once: no sign-up form ever asked it.

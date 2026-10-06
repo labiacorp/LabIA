@@ -7,8 +7,8 @@ describe("reel estimate", () => {
     vi.stubEnv("USD_BRL_RATE", "5.4");
     vi.stubEnv("FAL_MOCK", "1");
     const { perStep, totalBrl } = estimateReel();
-    expect(perStep).toEqual({ SCRIPT: null, IMAGE: 0.43, VIDEO: 5.67, ASSEMBLY: 0 });
-    expect(totalBrl).toBeCloseTo(6.1, 1);
+    expect(perStep).toEqual({ SCRIPT: null, IMAGE: 0.43, VIDEO: 6.8, ASSEMBLY: 0 });
+    expect(totalBrl).toBeCloseTo(7.23, 1);
     vi.unstubAllEnvs();
   });
 });

@@ -20,3 +20,6 @@ export const needsConsent = (user: { createdAt: Date; consentAcceptedAt: Date | 
   user.consentAcceptedAt === null && user.createdAt >= CONSENT_TRACKING_SINCE;
 
 export const consentAcceptedNow = () => ({ consentAcceptedAt: new Date(), consentTermsVersion: CURRENT_TERMS_VERSION });
+
+// Set by the login page when the terms box is ticked before Google sign-in; read by auth.ts when the account is created.
+export const GOOGLE_TERMS_COOKIE = "labia_terms";

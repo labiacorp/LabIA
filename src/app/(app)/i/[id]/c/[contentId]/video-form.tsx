@@ -39,6 +39,7 @@ type VideoFormProps = {
   options: VideoFormOption[];
 };
 
+const DEFAULT_VIDEO_MODEL = "minimax/h3-max-turbo/image-to-video";
 export function VideoForm({ action, intent, prompt, balanceBrl, blockedReason, options }: VideoFormProps) {
   const [state, formAction, pending] = useActionState(action, {});
 
@@ -53,7 +54,8 @@ export function VideoForm({ action, intent, prompt, balanceBrl, blockedReason, o
     return sameDuration >= 0 ? sameDuration : item.configurations.findIndex((config) => config.resolution === resolution);
   }
   const availableOptions = options;
-  const firstAvailable = availableOptions.find((item) => preferredIndex(item, quality) >= 0);
+  // MiniMax is what most people use, so it is the default pick; the Kling reel and the rest stay one tap away.
+  const firstAvailable = availableOptions.find((item) => item.model === DEFAULT_VIDEO_MODEL && preferredIndex(item, quality) >= 0) ?? availableOptions.find((item) => preferredIndex(item, quality) >= 0);
   const [selection, setSelection] = useState({ key: firstAvailable?.key ?? "", index: firstAvailable ? preferredIndex(firstAvailable, quality) : 0 });
   const option = availableOptions.find((item) => item.key === selection.key) ?? firstAvailable;
   const configurations = option?.configurations ?? [];

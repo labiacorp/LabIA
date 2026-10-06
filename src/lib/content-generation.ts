@@ -1,3 +1,4 @@
+import { usdBrlRate } from "@/lib/fx";
 import { prepareImage, SCENE_DEFINITIONS } from "./providers/image-models";
 import { REEL } from "@/lib/content-plan";
 import { quote, startPlan, UserError, type PlanItem } from "@/lib/generation";
@@ -15,7 +16,7 @@ export function sceneItem(prompt: string, frontUrl: string, aspectRatio: string,
       resolution: selection.resolution,
     },
   };
-  const prepared = prepareImage(item.model, item.params, Number(process.env.USD_BRL_RATE) || 5.4);
+  const prepared = prepareImage(item.model, item.params, usdBrlRate());
   item.params.imagePricing = prepared.snapshot;
   return item;
 }

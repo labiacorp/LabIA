@@ -161,7 +161,7 @@ export function Landing() {
                 {doneRow("Imagem", "R$ 0,41 ✓")}
                 <div style={{ borderRadius: 20, background: T.surface, boxShadow: `inset 0 0 0 1.5px ${stg === 2 ? T.lineStrong : T.cost}`, padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ fontFamily: display, fontWeight: 900, fontSize: 24, lineHeight: 1, textTransform: "uppercase" }}>04 · Vídeo</span><span style={{ marginLeft: "auto", fontSize: 12, color: [T.warn, T.info, T.ink][stg] }}>{["Aprovar custo", "Gerando", "Pronto"][stg]}</span></div>
-                  <div style={{ display: "flex", gap: 6 }}>{["Seedance 2.5", "3 × 5s"].map((c) => <span key={c} style={pill({ height: 28, padding: "0 10px", background: T.s2, fontSize: 12 })}>{c}</span>)}</div>
+                  <div style={{ display: "flex", gap: 6 }}>{["MiniMax H3 Turbo", "15s"].map((c) => <span key={c} style={pill({ height: 28, padding: "0 10px", background: T.s2, fontSize: 12 })}>{c}</span>)}</div>
                   {stg === 0 && <div style={{ ...pill({ height: 52, padding: "0 6px 0 20px", background: T.cost, color: T.onCost, fontWeight: 600, fontSize: 16, justifyContent: "space-between" }) }}>Gerar take<span style={pill({ height: 40, padding: "0 12px", background: T.onCost, color: T.cost, fontFamily: mono, fontSize: 14 })}>~R$ 5,67</span></div>}
                   {stg === 1 && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -305,7 +305,7 @@ export function Landing() {
             </Phone>
             <Phone caption="Confirmação · o preço é o herói" bar={<><X size={20} /><span style={{ fontFamily: mono, fontSize: 11, letterSpacing: ".08em", color: T.ink2 }}>CONFIRMAR TAKE 04</span></>}>
               <div style={{ flex: 1, padding: "18px 18px 22px", display: "flex", flexDirection: "column", gap: 16 }}>
-                <span style={{ fontFamily: mono, fontSize: 11, letterSpacing: ".06em", color: T.ink2 }}>VÍDEO · SEEDANCE 2.5 · 3 × 5S</span>
+                <span style={{ fontFamily: mono, fontSize: 11, letterSpacing: ".06em", color: T.ink2 }}>VÍDEO · MINIMAX H3 TURBO · 3 × 5S</span>
                 <span style={{ fontFamily: display, fontWeight: 900, fontSize: 76, lineHeight: 0.85, color: T.cost }}>~R$ 5,67</span>
                 <span style={{ fontSize: 13, color: T.ink2 }}>previstos para 15 segundos de vídeo</span>
                 <div style={{ display: "flex", flexDirection: "column", fontFamily: mono, fontSize: 13 }}>

@@ -13,6 +13,7 @@ export const cleanText = (s: string) => s.replace(INVISIBLE, "").trim();
 
 export type ToolResult = { ok: true; data: Record<string, unknown> } | { ok: false; code: string; message: string };
 export type McpTool = { name: string; description: string; scope: McpScope; input: z.ZodType; run: (p: McpPrincipal, args: never) => Promise<ToolResult> };
+export const MAX_DRAFTS_PER_DAY = 50;
 const idField = z.string().min(1).max(64);
 
 const listInfluencers: McpTool = {
@@ -57,6 +58,9 @@ const createDraft: McpTool = {
   input: z.object({ influencer_id: idField, title: z.string().trim().min(1).max(120), idea: z.string().trim().max(2000), script: z.string().trim().max(2000).optional(), aspect_ratio: z.enum(["9:16", "16:9", "1:1"]).default("9:16") }).strict(),
   description: "Create a FREE draft content (title, idea, optional script) for the user to review. It never spends money: generating image or video is a step the user confirms in the app, with the price shown.",
   async run(p, args: { influencer_id: string; title: string; idea: string; script?: string; aspect_ratio: "9:16" | "16:9" | "1:1" }) {
+    // Sensible ceiling: an agent in a loop cannot flood the account with drafts.
+    const today = await prisma.apiUsage.count({ where: { tokenId: p.tokenId, tool: "create_content_draft", outcome: "ok", createdAt: { gte: new Date(Date.now() - 86_400_000) } } });
+    if (today >= MAX_DRAFTS_PER_DAY) return { ok: false, code: "daily_limit", message: `Limit of ${MAX_DRAFTS_PER_DAY} drafts per 24h for this token.` };
     const c = await createContentDraft(p.userId, { influencerId: args.influencer_id, title: args.title, idea: args.idea, script: args.script, aspectRatio: args.aspect_ratio });
     if (!c) return { ok: false, code: "not_found", message: "No such influencer on this account." };
     return { ok: true, data: { content_id: c.id, review_url: `${process.env.AUTH_URL ?? ""}/i/${c.influencerId}/c/${c.id}`, cost_brl: 0 } };

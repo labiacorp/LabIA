@@ -7,6 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/session";
 import { getBalanceBrl, getFalCreditsUsd } from "@/lib/ledger";
+import { rateInfo } from "@/lib/fx";
 import { videoUsdBrlRate } from "@/lib/video-options";
 import { currency, dateLabel } from "@/lib/platform";
 
@@ -25,6 +26,7 @@ export default async function BalancePage({ searchParams }: { searchParams: Prom
     <PageHeading title="Saldo e extrato" description="Seus créditos e o histórico de uso, centavo por centavo." />
     <section className="flex flex-col gap-3.5 rounded-sheet bg-lab-surface-1 p-6 shadow-[inset_0_0_0_1px_var(--lab-border)] md:p-8">
       {falUsd === undefined ? <><span className="lp-eyebrow">Disponível para criar</span><p className={big}>{currency(balance)}</p></> : <><span className="lp-eyebrow">Conta da equipe · gera sem saldo · crédito real na fal.ai</span><p className={big}>{falUsd === null ? "Indisponível" : falUsd.toLocaleString("en-US", { style: "currency", currency: "USD" })}</p>{falUsd !== null && <p className="font-mono text-body-sm text-lab-text-dim">≈ {currency(falUsd * videoUsdBrlRate())}</p>}</>}
+      <p className="font-mono text-caption text-lab-text-dim">Cotação do dólar nos preços: R$ {rateInfo().rate.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 3 })}, atualizada ao vivo.</p>
       <details className="max-w-2xl text-body-sm text-lab-text-dim"><summary className="min-h-11 cursor-pointer py-2.5">Como o saldo funciona</summary><p className="leading-6">Os créditos entram por cartão (ou pela equipe, na beta). Cada geração reserva o valor confirmado por você. A diferença é devolvida após a confirmação do custo final; apurações pendentes mantêm a reserva. Se a geração falhar, a reserva volta inteira.</p></details>
     </section>
     {query.pago ? <p role="status" className="rounded-lab border-[1.5px] border-lab-border-strong bg-lab-surface-1 p-4 text-body-sm">Pagamento recebido. O saldo atualiza em instantes; se não mudar em um minuto, recarregue a página.</p> : null}

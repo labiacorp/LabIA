@@ -3,12 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { startContentImage } from "@/lib/content-generation";
 import { UserError } from "@/lib/generation";
+import { refreshRate } from "@/lib/fx";
 import { requireUserId } from "@/lib/session";
 
 export type ContentState = { error?: string };
 
 export async function generateScene(influencerId: string, contentId: string, _previous: ContentState, data: FormData): Promise<ContentState> {
   const userId = await requireUserId();
+  await refreshRate(); // quote on a fresh USD→BRL rate
   const intentId = String(data.get("intent") ?? "");
   const expectedBrl = Number(data.get("expectedBrl"));
   if (!/^[0-9a-f-]{36}$/.test(intentId) || !Number.isFinite(expectedBrl)) return { error: "Pedido inválido. Recarregue a página." };
@@ -41,6 +43,7 @@ export async function assembleVideo(influencerId: string, contentId: string, _pr
 
 async function runVideoAction(influencerId: string, contentId: string, data: FormData, start: (input: { userId: string; influencerId: string; contentId: string; intentId: string; expectedBrl: number }) => Promise<unknown>): Promise<ContentState> {
   const userId = await requireUserId();
+  await refreshRate(); // quote on a fresh USD→BRL rate
   const intentId = String(data.get("intent") ?? "");
   const expectedBrl = Number(data.get("expectedBrl"));
   if (!/^[0-9a-f-]{36}$/.test(intentId) || !Number.isFinite(expectedBrl)) return { error: "Pedido inválido. Recarregue a página." };

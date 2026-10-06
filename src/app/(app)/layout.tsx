@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { needsConsent } from "@/lib/consent";
 import { ownerSession } from "@/lib/owner";
+import { refreshRate } from "@/lib/fx";
 import { requireUserId } from "@/lib/session";
 
 export default async function AppLayout({
@@ -14,6 +15,7 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const userId = await requireUserId();
+  void refreshRate();
   const balance = await getBalanceBrl(userId)
     .then((value) => ({ ok: true as const, value }))
     .catch(() => ({ ok: false as const }));
