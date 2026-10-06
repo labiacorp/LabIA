@@ -33,8 +33,8 @@ export function AppNavigation({ name, email, balance, avatarVersion, owner = fal
   const account = useRef<HTMLDialogElement>(null);
   const displayName = name || email.split("@")[0];
   const active = (href: string) => pathname === href || (href !== "/painel" && pathname.startsWith(href));
-  const items = (list: NavItem[], close?: () => void) => list.filter((i) => !i.admin || owner).map(({ href, label, icon: Icon }) => (
-    <Link key={href} href={href} onClick={close} aria-current={active(href) ? "page" : undefined}
+  const items = (list: NavItem[]) => list.filter((i) => !i.admin || owner).map(({ href, label, icon: Icon }) => (
+    <Link key={href} href={href} aria-current={active(href) ? "page" : undefined}
       className={`flex h-11 items-center gap-3 rounded-lab px-3 text-body-sm transition-colors ${focus} ${active(href) ? "bg-lab-surface-2 font-semibold text-lab-text" : "text-lab-text-dim hover:bg-lab-surface-1 hover:text-lab-text"}`}>
       <Icon className="size-[18px] shrink-0" aria-hidden />{label}
       {href === "/saldo" && balance !== null ? <span className="ml-auto font-mono text-caption text-lab-reagent-bright">{brl(balance)}</span> : null}
@@ -75,12 +75,12 @@ export function AppNavigation({ name, email, balance, avatarVersion, owner = fal
           <h2 id="sheet-title" className="font-display text-xl">Menu</h2>
           <button aria-label="Fechar menu" className="lab-hit-target" onClick={() => sheet.current?.close()}><X className="mx-auto size-5" /></button>
         </div>
-        <div className="grid gap-1 p-3">
+        <div className="grid gap-1 p-3" onClick={(e) => { if ((e.target as HTMLElement).closest("a")) sheet.current?.close(); }}>
           {create("mb-2")}
-          {items(main, () => sheet.current?.close())}
+          {items(main)}
           <span className="mx-3 my-1 h-px bg-lab-border" />
-          {items(footer, () => sheet.current?.close())}
-          <Link href="/conta" onClick={() => sheet.current?.close()} className={`flex h-11 items-center gap-3 rounded-lab px-3 text-body-sm text-lab-text-dim ${focus}`}><UserRound className="size-[18px]" />Minha conta</Link>
+          {items(footer)}
+          <Link href="/conta" className={`flex h-11 items-center gap-3 rounded-lab px-3 text-body-sm text-lab-text-dim ${focus}`}><UserRound className="size-[18px]" />Minha conta</Link>
           <form action={logout}><button type="submit" className={`flex h-11 w-full items-center gap-3 rounded-lab px-3 text-body-sm text-lab-text-dim ${focus}`}><LogOut className="size-[18px]" />Sair da conta</button></form>
         </div>
       </dialog>

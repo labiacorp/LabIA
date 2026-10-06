@@ -73,8 +73,7 @@ export function Landing() {
       setVw(sr.width); setVh(sr.height);
     };
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const timers = reduce ? [] : [setTimeout(() => setLp(1), 700), setTimeout(() => setLp(2), 1500)];
-    if (reduce) setLp(2);
+    const timers = reduce ? [setTimeout(() => setLp(2), 0)] : [setTimeout(() => setLp(1), 700), setTimeout(() => setLp(2), 1500)];
     timers.push(setTimeout(onScroll, 50), setTimeout(onScroll, 1700));
     window.addEventListener("scroll", onScroll, true);
     window.addEventListener("resize", onScroll);
@@ -94,8 +93,7 @@ export function Landing() {
   const q = cl((p - 0.52) / 0.4);
   const stg = q < 0.34 ? 0 : q < 0.67 ? 1 : 2;
   const g = cl((q - 0.34) / 0.33);
-  let acc = 0;
-  const cum = STEPS.map((s) => (acc += s[5]));
+  const cum = STEPS.map((_, i) => STEPS.slice(0, i + 1).reduce((sum, s) => sum + s[5], 0));
   const monthly = n * 7.02;
   const pack = [20, 50, 100, 200, 500].find((v) => v >= monthly) ?? 500;
   const sideTop = mob ? "84px" : vh / 2 - 90 + "px";
