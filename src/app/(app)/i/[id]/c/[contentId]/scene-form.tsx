@@ -3,6 +3,7 @@
 import { useActionState, useId, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { track } from "@/lib/track";
 import { CostChip } from "@/components/ui/cost-chip";
 import { Field, Select, Textarea } from "@/components/ui/field";
 import type { getImageOptions } from "@/lib/content-generation";
@@ -51,7 +52,7 @@ export function SceneForm({ action, intent, options, balanceBrl, prompt, blocked
         <Textarea id={promptId} name="prompt" defaultValue={prompt} required maxLength={option?.maxPrompt ?? 2000} disabled={pending} />
       </Field>
       <div className="flex flex-wrap items-center gap-3">
-        <Button variant="cost" loading={pending} disabled={!!blockedReason || !configuration || insufficient}>{label}</Button>
+        <Button variant="cost" onClick={() => track("generate_clicked", { kind: "image", estimate_brl: configuration?.brl ?? 0 })} loading={pending} disabled={!!blockedReason || !configuration || insufficient}>{label}</Button>
         <CostChip state={configuration ? "estimated" : "unavailable"} value={configuration?.brl} prefix="total estimado" />
       </div>
       {insufficient ? <p className="text-caption text-lab-warning">Saldo insuficiente para esta imagem.</p> : null}

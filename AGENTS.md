@@ -13,6 +13,7 @@ This file is identical to `AGENTS.md` (read by Codex). Edit one, mirror the othe
 - Work in small blocks and commit at the end of each one. Commit with explicit paths, never `git add -A`.
 - Money-moving server actions recompute the price on the server.
 - "It works" only after running it (test or real call). UI changes: check them in the browser at about 390px and desktop.
+- Before calling any UI done, run it through `PRODUCT_REVIEW_LENS.md` (look at the screenshot first).
 - UI/UX: follow the design reference in `design/reference/` (Claude Design handoff: `LabIA Design System.dc.html`, `LabIA Telas.dc.html`, `LabIA Telas - Casa e Acesso.dc.html`, `LabIA Header.dc.html`, tokens and components in `handoff/`, application map and copy rules in `handoff/MAPA-DE-APLICACAO.md`). The current build is too generic: improve layouts, states (loading, empty, error), header with the cost chip and mobile sheet, and PT-BR copy using it. It was drawn for an earlier information architecture (projects and flows), so adapt it to Influencers > Content > Steps instead of copying screens literally. Keep colors, type and spacing in the tokens so a later rebrand stays a token change. To view the mockups: `python3 -m http.server 4100 --directory design/reference` and open the `.dc.html` files.
 - Tests that touch the database seed their own user and delete it in `afterAll`; never drive or edit real data.
 - Never commit or print secrets. Keys live in `.env.local`; `.env.example` lists the required ones.

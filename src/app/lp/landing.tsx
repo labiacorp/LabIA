@@ -2,6 +2,8 @@
 
 import { AudioLines, Check, ChevronLeft, CircleCheck, CircleDashed, Clapperboard, FileText, Image as ImageIcon, Mic, Minus, Plus, Scissors, X, ArrowDown, type LucideIcon } from "lucide-react";
 import Link from "next/link";
+import { InAppBrowserBar } from "@/components/app/in-app-browser-bar";
+import { track } from "@/lib/track";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 // Port of design/reference "LabIA Landing" (Claude Design). Colors map to the --lab-* tokens.
@@ -109,6 +111,7 @@ export function Landing() {
 
   return (
     <div id="topo" style={{ ...DARK, fontFamily: "var(--font-ui), system-ui, sans-serif", color: T.ink, background: T.bg, minHeight: "100vh", scrollBehavior: "smooth" }}>
+      <div style={{ position: "fixed", top: 72, left: 16, right: 16, zIndex: 30 }}><InAppBrowserBar /></div>
       <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 20, height: 64, display: "flex", alignItems: "center", gap: 16, padding: "0 clamp(16px,3vw,40px)", background: "rgba(11,11,12,.72)", backdropFilter: "blur(14px)", borderBottom: "1px solid rgba(44,44,48,.6)" }}>
         <a href="#topo" aria-label="LabIA, início" style={{ textDecoration: "none", color: T.ink, opacity: cl((p - 0.15) / 0.15), display: "flex", alignItems: "center", minHeight: 44 }}><Wordmark size={26} /></a>
         {!mob && (
@@ -120,7 +123,7 @@ export function Landing() {
         )}
         <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
           <Link href="/login" className="lp-nav" style={{ ...pill({ height: 44, padding: "0 14px", fontSize: 15, fontWeight: 500 }), color: T.ink, textDecoration: "none" }}>Entrar</Link>
-          <Link href="/acesso" style={ctaLight}>Tenho um código</Link>
+          <Link href="/acesso" style={ctaLight} onClick={() => track("landing_cta", { place: "header" })}>Tenho um código</Link>
         </span>
       </header>
 
@@ -277,7 +280,7 @@ export function Landing() {
             <span style={{ fontFamily: display, fontWeight: 900, fontSize: "clamp(64px,8vw,104px)", lineHeight: 0.85, color: T.cost }}>~R$ {brl(monthly)}</span>
             <span style={{ fontFamily: mono, fontSize: 13, color: T.ink2 }}>{n} × ~R$ 7,02 · recarga sugerida R$ {pack} via Pix</span>
           </div>
-          <Link href="/acesso" style={{ ...pill({ height: 56, justifyContent: "center", background: T.ink, color: T.bg, fontWeight: 600, fontSize: 16 }), textDecoration: "none" }}>Tenho um código</Link>
+          <Link href="/acesso" onClick={() => track("landing_cta", { place: "calculator", videos: n })} style={{ ...pill({ height: 56, justifyContent: "center", background: T.ink, color: T.bg, fontWeight: 600, fontSize: 16 }), textDecoration: "none" }}>Tenho um código</Link>
         </div>
       </section>
 
@@ -335,7 +338,7 @@ export function Landing() {
         <div style={{ display: "flex", flexDirection: "column", borderTop: `1px solid ${T.line}` }}>
           {FAQS.map(([qu, a], i) => (
             <div key={qu} style={{ borderBottom: `1px solid ${T.line}` }}>
-              <button type="button" className="lp-btn" aria-expanded={faq === i} onClick={() => setFaq(faq === i ? -1 : i)} style={{ width: "100%", minHeight: 72, padding: "16px 0", border: 0, background: "transparent", color: T.ink, display: "flex", alignItems: "center", gap: 16, textAlign: "left" }}>
+              <button type="button" className="lp-btn" aria-expanded={faq === i} onClick={() => { setFaq(faq === i ? -1 : i); track("landing_faq", { question: qu }); }} style={{ width: "100%", minHeight: 72, padding: "16px 0", border: 0, background: "transparent", color: T.ink, display: "flex", alignItems: "center", gap: 16, textAlign: "left" }}>
                 <span style={{ flex: 1, fontSize: "clamp(18px,2vw,22px)", fontWeight: 600, letterSpacing: "-.01em" }}>{qu}</span>
                 <span style={{ width: 44, height: 44, flexShrink: 0, borderRadius: "50%", background: T.s2, display: "flex", alignItems: "center", justifyContent: "center" }}>{faq === i ? <Minus size={20} /> : <Plus size={20} />}</span>
               </button>
@@ -349,7 +352,7 @@ export function Landing() {
         <Wordmark size="clamp(96px,20vw,280px)" />
         <p style={{ margin: 0, fontSize: "clamp(17px,2vw,20px)", lineHeight: 1.5, color: T.ink2, maxWidth: 520 }}>Acesso por convite enquanto a gente cresce com calma. Recebeu um código? Entre agora.</p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-          <Link href="/acesso" style={{ ...pill({ height: 56, padding: "0 26px", background: T.ink, color: T.bg, fontWeight: 600, fontSize: 16 }), textDecoration: "none" }}>Entrar com código</Link>
+          <Link href="/acesso" onClick={() => track("landing_cta", { place: "footer" })} style={{ ...pill({ height: 56, padding: "0 26px", background: T.ink, color: T.bg, fontWeight: 600, fontSize: 16 }), textDecoration: "none" }}>Entrar com código</Link>
           <Link href="/login" style={{ ...pill({ height: 56, padding: "0 26px", border: `1.5px solid ${T.lineStrong}`, color: T.ink, fontWeight: 600, fontSize: 16 }), textDecoration: "none" }}>Já tenho conta</Link>
         </div>
       </section>

@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { PIPELINE } from "@/lib/pipeline";
+import { createContentDraft } from "@/lib/content-draft";
 import { requireUserId } from "@/lib/session";
 export async function createProduction(_previous: string, form: FormData) {
   const userId = await requireUserId();
@@ -20,31 +20,8 @@ export async function createProduction(_previous: string, form: FormData) {
     return "Escolha um personagem e preencha um título de até 120 caracteres e uma ideia de até 2.000 caracteres.";
   let id: string;
   try {
-    const character = await prisma.influencer.findFirst({
-      where: { id: input.data.influencerId, userId },
-      select: { id: true },
-    });
-    if (!character) return "Escolha um personagem da sua conta.";
-    const { script, ...draft } = input.data;
-    const content = await prisma.content.create({
-      data: {
-        ...draft,
-        steps: {
-          create: PIPELINE.map((step, position) => ({
-            kind: step.kind,
-            position,
-            ...(step.kind === "SCRIPT" && script
-              ? {
-                  input: { script },
-                  status: "DONE" as const,
-                  actualCostBrl: 0,
-                  completedAt: new Date(),
-                }
-              : {}),
-          })),
-        },
-      },
-    });
+    const content = await createContentDraft(userId, input.data);
+    if (!content) return "Escolha um personagem da sua conta.";
     id = content.id;
   } catch {
     return "Não conseguimos criar o rascunho. Tente novamente.";
