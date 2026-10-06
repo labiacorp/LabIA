@@ -40,7 +40,7 @@ export async function handleMcpMessage(body: unknown, principal: McpPrincipal): 
     }
     case "ping": return ok(id, {});
     case "tools/list":
-      return ok(id, { tools: MCP_TOOLS.filter((t) => principal.scopes.includes(t.scope)).map((t) => ({ name: t.name, description: t.description, inputSchema: (({ $schema: _s, ...rest }) => rest)(z.toJSONSchema(t.input, { io: "input" }) as Record<string, unknown>), annotations: { readOnlyHint: t.scope === "read", destructiveHint: false } })) });
+      return ok(id, { tools: MCP_TOOLS.filter((t) => principal.scopes.includes(t.scope)).map((t) => ({ name: t.name, description: t.description, inputSchema: z.toJSONSchema(t.input, { io: "input", target: "draft-7" }), annotations: { readOnlyHint: t.scope === "read", destructiveHint: false } })) });
     case "tools/call": { const r = await callTool(principal, params); return r ? ok(id, r) : err(id, -32602, "Unknown tool"); }
     default: return err(id, -32601, "Method not found");
   }
