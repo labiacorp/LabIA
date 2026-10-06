@@ -8,7 +8,12 @@ const display = Big_Shoulders({ subsets: ["latin"], variable: "--font-display" }
 const ui = Geist({ subsets: ["latin"], variable: "--font-ui" });
 const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
-export const metadata: Metadata = { title: "LabIA", description: "Esteira de conteúdo para influencers de IA." };
+export const metadata: Metadata = {
+  metadataBase: new URL("https://labia.studio"),
+  title: "LabIA",
+  description: "Esteira de conteúdo para influencers de IA.",
+  openGraph: { siteName: "LabIA", locale: "pt_BR", type: "website", url: "/" },
+};
 export const viewport = { themeColor: "#0B0B0C" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
