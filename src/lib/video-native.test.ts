@@ -174,7 +174,7 @@ describe("native video lifecycle without a database or provider network", () => 
     const requests = vi.spyOn(MockProvider.prototype, "generate");
     const oldQuote = estimate();
     vi.stubEnv("USD_BRL_RATE", "9");
-    await expect(start(grok, oldQuote)).rejects.toThrow(/preço mudou/);
+    await expect(start(grok, oldQuote)).rejects.toThrow(/custo mudou/);
     expect(fixture.video.status).toBe("PENDING");
     expect(fixture.ledger).toHaveLength(1);
     expect(requests).not.toHaveBeenCalled();

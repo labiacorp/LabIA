@@ -25,7 +25,8 @@ import { BriefForm } from "./brief-form";
 import { ScriptForm } from "./script-form";
 import { ReviewForm } from "./review-form";
 import { DownloadAsset } from "@/app/(app)/biblioteca/library-view";
-import { contentStatusLabels, currency } from "@/lib/platform";
+import { contentStatusLabels } from "@/lib/platform";
+import { costText } from "@/lib/plan";
 import { SceneForm } from "./scene-form";
 import { VideoForm } from "./video-form";
 
@@ -173,8 +174,8 @@ export default async function ContentPage({
           </p>
         ) : null}
         <div className="mt-4 grid grid-cols-2 border-y border-lab-border">
-          <div className="flex flex-col gap-0.5 py-3"><span className="font-mono text-[11px] text-lab-text-dim">gasto ✓</span><span className="font-mono text-[22px]">{unknownCost ? "indisponível" : currency(spent)}</span></div>
-          <div className="flex flex-col gap-0.5 border-l border-lab-border py-3 pl-3.5"><span className="font-mono text-[11px] text-lab-text-dim">total previsto</span><span className="font-mono text-[22px] text-lab-reagent-bright">{currency(planned)}</span></div>
+          <div className="flex flex-col gap-0.5 py-3"><span className="font-mono text-caption text-lab-text-dim">usado ✓</span><span className="font-mono text-[22px]">{unknownCost ? "indisponível" : costText(spent)}</span></div>
+          <div className="flex flex-col gap-0.5 border-l border-lab-border py-3 pl-3.5"><span className="font-mono text-caption text-lab-text-dim">total previsto</span><span className="font-mono text-[22px] text-lab-reagent-bright">{costText(planned)}</span></div>
         </div>
       </div>
       <nav aria-label="Visualização da produção" className="flex gap-2">
@@ -284,7 +285,7 @@ export default async function ContentPage({
                 {step.status === "RUNNING" ? <p role="status" className="mt-3 text-body-sm text-lab-text-dim">Gerando imagem… O custo está reservado.</p> : null}
                 {step.status === "FAILED" ? <Alert variant="error" title="Esta geração falhou">{["submission_unknown", "cost_unknown"].includes(step.submissionState)
                   ? "O custo ainda precisa de conferência. Nada será reenviado automaticamente."
-                  : "A geração não foi concluída. Confira o saldo e tente outra produção enquanto verificamos a falha."}</Alert> : null}
+                  : "A geração não foi concluída. Confira seus créditos e tente outra produção enquanto verificamos a falha."}</Alert> : null}
                 {step.assets.map((asset) => (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img key={asset.id} src={asset.url} alt="Imagem da cena com o influencer" className="mt-4 max-h-[32rem] max-w-full rounded-lab border border-lab-border object-contain" />
@@ -305,7 +306,7 @@ export default async function ContentPage({
               </div> : null}
               {step.kind !== "IMAGE" && step.status === "FAILED" ? <div className="w-full"><Alert variant="error" title="Esta etapa falhou">{["submission_unknown", "cost_unknown"].includes(step.submissionState)
                   ? "O custo ainda precisa de conferência. Nada será reenviado automaticamente."
-                  : "A geração não foi concluída. Confira o saldo e tente outra produção enquanto verificamos a falha."}</Alert></div> : null}
+                  : "A geração não foi concluída. Confira seus créditos e tente outra produção enquanto verificamos a falha."}</Alert></div> : null}
               {step.assets.filter((asset) => asset.kind === "VIDEO").sort((a, b) => {
                 const clips = (step.input as { chain?: VideoChain }).chain?.clips ?? [];
                 return clips.findIndex((clip) => clip.url === a.url) - clips.findIndex((clip) => clip.url === b.url);

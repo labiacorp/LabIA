@@ -81,8 +81,8 @@ describe.skipIf(!process.env.DATABASE_URL)("persisted 3x5s video chain", () => {
 
   it("refuses without the scene, without funds, or with an outdated quote", async () => {
     const empty = await seed(10, false); await expect(run(empty)).rejects.toThrow(/imagem da cena/);
-    const poor = await seed(1); await expect(run(poor)).rejects.toThrow(/Saldo insuficiente/);
-    const who = await seed(); await expect(run(who, { expectedBrl: 1 })).rejects.toThrow(/preço mudou/);
+    const poor = await seed(1); await expect(run(poor)).rejects.toThrow(/Créditos insuficientes/);
+    const who = await seed(); await expect(run(who, { expectedBrl: 1 })).rejects.toThrow(/custo mudou/);
     expect((await video(who.contentId)).status).toBe("PENDING");
   });
 

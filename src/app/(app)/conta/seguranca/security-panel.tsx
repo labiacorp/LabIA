@@ -67,7 +67,7 @@ export function SecurityPanel({ email, hasPassword, googleBound, googleReady, em
     <section className="account-settings-section" aria-labelledby="security-danger">
       <h2 id="security-danger">Zona de risco</h2>
       <div className="account-settings-group"><Row icon={<Trash2 className="size-5 text-lab-danger" />} label="Excluir conta" locked={locked} onOpen={() => open(deleteDialog)} /></div>
-      <p className="account-group-caption">Apaga personagens, produções, arquivos e o histórico de saldo. Não pode ser desfeito.</p>
+      <p className="account-group-caption">Apaga personagens, produções, arquivos e o histórico de créditos. Não pode ser desfeito.</p>
     </section>
 
     <SettingsDialog dialog={gate} title="Confirme que é você"><p className="mb-5 text-body-sm leading-6 text-lab-text-dim">Para mudar e-mail, senha ou excluir a conta, entre de novo com o Google. A confirmação vale por 5 minutos.</p><Reauth googleReady={googleReady} /></SettingsDialog>

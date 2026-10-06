@@ -6,6 +6,7 @@ import { useRef, type ReactNode } from "react";
 import { Film, House, Library, LogOut, Menu, Cpu, Plug, Plus, ShieldCheck, TrendingUp, UserRound, Wallet, X, type LucideIcon } from "lucide-react";
 import { logout } from "@/app/(app)/actions";
 import { AccountAvatar } from "@/components/app/account-avatar";
+import { balanceCredits } from "@/lib/plan";
 
 type NavItem = { href: string; label: string; icon: LucideIcon; admin?: boolean };
 const main: NavItem[] = [
@@ -18,10 +19,9 @@ const main: NavItem[] = [
   { href: "/conexoes", label: "Conexões", icon: Plug },
 ];
 const footer: NavItem[] = [
-  { href: "/saldo", label: "Saldo e extrato", icon: Wallet },
+  { href: "/saldo", label: "Plano e créditos", icon: Wallet },
   { href: "/admin", label: "Admin", icon: ShieldCheck, admin: true },
 ];
-const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const focus = "focus-visible:outline-none focus-visible:shadow-lab-focus";
 const wordmark = (size: string) => <span className={`lab-wordmark ${size} leading-none`}>Lab<span>I</span>A</span>;
 
@@ -58,9 +58,9 @@ export function AppNavigation({ name, email, balance, avatarVersion, owner = fal
           <Link href="/painel" aria-label="LabIA, início" className={`lg:hidden ${focus}`}>{wordmark("text-[26px]")}</Link>
           <span className="hidden text-body-sm text-lab-text-dim lg:block">{current}</span>
           <span className="ml-auto" />
-          <Link href="/saldo" aria-label="Ver saldo e extrato" className={`rounded-full ${focus}`}>
+          <Link href="/saldo" aria-label="Ver plano e créditos" className={`rounded-full ${focus}`}>
             <span className="flex h-11 items-center gap-2 rounded-full border-[1.5px] border-lab-reagent px-3.5 font-mono text-body-sm text-lab-reagent-bright">
-              <span className="text-caption text-lab-text-dim">saldo</span>{balance === null ? "indisponível" : brl(balance)}
+              <span className="text-caption text-lab-text-dim">créditos</span>{balance === null ? "indisponível" : balanceCredits(balance).toLocaleString("pt-BR")}
             </span>
           </Link>
           <button type="button" onClick={() => account.current?.showModal()} aria-label={`Abrir conta de ${displayName}`} className={`hidden size-11 items-center justify-center rounded-full bg-lab-surface-2 lg:flex ${focus}`}><AccountAvatar name={displayName} version={avatarVersion} /></button>
@@ -91,7 +91,7 @@ export function AppNavigation({ name, email, balance, avatarVersion, owner = fal
         </div>
         <div className="grid gap-1 p-2">
           <Link href="/conta" onClick={() => account.current?.close()} className={`flex h-11 items-center gap-3 rounded-lab px-3 text-body-sm hover:bg-lab-surface-2 ${focus}`}><UserRound className="size-4" />Perfil e conta</Link>
-          <Link href="/saldo" onClick={() => account.current?.close()} className={`flex h-11 items-center gap-3 rounded-lab px-3 text-body-sm hover:bg-lab-surface-2 ${focus}`}><Wallet className="size-4" />Saldo e extrato</Link>
+          <Link href="/saldo" onClick={() => account.current?.close()} className={`flex h-11 items-center gap-3 rounded-lab px-3 text-body-sm hover:bg-lab-surface-2 ${focus}`}><Wallet className="size-4" />Plano e créditos</Link>
           <form action={logout}><button type="submit" className={`flex h-11 w-full items-center gap-3 rounded-lab border-t border-lab-border px-3 text-body-sm hover:bg-lab-surface-2 ${focus}`}><LogOut className="size-4" />Sair da conta</button></form>
         </div>
       </dialog>

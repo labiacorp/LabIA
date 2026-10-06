@@ -4,7 +4,7 @@ Production is `main`; integration is `dev` (see the branch rule in `CLAUDE.md`).
 
 ## What it is
 
-A pipeline to produce content with AI influencers: Influencer (face, niche, tone) > Content (one piece) > Steps (script, image, video, final assembly). UI in PT-BR. Cost is quoted before and recorded after each step.
+A pipeline to produce content with AI influencers: Influencer (face, niche, tone) > Content (one piece) > Steps (script, image, video, final assembly). UI in PT-BR. Sold as one monthly subscription (R$ 49,90, Stripe) that grants credits; every step shows its credit cost before and records the real cost after.
 
 ## Stack
 
@@ -43,6 +43,8 @@ Character kit = step 1 sheet (nano-banana-2, 2K, 3:2) then step 2 portraits fron
 - `FAL_MOCK=1` (dev/test only, ignored in production) swaps fal for a fake provider with real prices; prompt markers `[mock-fail]` and `[mock-submit-error]` simulate failures.
 
 ## Access
+
+**Closed to the public (2026-10-06):** in production only OWNER accounts sign in, on any provider (`ownersOnly` in `src/auth.ts`); every other Google or password sign-in is refused and password sign-up is off. The landing has no code CTA, only the invite request. `LABIA_OPEN_SIGNUP=1` reopens. Development and tests are unaffected.
 
 `LABIA_ACCESS_CODE` + `AUTH_SECRET` gate sign-in (signed cookie, 8 tries/10 min/IP in Postgres, fails closed in production when unset); the check also runs in the Auth.js `signIn` callback. `ALLOWED_EMAILS` is an optional extra restriction.
 
@@ -150,13 +152,13 @@ Creation-home checks: 105 tests across 31 files pass, typecheck/lint/build pass.
 
 
 ## Open items (2026-10-06)
-- **Stripe card top-ups** are built (`src/lib/stripe.ts`, `/api/stripe/webhook`, `saldo/topup.ts`) but never run against real Stripe: needs `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` on Vercel and the webhook registered (`checkout.session.completed`). Not handled yet: refunds/disputes (a refunded charge does not debit the ledger).
+- **Subscription** (`src/lib/plan.ts`, `src/lib/stripe.ts`, `saldo/subscribe.ts`, `/api/stripe/webhook`): Checkout in subscription mode (price set inline, `subscription_data.metadata.userId`); every paid `invoice.paid` (first month and renewals) grants `PLAN_CREDITS` once (note `stripe:<invoice id>`, unique). "Active" = a subscription invoice paid in the last 35 days, read from the ledger. Card, invoices and cancellation in the Stripe billing portal. Ledger stays in reais of provider cost; 1 credit = `CREDIT_BRL` (R$ 0,05) and the plan grants 350 credits (R$ 17,50 of provider budget, 35% of the price): placeholders until the founders fix the numbers. Unused credits stay after cancellation (no expiry yet). Before it works in production: add `invoice.paid` to the Stripe webhook destination, save a billing-portal configuration in Stripe, and test end to end in the sandbox. Card top-up packs were removed. Not handled yet: refunds/disputes, failed renewals (no grant, nothing revoked).
 - **Migrations**: `vercel.json` runs `prisma migrate deploy` on every production build, so the MCP, Stripe-index and invite-request migrations go out with the deploy.
 - **MCP** (`/api/mcp`, tokens by `scripts/mcp-token.ts`): read tools + free drafts only (cap 50 drafts per token per 24h); paid generation stays a human confirmation, so no spend cap is needed yet.
 - **PostHog** off until `NEXT_PUBLIC_POSTHOG_KEY` is set. No server-side events yet; LGPD consent for analytics undecided.
 - **Invite requests** are listed in /admin (mailto link); there is no automatic e-mail yet (e-mail is off in production).
 - **Video estimate vs real** (`scripts/eval-costs.ts`): the Kling reel is now reserved at 6s/clip (x1.2, `KLING_REEL_ALLOWANCE`) and the difference is returned on settlement. Still worth one check against a fal invoice to confirm fal bills measured seconds.
 - **FX**: prices follow the live USD→BRL quote (`src/lib/fx.ts`, 5 min cache, AwesomeAPI then open.er-api, sane-range guard; `/api/fx` shows the rate in use). Pin with `USD_BRL_RATE_FIXED`, add a margin with `USD_BRL_SPREAD_PCT` (IOF/spread of the card is not included: decide a %). Vercel has an old `USD_BRL_RATE` (now only the fallback).
-- **Default video model** is MiniMax H3 Max Turbo (the form pre-selects it); `REEL`/`estimateReel` (landing numbers, kit estimates) still use the Kling reel recipe. Landing example prices were not recomputed for MiniMax.
+- **Default video model** is MiniMax H3 Max Turbo 768p 15s (`DEFAULT_VIDEO` in `plan.ts`); the video form opens on it (it used to fall to Grok Lite 5s because MiniMax has no 720p) and `estimateReel` prices it, so the landing, Início and plan page quote the same number (`video-form.test.ts`). The Kling three-clip reel stays in the form.
 - **Not covered by tests**: real Google sign-in under the CSP, in-app browser bar on a real phone, mobile e2e project (skipped on purpose), refunds.
 - `design/reference/handoff` is the old design and stale.

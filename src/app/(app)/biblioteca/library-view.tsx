@@ -20,7 +20,8 @@ import {
   DEFAULT_LIBRARY_FILTERS,
   type LibraryFilters,
 } from "@/lib/library";
-import { currency, dateLabel } from "@/lib/platform";
+import { dateLabel } from "@/lib/platform";
+import { costText } from "@/lib/plan";
 import type { LibraryAsset } from "@/lib/library-data";
 
 function MediaPreview({
@@ -355,9 +356,9 @@ export function LibraryView({
                   <dt className="text-lab-text-muted">Custo da etapa</dt>
                   <dd>
                     {selected.actualCost !== null
-                      ? currency(selected.actualCost)
+                      ? costText(selected.actualCost)
                       : selected.estimatedCost !== null
-                        ? `${currency(selected.estimatedCost)} estimado`
+                        ? `~${costText(selected.estimatedCost)}`
                         : "Ainda não apurado"}
                   </dd>
                   <p className="mt-1 text-caption text-lab-text-dim">

@@ -1,4 +1,5 @@
 "use client";
+import { costText } from "@/lib/plan";
 import Image from "next/image";
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -174,7 +175,7 @@ export function MotionForm({
         <p className="text-body-sm text-lab-text-dim">
           {cost === null
             ? "Selecione o vídeo para estimar a geração."
-            : `Estimativa de geração: ${cost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}. A duração é arredondada para cima em segundos.`}{" "}
+            : `Estimativa de geração: ~${costText(cost)}. A duração é arredondada para cima em segundos.`}{" "}
           Salvar este rascunho é gratuito. A geração será confirmada na próxima
           tela.
         </p>

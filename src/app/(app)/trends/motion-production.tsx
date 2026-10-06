@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { costText } from "@/lib/plan";
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -110,7 +111,7 @@ export async function MotionProduction({
               <p className="text-body-sm text-lab-text-muted">
                 {step.actualCostBrl === null
                   ? "Custo final aguardando conferência. A reserva foi mantida."
-                  : `Custo registrado: R$ ${Number(step.actualCostBrl).toFixed(2)}`}
+                  : `Custo registrado: ${costText(Number(step.actualCostBrl))}`}
               </p>
               <ReviewForm
                 influencerId={content.influencerId}

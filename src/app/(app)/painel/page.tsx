@@ -6,7 +6,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/session";
 import { getBalanceBrl } from "@/lib/ledger";
-import { currency } from "@/lib/platform";
+import { estimateReel } from "@/lib/content-plan";
+import { balanceCredits, costCredits, creditsText } from "@/lib/plan";
 import { ProductionCard } from "@/components/app/production-card";
 
 const card = "rounded-sheet bg-lab-surface-1 p-5 shadow-[inset_0_0_0_1px_var(--lab-border)] md:p-[22px] flex flex-col gap-3.5";
@@ -26,6 +27,8 @@ export default async function DashboardPage() {
   const first = (user.name || user.email.split("@")[0]).split(" ")[0];
   const today = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "short", timeZone: "America/Sao_Paulo" }).format(new Date());
   const unlimited = balance === Infinity;
+  const reel = costCredits(estimateReel().totalBrl);
+  const credits = balance === null || unlimited ? 0 : balanceCredits(balance);
   const last = recent[0];
   return <div className="mx-auto flex max-w-content flex-col gap-7">
     <div className="flex flex-col gap-1.5"><span className="lp-eyebrow">{today}</span><h1 className="font-display text-[clamp(40px,7vw,56px)] leading-[.9]">Olá, {first}</h1></div>
@@ -35,7 +38,7 @@ export default async function DashboardPage() {
         {[
           { done: influencers.length > 0, n: "01", title: "Crie a influencer", text: "Defina o rosto, o nicho e o tom. Rascunhos são grátis.", href: "/?criar=1", cta: "Criar influencer" },
           { done: recent.length > 0, n: "02", title: "Prepare um conteúdo", text: "Título, ideia e roteiro. Ainda sem gastar nada.", href: "/conteudos/novo", cta: "Novo conteúdo" },
-          { done: !!balance && balance > 0, n: "03", title: "Tenha saldo e gere", text: "Você vê o preço antes de cada etapa e o valor real depois.", href: "/saldo", cta: "Ver saldo" },
+          { done: !!balance && balance > 0, n: "03", title: "Assine e gere", text: "Créditos todo mês. Você vê quantos cada etapa usa antes de gerar.", href: "/saldo", cta: "Ver plano" },
         ].map((step) => <li key={step.n} className={`flex flex-col gap-2 rounded-card p-4 ${step.done ? "opacity-60" : "bg-lab-surface-2"}`}>
           <span className="font-mono text-caption text-lab-text-dim">{step.n}{step.done ? " · feito ✓" : ""}</span>
           <span className="font-display text-[26px] font-black uppercase leading-none">{step.title}</span>
@@ -46,10 +49,10 @@ export default async function DashboardPage() {
     </section> : null}
     <div className="grid gap-4 md:grid-cols-2">
       <div className={card}>
-        <span className="lp-eyebrow">Saldo</span>
-        <span className="font-display text-[clamp(56px,9vw,76px)] font-black uppercase leading-[.85] text-lab-reagent-bright">{balance === null ? "—" : unlimited ? "Equipe" : currency(balance)}</span>
-        <span className="text-body-sm leading-6 text-lab-text-dim">{balance === null ? "Não foi possível ler o saldo agora." : unlimited ? "Conta da equipe: gera sem saldo." : balance < 7.02 ? "Não cobre um vídeo de 15s (~R$ 7,02). Peça crédito à equipe para continuar." : `Dá para uns ${Math.floor(balance / 7.02)} vídeos de 15s com lip sync.`}</span>
-        <div className="mt-auto"><Link href="/saldo" className={buttonVariants({ variant: "secondary" })}>Ver extrato</Link></div>
+        <span className="text-body-sm text-lab-text-dim">Créditos</span>
+        <span className="font-display text-[clamp(56px,9vw,76px)] font-black uppercase leading-[.85] text-lab-reagent-bright">{balance === null ? "—" : unlimited ? "Equipe" : credits.toLocaleString("pt-BR")}</span>
+        <span className="text-body-sm leading-6 text-lab-text-dim">{balance === null ? "Não foi possível ler os créditos agora." : unlimited ? "Conta da equipe: gera sem créditos." : credits < reel ? `Faltam ${creditsText(reel - credits)} para um vídeo de 15s (~${creditsText(reel)}).` : `Dá para uns ${Math.floor(credits / reel)} vídeos de 15s.`}</span>
+        <div className="mt-auto"><Link href="/saldo" className={buttonVariants({ variant: !unlimited && balance !== null && credits < reel ? "primary" : "secondary" })}>{!unlimited && balance !== null && credits < reel ? "Ver plano" : "Ver extrato"}</Link></div>
       </div>
       <div className={card}>
         <span className="lp-eyebrow">Continue de onde parou</span>
@@ -64,7 +67,7 @@ export default async function DashboardPage() {
       </div>
     </div>
     <div className="grid grid-cols-2 border-y border-lab-border">
-      <div className="flex flex-col gap-1 py-4"><span className="font-mono text-caption text-lab-text-dim">gasto neste mês</span><span className="font-mono text-[26px]">{currency(spent)}</span></div>
+      <div className="flex flex-col gap-1 py-4"><span className="font-mono text-caption text-lab-text-dim">créditos usados no mês</span><span className="font-mono text-[26px]">{costCredits(spent).toLocaleString("pt-BR")}</span></div>
       <div className="flex flex-col gap-1 border-l border-lab-border py-4 pl-4"><span className="font-mono text-caption text-lab-text-dim">conteúdos ativos</span><span className="font-mono text-[26px]">{recent.length === 6 ? "6+" : recent.length}</span></div>
     </div>
     <section className="flex flex-col gap-3.5">

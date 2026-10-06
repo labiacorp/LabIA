@@ -8,8 +8,8 @@ test.afterAll(() => sql`DELETE FROM invite_requests WHERE email LIKE ${prefix + 
 test("a visitor on / sees the landing page", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle(/Conteúdo para influencers de IA/);
-  await expect(page.getByRole("link", { name: "Tenho um código" }).first()).toBeVisible();
-  await expect(page.getByText("Seis etapas. Cada uma com preço.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Pedir convite" }).first()).toBeVisible();
+  await expect(page.getByText("Quatro etapas. Cada uma com custo.")).toBeVisible();
   await page.getByRole("link", { name: "Entrar", exact: true }).first().click();
   await expect(page).toHaveURL(/\/(login|acesso)/);
 });
@@ -19,7 +19,7 @@ const cookie = (name: string, value = "garbage") => ({ name, value, domain: "loc
 const seesLanding = async (page: Page, path = "/") => {
   await page.goto(path);
   await expect(page).toHaveTitle(LANDING);
-  await expect(page.getByText("Seis etapas. Cada uma com preço.")).toBeVisible();
+  await expect(page.getByText("Quatro etapas. Cada uma com custo.")).toBeVisible();
 };
 
 // The bug this guards: a leftover expired session cookie used to count as "signed in" and bounced the visitor to /login.
@@ -54,26 +54,26 @@ test("on a phone there is no sideways scroll and the CTAs fit", async ({ page })
   await seesLanding(page);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);
-  await expect(page.getByRole("link", { name: "Tenho um código" }).first()).toBeInViewport();
+  await expect(page.getByRole("link", { name: "Pedir convite" }).first()).toBeInViewport();
 });
 
 test("the landing links go to real pages", async ({ page, request }) => {
   await seesLanding(page);
   const hrefs = await page.locator("a[href^='/']").evaluateAll((els) => [...new Set(els.map((e) => e.getAttribute("href")!))]);
-  expect(hrefs).toEqual(expect.arrayContaining(["/login", "/acesso", "/termos", "/privacidade"]));
+  expect(hrefs).toEqual(expect.arrayContaining(["/login", "/termos", "/privacidade"]));
   for (const href of hrefs) expect((await request.get(href)).status(), href).toBeLessThan(400);
   for (const id of ["como", "preco", "telas", "duvidas", "convite"]) await expect(page.locator(`#${id}`)).toHaveCount(1);
 });
 
-test("the price calculator and the steps respond", async ({ page }) => {
+test("the plan card, the steps and the FAQ respond", async ({ page }) => {
   await seesLanding(page);
-  const slider = page.getByRole("slider", { name: "Vídeos por mês" });
-  await slider.fill("30");
-  await expect(page.getByText("30 × ~R$ 7,02")).toBeVisible();
+  await expect(page.getByText("Créditos por mês")).toBeVisible();
+  await expect(page.getByText(/R\$\s?49,90/).first()).toBeVisible();
+  await expect(page.getByText(/R\$\s?[0-9]+,[0-9]{2} previsto|~R\$ 5,67|7,02/)).toHaveCount(0);
   await page.getByRole("button", { name: /^03/ }).click();
   await expect(page.getByRole("button", { name: /^03/ })).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "E se a geração falhar?" }).click();
-  await expect(page.getByText("volta inteiro para o seu saldo")).toBeVisible();
+  await expect(page.getByText("que não foram usados voltam e aparecem no extrato")).toBeVisible();
 });
 
 test("link previews have art and metadata", async ({ page, request }) => {
@@ -94,9 +94,9 @@ test("a signed-in user gets the studio on /, and the landing stays on /lp", asyn
   await signInDev(page, email!);
   await page.goto("/");
   await expect(page.locator("#app-content")).toBeVisible();
-  await expect(page.getByText("Seis etapas. Cada uma com preço.")).toHaveCount(0);
+  await expect(page.getByText("Quatro etapas. Cada uma com custo.")).toHaveCount(0);
   await page.goto("/lp");
-  await expect(page.getByText("Seis etapas. Cada uma com preço.")).toBeVisible();
+  await expect(page.getByText("Quatro etapas. Cada uma com custo.")).toBeVisible();
 });
 
 test("security headers are sent and the in-app browser bar shows only inside Instagram", async ({ page, browser }) => {
