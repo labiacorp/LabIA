@@ -4,7 +4,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge, stepStatus } from "@/components/ui/badge";
 import { CostChip } from "@/components/ui/cost-chip";
 import { DEFAULT_SHEET, getSheetOptions, kitSpent, PORTRAIT_ROLES, ROLE_LABEL, sheetItem, stepCost } from "@/lib/character";
-import { findImageDefinition } from "@/lib/providers/image-models";
+import { findImageDefinition, qualityLabel } from "@/lib/providers/image-models";
 import { currency } from "@/lib/platform";
 import { quote } from "@/lib/generation";
 import { cardOf, loadKit, planFor, type KitStep } from "@/lib/kit";
@@ -49,7 +49,7 @@ function Provenance({ step }: { step: KitStep }) {
     <details className="text-caption text-lab-text-dim">
       <summary className="cursor-pointer">
         Feita com {findImageDefinition(step.model)?.name ?? step.model}
-        {input?.resolution ? ` · ${input.resolution === "default" ? "qualidade do modelo" : input.resolution}` : ""}
+        {input?.resolution ? ` · ${qualityLabel(input.resolution)}` : ""}
       </summary>
       {input?.prompt ? <p className="mt-2 whitespace-pre-wrap break-words">{input.prompt}</p> : null}
     </details>

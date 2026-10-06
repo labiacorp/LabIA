@@ -54,10 +54,9 @@ describe("text-to-image models for the character sheet", () => {
     ["fal-ai/nano-banana-2", "2K", .12],
     ["fal-ai/nano-banana-pro", "4K", .3],
     ["bytedance/seedream/v5/lite/text-to-image", "2K", .035],
-    ["fal-ai/bytedance/seedream/v4.5/text-to-image", "2K", .04],
-    ["fal-ai/flux-pro/kontext/text-to-image", "default", .04],
-    ["fal-ai/flux-pro/kontext/max/text-to-image", "default", .08],
-    ["fal-ai/qwen-image-max/text-to-image", "2K", .075],
+    ["openai/gpt-image-2.5/flare/text-to-image", "high", .0412],
+    ["xai/grok-imagine-image/v2.0/text-to-image", "2k/medium", .08],
+    ["meta/muse-image/text-to-image", "default", .01],
   ])("quotes and submits %s without any reference image", async (model, resolution, usd) => {
     const selection = { ...sheet, resolution };
     const prepared = prepareImage(model, selection, 5.4);
@@ -73,6 +72,20 @@ describe("text-to-image models for the character sheet", () => {
   it("refuses a reference on a text-only model and a missing one on an edit model", () => {
     expect(() => prepareImage("fal-ai/nano-banana-2", { ...sheet, resolution: "2K", image_urls: ["https://fixture/x.png"] }, 5.4)).toThrow();
     expect(() => prepareImage("fal-ai/nano-banana-2/edit", { ...sheet, resolution: "2K" }, 5.4)).toThrow();
+  });
+
+  it("maps each new family to its own wire contract", () => {
+    const wire = (model: string, resolution: string) => prepareImage(model, { ...sheet, resolution }, 5.4);
+    const gpt = wire("openai/gpt-image-2.5/flare/text-to-image", "xhigh");
+    expect(gpt.input).toMatchObject({ quality: "xhigh", image_size: { width: 1536, height: 1024 }, output_format: "png", num_images: 1 });
+    expect(gpt.input).not.toHaveProperty("aspect_ratio");
+    expect(gpt.snapshot.estimated).toBe(true);
+    expect(gpt.cost.source).toContain("estimate");
+    expect(wire("xai/grok-imagine-image/v2.0/text-to-image", "1k/low").input).toMatchObject({ aspect_ratio: "3:2", resolution: "1k", quality: "low" });
+    expect(wire("meta/muse-image/text-to-image", "default").input).toMatchObject({ aspect_ratio: "3:2", output_format: "png" });
+    expect(wire("fal-ai/nano-banana-2", "2K").snapshot.estimated).toBeUndefined();
+    expect(() => prepareImage("xai/grok-imagine-image/v2.0/text-to-image", { ...sheet, aspect_ratio: "4:5", resolution: "2k/medium" }, 5.4)).toThrow();
+    expect(() => wire("openai/gpt-image-2.5/flare/text-to-image", "2K")).toThrow();
   });
 
   it("keeps text-only models out of the scene options", () => {

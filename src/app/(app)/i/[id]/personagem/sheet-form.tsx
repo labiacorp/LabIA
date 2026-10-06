@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CostChip } from "@/components/ui/cost-chip";
 import { Field, Select } from "@/components/ui/field";
 import type { getSheetOptions, SheetSelection } from "@/lib/character";
+import { qualityLabel } from "@/lib/providers/image-models";
 import type { KitState } from "../kit-actions";
 
 type Props = {
@@ -42,12 +43,12 @@ export function SheetForm({ action, intent, options, initial, prompt, label, var
             const next = options.find((item) => item.model === event.target.value);
             if (next) setSelection({ model: next.model, resolution: next.configurations.find((item) => item.resolution === selection.resolution)?.resolution ?? next.configurations[0]?.resolution ?? "" });
           }}>
-            {options.map((item) => <option key={item.model} value={item.model} disabled={!item.configurations.length}>{item.name}</option>)}
+            {options.map((item) => <option key={item.model} value={item.model} disabled={!item.configurations.length}>{item.name}{item.estimated ? " · preço estimado" : ""}</option>)}
           </Select>
         </Field>
         <Field label="Qualidade" htmlFor="sheet-quality">
           <Select id="sheet-quality" className="h-11" value={selection.resolution} disabled={pending} onChange={(event) => setSelection({ ...selection, resolution: event.target.value })}>
-            {option?.configurations.map((item) => <option key={item.resolution} value={item.resolution}>{item.resolution === "default" ? "Definida pelo modelo" : item.resolution} · {price.format(item.brl)}</option>)}
+            {option?.configurations.map((item) => <option key={item.resolution} value={item.resolution}>{qualityLabel(item.resolution)} · {price.format(item.brl)}</option>)}
           </Select>
         </Field>
       </div>

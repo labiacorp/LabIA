@@ -54,10 +54,13 @@ describe("kit cost after generation", () => {
 describe("sheet model options", () => {
   it("prices every text-to-image model server-side and drops pairs the prompt cannot use", () => {
     const options = getSheetOptions(card);
-    expect(options.map((option) => option.name)).toContain("Nano Banana Pro");
+    expect(options.map((option) => option.name)).toEqual(["Nano Banana 2", "GPT Image 2.5 Flare", "Grok Imagine 2.0", "Muse Image", "Seedream 5.0 Lite", "Nano Banana Pro"]);
+    // Every offered pair is priced; token-billed GPT is flagged as an estimate.
+    expect(options.every((option) => option.configurations.length > 0)).toBe(true);
+    expect(options.find((option) => option.name === "GPT Image 2.5 Flare")?.estimated).toBe(true);
+    expect(options.find((option) => option.name === "GPT Image 2.5 Flare")?.configurations.find((item) => item.resolution === "high")?.brl).toBeCloseTo(0.2225, 4);
+    expect(options.find((option) => option.name === "Muse Image")?.configurations).toEqual([{ resolution: "default", brl: 0.054 }]);
     expect(options.find((option) => option.name === "Nano Banana 2")?.configurations.find((item) => item.resolution === "2K")?.brl).toBeCloseTo(0.648, 4);
-    // The sheet prompt is longer than Qwen Image Max accepts (800 characters).
-    expect(options.find((option) => option.name === "Qwen Image Max")?.configurations).toEqual([]);
   });
 
   it("rejects an unknown model or quality before anything is charged", () => {
