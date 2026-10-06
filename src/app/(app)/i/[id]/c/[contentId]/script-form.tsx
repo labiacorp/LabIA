@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useId } from "react";
+import { useActionState, useId, useState } from "react";
+import { CONTENT_STARTERS } from "@/lib/content-templates";
 import { Button } from "@/components/ui/button";
 import { Field, Textarea } from "@/components/ui/field";
 import { saveScript } from "./management-actions";
@@ -14,6 +15,7 @@ export function ScriptForm({
   script: string;
 }) {
   const id = useId();
+  const [text, setText] = useState(script);
   const [state, action, pending] = useActionState(
     saveScript.bind(null, influencerId, contentId),
     { error: "", message: "" },
@@ -25,10 +27,23 @@ export function ScriptForm({
         htmlFor={id}
         description="Escreva o roteiro sem custo. Ele será sugerido nas próximas gerações; arquivos existentes não são alterados."
       >
-        <Textarea
+        <div className="flex flex-wrap gap-2" aria-label="Estruturas prontas">
+        {CONTENT_STARTERS.map((starter) => (
+          <button
+            key={starter.id}
+            type="button"
+            className="h-8 rounded-full border border-lab-border-strong px-3 text-caption text-lab-text-dim transition-colors hover:border-lab-text hover:text-lab-text"
+            onClick={() => (!text.trim() || window.confirm("Trocar o roteiro atual por esta estrutura?")) && setText(starter.script)}
+          >
+            {starter.name}
+          </button>
+        ))}
+      </div>
+      <Textarea
           id={id}
           name="script"
-          defaultValue={script}
+          value={text}
+          onChange={(event) => setText(event.target.value)}
           rows={5}
           maxLength={2000}
           required

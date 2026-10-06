@@ -11,6 +11,7 @@ import { videoUsdBrlRate } from "@/lib/video-options";
 import { estimateReel } from "@/lib/content-plan";
 import { currency, dateLabel } from "@/lib/platform";
 import { balanceCredits, costCredits, creditsText, PLAN_CREDITS, planPriceText } from "@/lib/plan";
+import { LEDGER_FILTERS, ledgerFilter } from "./ledger-filter";
 
 type Entry = { reason: "TOPUP" | "SPEND" | "REFUND" | "REFERRAL"; note: string | null };
 function entryLabel({ reason, note }: Entry) {
@@ -18,14 +19,17 @@ function entryLabel({ reason, note }: Entry) {
   return { SPEND: "Reservado para gerar", REFUND: "Devolvido", REFERRAL: "Bônus de indicação" }[reason];
 }
 
-export default async function CreditsPage({ searchParams }: { searchParams: Promise<{ page?: string; assinado?: string; erro?: string }> }) {
+export default async function CreditsPage({ searchParams }: { searchParams: Promise<{ page?: string; assinado?: string; erro?: string; tipo?: string }> }) {
   const userId = await requireUserId();
   const query = await searchParams;
   const requested = Number(query.page);
-  const [balance, count, plan] = await Promise.all([getBalanceBrl(userId), prisma.ledgerEntry.count({ where: { userId } }), activePlan(userId)]);
+  const filter = ledgerFilter(query.tipo);
+  const where = { userId, ...(filter.reasons ? { reason: { in: [...filter.reasons] } } : {}) };
+  const tipo = filter.key ? `&tipo=${filter.key}` : "";
+  const [balance, count, plan] = await Promise.all([getBalanceBrl(userId), prisma.ledgerEntry.count({ where }), activePlan(userId)]);
   const pages = Math.max(1, Math.ceil(count / 25));
   const page = Number.isSafeInteger(requested) && requested > 0 ? Math.min(requested, pages) : 1;
-  const entries = await prisma.ledgerEntry.findMany({ where: { userId }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], skip: (page - 1) * 25, take: 25, include: { step: { select: { content: { select: { title: true } }, influencer: { select: { name: true } } } } } });
+  const entries = await prisma.ledgerEntry.findMany({ where, orderBy: [{ createdAt: "desc" }, { id: "desc" }], skip: (page - 1) * 25, take: 25, include: { step: { select: { content: { select: { title: true } }, influencer: { select: { name: true } } } } } });
   const falUsd = balance === Infinity ? await getFalCreditsUsd() : undefined;
   const reels = Math.floor(PLAN_CREDITS / Math.max(1, costCredits(estimateReel().totalBrl)));
   const big = "font-display text-[clamp(56px,9vw,88px)] font-black uppercase leading-[.85] text-lab-reagent-bright";
@@ -59,8 +63,9 @@ export default async function CreditsPage({ searchParams }: { searchParams: Prom
       </> : <p className="text-body-sm text-lab-text-dim">A assinatura abre em breve. Por enquanto, os créditos são liberados pela equipe.</p>}
     </section>
     <section className="flex flex-col gap-3.5">
-      <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-semibold">Extrato</h2>{count > 0 && <span className="font-mono text-caption text-lab-text-dim">Página {page} de {pages}</span>}</div>
-      {entries.length ? <><ul className="border-t border-lab-border">{entries.map((entry) => { const delta = Number(entry.deltaBrl); const amount = delta > 0 ? balanceCredits(delta) : costCredits(-delta); return <li key={entry.id} className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-lab-border py-3"><div className="min-w-0"><p className="text-body-sm font-medium">{entryLabel(entry)}</p><p className="mt-0.5 break-words text-caption text-lab-text-dim">{entry.step?.content?.title || entry.step?.influencer?.name || "Conta LabIA"} · {dateLabel(entry.createdAt)}</p></div><span className={`font-mono text-body ${delta > 0 ? "text-lab-reagent-bright" : "text-lab-text"}`}>{delta > 0 ? "+" : "−"}{amount.toLocaleString("pt-BR")}</span></li>; })}</ul>{pages > 1 && <nav aria-label="Páginas do extrato" className="mt-2 flex justify-between gap-3">{page > 1 ? <Link href={`/saldo?page=${page - 1}`} className={buttonVariants({ variant: "secondary" })}>Anterior</Link> : <span />}{page < pages && <Link href={`/saldo?page=${page + 1}`} className={buttonVariants({ variant: "secondary" })}>Próxima</Link>}</nav>}</> : <EmptyState title="Seu histórico começa na primeira geração" description="Criar influencers e rascunhos não gasta créditos. As movimentações aparecem aqui quando você gerar." action={<Link href="/" className={buttonVariants({ variant: "secondary" })}>Explorar o estúdio</Link>} />}
+      <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-semibold">Extrato</h2><span className="flex items-center gap-3">{count > 0 && <span className="font-mono text-caption text-lab-text-dim">Página {page} de {pages}</span>}<a href={`/saldo/extrato.csv${filter.key ? `?tipo=${filter.key}` : ""}`} className="text-caption underline">Baixar CSV</a></span></div>
+      <nav aria-label="Filtrar extrato" className="flex flex-wrap gap-2">{LEDGER_FILTERS.map((item) => <Link key={item.key} href={item.key ? `/saldo?tipo=${item.key}` : "/saldo"} aria-current={item.key === filter.key ? "page" : undefined} className={`flex h-8 items-center rounded-full border px-3 text-caption ${item.key === filter.key ? "border-lab-text bg-lab-text text-lab-on-reagent" : "border-lab-border-strong text-lab-text-dim hover:text-lab-text"}`}>{item.label}</Link>)}</nav>
+      {entries.length ? <><ul className="border-t border-lab-border">{entries.map((entry) => { const delta = Number(entry.deltaBrl); const amount = delta > 0 ? balanceCredits(delta) : costCredits(-delta); return <li key={entry.id} className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-lab-border py-3"><div className="min-w-0"><p className="text-body-sm font-medium">{entryLabel(entry)}</p><p className="mt-0.5 break-words text-caption text-lab-text-dim">{entry.step?.content?.title || entry.step?.influencer?.name || "Conta LabIA"} · {dateLabel(entry.createdAt)}</p></div><span className={`font-mono text-body ${delta > 0 ? "text-lab-reagent-bright" : "text-lab-text"}`}>{delta > 0 ? "+" : "−"}{amount.toLocaleString("pt-BR")}</span></li>; })}</ul>{pages > 1 && <nav aria-label="Páginas do extrato" className="mt-2 flex justify-between gap-3">{page > 1 ? <Link href={`/saldo?page=${page - 1}${tipo}`} className={buttonVariants({ variant: "secondary" })}>Anterior</Link> : <span />}{page < pages && <Link href={`/saldo?page=${page + 1}${tipo}`} className={buttonVariants({ variant: "secondary" })}>Próxima</Link>}</nav>}</> : filter.key ? <p className="text-body-sm text-lab-text-dim">Nada em “{filter.label}” por enquanto.</p> : <EmptyState title="Seu histórico começa na primeira geração" description="Criar influencers e rascunhos não gasta créditos. As movimentações aparecem aqui quando você gerar." action={<Link href="/" className={buttonVariants({ variant: "secondary" })}>Explorar o estúdio</Link>} />}
     </section>
   </div>;
 }
