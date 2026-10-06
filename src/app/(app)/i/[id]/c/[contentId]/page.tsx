@@ -25,7 +25,7 @@ import { BriefForm } from "./brief-form";
 import { ScriptForm } from "./script-form";
 import { ReviewForm } from "./review-form";
 import { DownloadAsset } from "@/app/(app)/biblioteca/library-view";
-import { contentStatusLabels } from "@/lib/platform";
+import { contentStatusLabels, currency } from "@/lib/platform";
 import { SceneForm } from "./scene-form";
 import { VideoForm } from "./video-form";
 
@@ -103,6 +103,7 @@ export default async function ContentPage({
     steps.reduce((sum, step) => sum + Number(pick(step)?.toString() ?? 0), 0);
   const reel = estimateReel();
   const spent = total((step) => step.actualCostBrl);
+  const planned = steps.reduce((sum, step) => sum + Number(step.actualCostBrl ?? step.estimatedCostBrl ?? reel.perStep[step.kind] ?? 0), 0);
   const imageOptions = getImageOptions(content.aspectRatio);
   const [balance, front] = await Promise.all([
     getBalanceBrl(userId),
@@ -135,10 +136,10 @@ export default async function ContentPage({
 
   return (
     <div className="grid gap-6">
-      <details className="justify-self-end"><summary className="cursor-pointer rounded-control border border-lab-border px-4 py-3 text-body-sm">Opções da produção</summary><div className="mt-3 flex flex-wrap justify-end gap-3">
+      <details className="justify-self-end"><summary className="cursor-pointer rounded-full border-[1.5px] border-lab-border-strong px-4 py-2.5 text-body-sm">Opções da produção</summary><div className="mt-3 flex flex-wrap justify-end gap-3">
         <Link
           href={`/conteudos/novo?copy=${contentId}&influencer=${id}`}
-          className="rounded-control border border-lab-border px-4 py-3 text-body-sm"
+          className="rounded-full border-[1.5px] border-lab-border-strong px-4 py-2.5 text-body-sm"
         >
           Duplicar briefing
         </Link>
@@ -156,7 +157,7 @@ export default async function ContentPage({
         >
           ← {content.influencer.name}
         </Link>
-        <h1 className="mt-2 font-display text-h1">{content.title}</h1>
+        <h1 className="mt-2 font-display text-[clamp(40px,7vw,56px)] leading-[.9]">{content.title}</h1>
         <BriefForm
           influencerId={id}
           contentId={contentId}
@@ -169,15 +170,9 @@ export default async function ContentPage({
             {content.idea}
           </p>
         ) : null}
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <CostChip
-            state={unknownCost ? "unavailable" : "actual"}
-            value={unknownCost ? undefined : spent}
-            prefix="gasto apurado"
-          />
-          <span className="rounded-control bg-lab-surface-2 px-3 py-1 text-caption">
-            {contentStatusLabels[content.status]}
-          </span>
+        <div className="mt-4 grid grid-cols-2 border-y border-lab-border">
+          <div className="flex flex-col gap-0.5 py-3"><span className="font-mono text-[11px] text-lab-text-dim">gasto ✓</span><span className="font-mono text-[22px]">{unknownCost ? "indisponível" : currency(spent)}</span></div>
+          <div className="flex flex-col gap-0.5 border-l border-lab-border py-3 pl-3.5"><span className="font-mono text-[11px] text-lab-text-dim">{contentStatusLabels[content.status]}</span><span className="font-mono text-[22px] text-lab-reagent-bright">{currency(planned)}</span><span className="sr-only">total previsto</span></div>
         </div>
       </div>
       <nav aria-label="Visualização da produção" className="flex gap-2">
@@ -193,7 +188,7 @@ export default async function ContentPage({
                 ? "page"
                 : undefined
             }
-            className={`rounded-control border px-4 py-2 text-body-sm ${canvasView === (view.value === "canvas") ? "border-lab-border-strong bg-lab-surface-2" : "border-lab-border text-lab-text-dim"}`}
+            className={`flex h-10 items-center rounded-full px-4 text-body-sm font-medium ${canvasView === (view.value === "canvas") ? "bg-lab-text text-lab-on-reagent" : "bg-lab-surface-2 text-lab-text-dim"}`}
           >
             {view.label}
           </Link>
@@ -227,15 +222,15 @@ export default async function ContentPage({
             <li
               id={`step-${step.id}`}
               key={step.id}
-              className="scroll-mt-20 flex flex-wrap items-start gap-3 rounded-lab border border-lab-border bg-lab-surface-1 p-4 sm:gap-4 sm:p-5"
+              className={`scroll-mt-20 flex flex-wrap items-start gap-3 rounded-card bg-lab-surface-1 p-4 sm:gap-4 sm:p-5 ${step.status === "FAILED" ? "shadow-[inset_0_0_0_1.5px_var(--lab-danger)]" : step.status === "PENDING" || step.status === "QUOTED" ? "shadow-[inset_0_0_0_1.5px_var(--lab-reagent)]" : "shadow-[inset_0_0_0_1px_var(--lab-border)]"}`}
             >
               <span
-                className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full font-mono text-caption text-lab-on-reagent ${info.accent}`}
+                className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-lab-surface-2 font-mono text-caption text-lab-text-dim`}
               >
                 {index + 1}
               </span>
               <div className="min-w-0 flex-1 basis-40">
-                <p className="font-display text-h3">{info.title}</p>
+                <p className="font-display text-[28px] font-black uppercase leading-none">{info.title}</p>
                 <p className="mt-0.5 text-body-sm text-lab-text-dim">
                   {info.description}
                 </p>
@@ -290,7 +285,7 @@ export default async function ContentPage({
                   : "A geração não foi concluída. Confira o saldo e tente outra produção enquanto verificamos a falha."}</Alert> : null}
                 {step.assets.map((asset) => (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img key={asset.id} src={asset.url} alt="Imagem da cena com o influencer" className="mt-4 max-h-[32rem] max-w-full rounded-control border border-lab-border object-contain" />
+                  <img key={asset.id} src={asset.url} alt="Imagem da cena com o influencer" className="mt-4 max-h-[32rem] max-w-full rounded-lab border border-lab-border object-contain" />
                 ))}
               </div> : null}
               {step.kind === "VIDEO" ? <div className="w-full min-w-0">
@@ -313,7 +308,7 @@ export default async function ContentPage({
                 const clips = (step.input as { chain?: VideoChain }).chain?.clips ?? [];
                 return clips.findIndex((clip) => clip.url === a.url) - clips.findIndex((clip) => clip.url === b.url);
               }).map((asset, clipIndex) => <figure key={asset.id} className="grid w-full max-w-xs gap-2">
-                <video controls preload="metadata" src={asset.url} className="max-h-[28rem] w-full rounded-control border border-lab-border" />
+                <video controls preload="metadata" src={asset.url} className="max-h-[28rem] w-full rounded-lab border border-lab-border" />
                 <DownloadAsset id={asset.id} />
                 <figcaption className="text-caption text-lab-text-dim">{step.kind === "ASSEMBLY" ? "Vídeo final" : `Clipe ${clipIndex + 1} · ${asset.durationSec?.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}s`}</figcaption>
               </figure>)}
@@ -327,7 +322,7 @@ export default async function ContentPage({
           step.status === "DONE" &&
           step.assets.some((asset) => asset.kind === "VIDEO"),
       ) ? (
-        <section className="rounded-lab border border-lab-border bg-lab-surface-1 p-5">
+        <section className="rounded-card bg-lab-surface-1 p-5 shadow-[inset_0_0_0_1px_var(--lab-border)]">
           <ReviewForm
             influencerId={id}
             contentId={contentId}

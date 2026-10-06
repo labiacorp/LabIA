@@ -56,8 +56,8 @@ const config: Config = {
         "body-sm": ["14px", { lineHeight: "20px" }],
         body: ["16px", { lineHeight: "24px" }],
         h3: ["18px", { lineHeight: "24px", fontWeight: "500" }],
-        h2: ["24px", { lineHeight: "32px", fontWeight: "500", letterSpacing: "-0.01em" }],
-        h1: ["32px", { lineHeight: "40px", fontWeight: "900", letterSpacing: "-0.02em" }],
+        h2: ["30px", { lineHeight: "30px", fontWeight: "900" }],
+        h1: ["clamp(40px,7vw,56px)", { lineHeight: "0.9", fontWeight: "900" }],
         "h1-lg": ["40px", { lineHeight: "48px", fontWeight: "700", letterSpacing: "-0.02em" }],
         display: ["64px", { lineHeight: "64px", fontWeight: "700", letterSpacing: "-0.03em" }],
         "cost-lg": ["28px", { lineHeight: "32px", fontWeight: "600" }], // mono
