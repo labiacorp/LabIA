@@ -89,7 +89,7 @@
 
 @layer components {
   .lab-wordmark { @apply font-display text-xl font-black uppercase; }
-  .font-display { text-transform: uppercase; }
+  .font-display { text-transform: uppercase; font-weight: 900; }
   .lab-wordmark span { color: var(--lab-reagent-bright); }
   .lab-status-dot { @apply inline-block size-1.5 rounded-full; }
   .lab-hit-target { @apply min-h-11 min-w-11; } /* NOVO · classe usada em /criar e inexistente */

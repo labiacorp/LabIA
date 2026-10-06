@@ -37,7 +37,6 @@ export function AppNavigation({ name, email, balance, avatarVersion, owner = fal
     <Link key={href} href={href} aria-current={active(href) ? "page" : undefined}
       className={`flex h-11 items-center gap-3 rounded-lab px-3 text-body-sm transition-colors ${focus} ${active(href) ? "bg-lab-surface-2 font-semibold text-lab-text" : "text-lab-text-dim hover:bg-lab-surface-1 hover:text-lab-text"}`}>
       <Icon className="size-[18px] shrink-0" aria-hidden />{label}
-      {href === "/saldo" && balance !== null ? <span className="ml-auto font-mono text-caption text-lab-reagent-bright">{brl(balance)}</span> : null}
     </Link>
   ));
   const current = [...main, ...footer].find((i) => active(i.href))?.label ?? (pathname.startsWith("/conta") ? "Conta" : "LabIA");

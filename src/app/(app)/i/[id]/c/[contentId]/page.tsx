@@ -124,6 +124,7 @@ export default async function ContentPage({
     : !front
       ? "Gere o retrato de frente na aba Personagem antes de criar a cena."
       : undefined;
+  const nextStepId = steps.find((step) => step.status === "PENDING" || step.status === "QUOTED")?.id;
   const sceneAsset = steps.find((step) => step.kind === "IMAGE" && step.status === "DONE")?.assets[0];
   const videoOptions = getVideoOptions(sceneAsset ? { width: sceneAsset.width, height: sceneAsset.height } : undefined);
   const sceneReady = steps.some((step) => step.kind === "IMAGE" && step.status === "DONE" && step.assets.length > 0);
@@ -158,6 +159,7 @@ export default async function ContentPage({
           ← {content.influencer.name}
         </Link>
         <h1 className="mt-2 font-display text-[clamp(40px,7vw,56px)] leading-[.9]">{content.title}</h1>
+        <p className="mt-2 font-mono text-caption text-lab-text-dim">{contentStatusLabels[content.status]} · {content.aspectRatio}</p>
         <BriefForm
           influencerId={id}
           contentId={contentId}
@@ -172,7 +174,7 @@ export default async function ContentPage({
         ) : null}
         <div className="mt-4 grid grid-cols-2 border-y border-lab-border">
           <div className="flex flex-col gap-0.5 py-3"><span className="font-mono text-[11px] text-lab-text-dim">gasto ✓</span><span className="font-mono text-[22px]">{unknownCost ? "indisponível" : currency(spent)}</span></div>
-          <div className="flex flex-col gap-0.5 border-l border-lab-border py-3 pl-3.5"><span className="font-mono text-[11px] text-lab-text-dim">{contentStatusLabels[content.status]}</span><span className="font-mono text-[22px] text-lab-reagent-bright">{currency(planned)}</span><span className="sr-only">total previsto</span></div>
+          <div className="flex flex-col gap-0.5 border-l border-lab-border py-3 pl-3.5"><span className="font-mono text-[11px] text-lab-text-dim">total previsto</span><span className="font-mono text-[22px] text-lab-reagent-bright">{currency(planned)}</span></div>
         </div>
       </div>
       <nav aria-label="Visualização da produção" className="flex gap-2">
@@ -217,12 +219,12 @@ export default async function ContentPage({
       <ol className="grid gap-3">
         {steps.map((step, index) => {
           const info = PIPELINE.find((item) => item.kind === step.kind)!;
-          const [variant, label] = stepStatus[step.status];
+          const [variant, label] = step.kind === "SCRIPT" && step.status === "DONE" ? (["ready", "Salvo"] as const) : stepStatus[step.status];
           return (
             <li
               id={`step-${step.id}`}
               key={step.id}
-              className={`scroll-mt-20 flex flex-wrap items-start gap-3 rounded-card bg-lab-surface-1 p-4 sm:gap-4 sm:p-5 ${step.status === "FAILED" ? "shadow-[inset_0_0_0_1.5px_var(--lab-danger)]" : step.status === "PENDING" || step.status === "QUOTED" ? "shadow-[inset_0_0_0_1.5px_var(--lab-reagent)]" : "shadow-[inset_0_0_0_1px_var(--lab-border)]"}`}
+              className={`scroll-mt-20 flex flex-wrap items-start gap-3 rounded-card bg-lab-surface-1 p-4 sm:gap-4 sm:p-5 ${step.status === "FAILED" ? "shadow-[inset_0_0_0_1.5px_var(--lab-danger)]" : step.id === nextStepId ? "shadow-[inset_0_0_0_1.5px_var(--lab-reagent)]" : "shadow-[inset_0_0_0_1px_var(--lab-border)]"}`}
             >
               <span
                 className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-lab-surface-2 font-mono text-caption text-lab-text-dim`}

@@ -21,7 +21,7 @@ export default async function BalancePage({ searchParams }: { searchParams: Prom
   const falUsd = balance === Infinity ? await getFalCreditsUsd() : undefined;
   const labels = { TOPUP: "Crédito adicionado", SPEND: "Reserva para geração", REFUND: "Devolução de reserva" };
   const big = "font-display text-[clamp(64px,10vw,104px)] font-black uppercase leading-[.85] text-lab-reagent-bright";
-  return <div className="mx-auto flex max-w-content flex-col gap-8">
+  return <div className="mx-auto flex max-w-content flex-col gap-8 [&>div:first-child]:mb-0">
     <PageHeading title="Saldo e extrato" description="Seus créditos e o histórico de uso, centavo por centavo." />
     <section className="flex flex-col gap-3.5 rounded-sheet bg-lab-surface-1 p-6 shadow-[inset_0_0_0_1px_var(--lab-border)] md:p-8">
       {falUsd === undefined ? <><span className="lp-eyebrow">Disponível para criar</span><p className={big}>{currency(balance)}</p></> : <><span className="lp-eyebrow">Conta da equipe · gera sem saldo · crédito real na fal.ai</span><p className={big}>{falUsd === null ? "Indisponível" : falUsd.toLocaleString("en-US", { style: "currency", currency: "USD" })}</p>{falUsd !== null && <p className="font-mono text-body-sm text-lab-text-dim">≈ {currency(falUsd * videoUsdBrlRate())}</p>}</>}

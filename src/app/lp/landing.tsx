@@ -25,7 +25,7 @@ const trim = { textBox: "trim-both cap alphabetic" } as CSSProperties;
 const h2: CSSProperties = { margin: 0, fontFamily: display, fontWeight: 900, fontSize: "clamp(44px,6vw,80px)", lineHeight: 0.9, textTransform: "uppercase" };
 const lead: CSSProperties = { margin: 0, fontSize: 17, lineHeight: 1.55, color: T.ink2 };
 const section: CSSProperties = { maxWidth: 1280, margin: "0 auto", padding: "clamp(80px,10vw,140px) clamp(16px,4vw,40px)" };
-const pill = (extra: CSSProperties): CSSProperties => ({ display: "flex", alignItems: "center", borderRadius: 999, ...extra });
+const pill = (extra: CSSProperties): CSSProperties => ({ display: "flex", alignItems: "center", borderRadius: 999, whiteSpace: "nowrap", ...extra });
 const ctaLight: CSSProperties = { ...pill({ height: 44, padding: "0 18px", background: T.ink, color: T.bg, fontSize: 15, fontWeight: 600 }), textDecoration: "none" };
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -184,11 +184,11 @@ export function Landing() {
 
           <div style={{ position: "absolute", top: sideTop, left: 0, width: sideW, padding: "0 24px", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 14, textAlign: "right", opacity: cl((p - 0.4) / 0.1) }}>
             <span style={{ fontFamily: display, fontWeight: 900, fontSize: sideSize, lineHeight: 0.86, textTransform: "uppercase" }}>O preço<br />antes</span>
-            <span style={pill({ height: 36, padding: "0 14px", border: `1.5px solid ${T.cost}`, color: T.cost, fontFamily: mono, fontSize: 15 })}>~R$ 5,67 previsto</span>
+            <span style={pill({ height: 36, padding: mob ? "0 10px" : "0 14px", border: `1.5px solid ${T.cost}`, color: T.cost, fontFamily: mono, fontSize: mob ? 12 : 15 })}>~R$ 5,67 previsto</span>
           </div>
           <div style={{ position: "absolute", top: sideTop, right: 0, width: sideW, padding: "0 24px", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 14, opacity: cl((p - 0.5) / 0.1) }}>
             <span style={{ fontFamily: display, fontWeight: 900, fontSize: sideSize, lineHeight: 0.86, textTransform: "uppercase" }}>E o real<br />depois.</span>
-            <span style={pill({ height: 36, padding: "0 14px", background: stg === 2 ? T.cost : T.s2, color: stg === 2 ? T.onCost : T.ink2, fontFamily: mono, fontSize: 15, fontWeight: 600 })}>{stg === 2 ? "R$ 5,41 ✓ real" : "aguardando…"}</span>
+            <span style={pill({ height: 36, padding: "0 14px", background: stg === 2 ? T.cost : T.s2, color: stg === 2 ? T.onCost : T.ink2, fontFamily: mono, fontSize: mob ? 12 : 15, fontWeight: 600 })}>{stg === 2 ? "R$ 5,41 ✓ real" : "aguardando…"}</span>
           </div>
           <div style={{ position: "absolute", left: "clamp(16px,3vw,40px)", right: "clamp(16px,3vw,40px)", bottom: 20, display: "flex", alignItems: "center", gap: 12, fontFamily: mono, fontSize: 12, color: T.ink2 }}>
             <span style={{ display: "flex", alignItems: "center", gap: 6 }}><span className="lp-blink" style={{ width: 7, height: 7, borderRadius: "50%", background: T.cost }} />REC</span>
