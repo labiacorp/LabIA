@@ -112,6 +112,16 @@ describe("OAuth callback route", () => {
   });
 });
 
+describe("keyless mock mode", () => {
+  it("start then callback complete with SOCIAL_TOKEN_KEY unset", async () => {
+    vi.stubEnv("SOCIAL_TOKEN_KEY", "");
+    const { cookie, state: s } = await begin();
+    const res = await callback(req(`/api/integrations/x/callback?code=mock&state=${s}`, cookie), ctx("x"));
+    expect(location(res)).toBe("/integracoes?conectado=x");
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("start route cookie and influencer", () => {
   const sealedOf = (res: Response) => JSON.parse(openToken(decodeURIComponent(cookieOf(res)), "oauth:x"));
 

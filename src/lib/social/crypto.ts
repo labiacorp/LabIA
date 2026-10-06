@@ -1,11 +1,17 @@
 // Server-only: uses node:crypto. Never import from a client component.
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { mockEnabled } from "@/lib/provider";
 
 const VERSION = "v1";
 const TAG_LENGTH = 16;
 
+// Mock/dev only, never used in production: lets FAL_MOCK=1 (CI e2e) run without SOCIAL_TOKEN_KEY.
+// mockEnabled() is false in production, so there the real key stays required.
+const MOCK_DEV_KEY = Buffer.alloc(32, 0x4c);
+
 function key(): Buffer {
   const k = Buffer.from(process.env.SOCIAL_TOKEN_KEY ?? "", "base64");
+  if (k.length !== 32 && mockEnabled() && !process.env.SOCIAL_TOKEN_KEY?.trim()) return MOCK_DEV_KEY;
   if (k.length !== 32) throw new Error("SOCIAL_TOKEN_KEY must be 32 bytes, base64-encoded");
   return k;
 }

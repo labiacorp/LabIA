@@ -38,9 +38,22 @@ describe("token sealing", () => {
   });
 
   it("refuses to seal without a 32-byte key", () => {
+    vi.stubEnv("FAL_MOCK", "");
     vi.stubEnv("SOCIAL_TOKEN_KEY", "");
     expect(() => sealToken("x", "a")).toThrow();
     vi.stubEnv("SOCIAL_TOKEN_KEY", Buffer.alloc(16, 1).toString("base64"));
     expect(() => sealToken("x", "a")).toThrow();
+  });
+
+  it("uses a dev-only key in mock mode when the key is unset, but never in production", () => {
+    vi.stubEnv("SOCIAL_TOKEN_KEY", "");
+    vi.stubEnv("FAL_MOCK", "1");
+    vi.stubEnv("NODE_ENV", "test");
+    expect(openToken(sealToken("tok", "a"), "a")).toBe("tok");
+    vi.stubEnv("NODE_ENV", "production");
+    expect(() => sealToken("tok", "a")).toThrow();
+    vi.stubEnv("NODE_ENV", "test");
+    vi.stubEnv("SOCIAL_TOKEN_KEY", Buffer.alloc(16, 1).toString("base64")); // a set but bad key still fails
+    expect(() => sealToken("tok", "a")).toThrow();
   });
 });

@@ -136,7 +136,7 @@ export async function createPosts(input: CreateInput): Promise<{ postIds: string
   }
 
   // Due posts go out now; bundle posts with a future time are handed to the backend's own scheduler.
-  await dispatchDuePosts({ userId: input.userId });
+  await dispatchDuePosts({ userId: input.userId, limit: 3, budgetMs: 100_000 });
   return { postIds };
 }
 
@@ -159,7 +159,7 @@ export async function dispatchDuePosts(opts: { userId?: string; now?: Date; limi
       providerPostId: null,
       OR: [{ scheduledAt: { lte: now } }, { account: { backend: "bundle" } }],
     },
-    include: { account: { select: { backend: true, status: true } } },
+    include: { account: { select: { backend: true, status: true, userId: true } } },
     orderBy: { scheduledAt: "asc" },
     take: opts.limit ?? 25,
   });
@@ -182,6 +182,7 @@ export async function dispatchDuePosts(opts: { userId?: string; now?: Date; limi
     let reason: FailureReason | null = null;
     try {
       if (post.account.status !== "CONNECTED") throw new AuthExpiredError("Account not connected");
+      if (post.account.userId !== post.userId) throw new Error("Account belongs to another user"); // defense in depth: never send, never expire the account
       publisher = getPublisher(post.account.backend as Backend);
       account = await accountRef(post.accountId);
     } catch (error) {

@@ -238,6 +238,7 @@ describe.skipIf(!process.env.DATABASE_URL)("social posts core", () => {
 
   it("real backends still need the key to save tokens", async () => {
     vi.stubEnv("SOCIAL_TOKEN_KEY", "");
+    vi.stubEnv("FAL_MOCK", "");
     try {
       const user = await prisma.user.create({ data: { email: `qa-${randomUUID()}@labia.test` } });
       created.push(user.id);
@@ -246,6 +247,7 @@ describe.skipIf(!process.env.DATABASE_URL)("social posts core", () => {
       ).rejects.toThrow();
     } finally {
       vi.stubEnv("SOCIAL_TOKEN_KEY", Buffer.alloc(32, 7).toString("base64"));
+      vi.stubEnv("FAL_MOCK", "1");
     }
   });
 
@@ -336,5 +338,18 @@ describe.skipIf(!process.env.DATABASE_URL)("social posts core", () => {
       await cancelPost(who.userId, post.id);
       expect((await prisma.socialPost.findUniqueOrThrow({ where: { id: post.id } })).status).toBe("CANCELED");
     });
+  });
+
+  it("dispatch refuses a post whose account belongs to another user: refund, account untouched", async () => {
+    const a = await seed();
+    const b = await seed();
+    const post = await dueScheduled(a, { accountId: b.accountId });
+    await prisma.ledgerEntry.create({ data: { userId: a.userId, deltaBrl: -0.081, reason: "SPEND", socialPostId: post.id } });
+    const publish = vi.spyOn(MockPublisher.prototype, "publish");
+    await dispatchDuePosts({ userId: a.userId });
+    expect(publish).not.toHaveBeenCalled();
+    expect((await prisma.socialPost.findUniqueOrThrow({ where: { id: post.id } })).status).toBe("FAILED");
+    expect(await ledgerSum({ socialPostId: post.id })).toBeCloseTo(0, 4);
+    expect((await prisma.socialAccount.findUniqueOrThrow({ where: { id: b.accountId } })).status).toBe("CONNECTED");
   });
 });
