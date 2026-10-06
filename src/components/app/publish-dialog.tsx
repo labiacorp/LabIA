@@ -7,6 +7,7 @@ import { getPublishTargets, publishAction, type PublishTargets } from "@/app/(ap
 import { Button, buttonVariants } from "@/components/ui/button";
 import { CostChip } from "@/components/ui/cost-chip";
 import { Textarea } from "@/components/ui/field";
+import { costText } from "@/lib/plan";
 import { NETWORKS, textLength } from "@/lib/social/networks";
 import { hasUrl, quotePost } from "@/lib/social/pricing";
 import { saoPauloIso } from "@/lib/social/schedule";
@@ -185,7 +186,7 @@ function PublishForm({ assetId, contentId, onPending }: { assetId: string; conte
         ) : null}
         {xLink ? (
           <p className="text-caption text-lab-text-dim">
-            Posts com link no X custam mais: ~{xLinkBrl.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            Posts com link no X custam mais: ~{costText(xLinkBrl)}
           </p>
         ) : null}
       </div>

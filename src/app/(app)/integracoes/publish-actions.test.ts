@@ -74,8 +74,8 @@ describe("publishAction", () => {
   });
 
   it("maps SocialError to its message and unknown errors to the generic copy", async () => {
-    mocks.createPosts.mockRejectedValueOnce(new SocialError("Saldo insuficiente."));
-    expect(await publishAction(input)).toEqual({ error: "Saldo insuficiente." });
+    mocks.createPosts.mockRejectedValueOnce(new SocialError("Créditos insuficientes."));
+    expect(await publishAction(input)).toEqual({ error: "Créditos insuficientes." });
     mocks.createPosts.mockRejectedValueOnce(new Error("db exploded: secret"));
     const generic = await publishAction(input);
     expect(generic).toEqual({ error: "Não foi possível publicar agora. Tente novamente." });

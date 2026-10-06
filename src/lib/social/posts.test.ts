@@ -86,7 +86,7 @@ describe.skipIf(!process.env.DATABASE_URL)("social posts core", () => {
 
   it("insufficient balance is refused", async () => {
     const who = await seed(0);
-    await expect(createPosts(input(who))).rejects.toThrow(/Saldo insuficiente/);
+    await expect(createPosts(input(who))).rejects.toThrow(/Créditos insuficientes/);
     expect(await posts(who.userId)).toHaveLength(0);
   });
 
@@ -185,7 +185,7 @@ describe.skipIf(!process.env.DATABASE_URL)("social posts core", () => {
     const results = await Promise.allSettled([createPosts(input(who)), createPosts(input(who))]);
     expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
     const failed = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
-    expect(String(failed.reason.message)).toMatch(/Saldo insuficiente/);
+    expect(String(failed.reason.message)).toMatch(/Créditos insuficientes/);
     expect(await posts(who.userId)).toHaveLength(1);
   });
 

@@ -1,6 +1,7 @@
 import { Prisma } from "@/generated/prisma/client";
 import type { SocialPostStatus } from "@/generated/prisma/enums";
 import { hasUnlimitedBalance } from "@/lib/ledger";
+import { balanceText, costText } from "@/lib/plan";
 import { prisma } from "@/lib/prisma";
 import { accountRef } from "./accounts";
 import { SocialError } from "./errors";
@@ -105,7 +106,7 @@ export async function createPosts(input: CreateInput): Promise<{ postIds: string
       const { _sum } = await tx.ledgerEntry.aggregate({ where: { userId: input.userId }, _sum: { deltaBrl: true } });
       const balance = num(_sum.deltaBrl);
       if (!hasUnlimitedBalance(me?.email) && balance + 1e-9 < priced.totalBrl)
-        throw new SocialError(`Saldo insuficiente: você tem R$ ${balance.toFixed(2)} e precisa de R$ ${priced.totalBrl.toFixed(2)}.`);
+        throw new SocialError(`Créditos insuficientes: você tem ${balanceText(balance)} e precisa de ${costText(priced.totalBrl)}.`);
       const ids: string[] = [];
       for (const account of accounts) {
         const cost = costOf.get(account.id)!;
