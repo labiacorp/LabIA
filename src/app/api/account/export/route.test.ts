@@ -26,4 +26,13 @@ describe("private account export", () => {
     expect(response.headers.get("content-disposition")).toContain("attachment");
     expect((await response.json()).account.name).toBe("Ana");
   });
+  it("never selects social tokens, whatever else is added to the export", async () => {
+    mocks.auth.mockResolvedValue({ user: { id: "owner" } });
+    mocks.find.mockResolvedValue({ name: "Ana" });
+    await GET();
+    const keys = (node: unknown): string[] =>
+      node && typeof node === "object" ? Object.entries(node).flatMap(([key, value]) => [key, ...keys(value)]) : [];
+    const selected = keys(mocks.find.mock.calls[0][0].select);
+    for (const forbidden of ["accessToken", "refreshToken", "tokenExpiresAt", "socialAccounts"]) expect(selected).not.toContain(forbidden);
+  });
 });
