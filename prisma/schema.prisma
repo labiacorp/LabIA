@@ -52,6 +52,33 @@ enum UserRole {
   OWNER
 }
 
+enum SocialNetwork {
+  X
+  INSTAGRAM
+  TIKTOK
+  LINKEDIN
+  THREADS
+  YOUTUBE
+  FACEBOOK
+  BLUESKY
+}
+
+enum SocialAccountStatus {
+  CONNECTED
+  EXPIRED
+  ERROR
+  DISCONNECTED
+}
+
+enum SocialPostStatus {
+  SCHEDULED
+  PUBLISHING
+  PUBLISHED
+  FAILED
+  CANCELED
+  UNKNOWN
+}
+
 enum LedgerReason {
   TOPUP
   SPEND
@@ -88,6 +115,9 @@ model User {
   ledger      LedgerEntry[]
   apiTokens   ApiToken[]
   templates ContentTemplate[]
+  socialAccounts SocialAccount[]
+  socialTenants SocialTenant[]
+  socialPosts SocialPost[]
   referralCode String? @unique @map("referral_code")
   referredById String? @map("referred_by_id")
   referredBy User? @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
@@ -112,6 +142,7 @@ model Influencer {
   contents        Content[]
   steps           Step[]
   assets          Asset[]
+  socialAccounts  SocialAccount[]
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
@@ -132,6 +163,7 @@ model Content {
   status       ContentStatus @default(IDEA)
   steps        Step[]
   assets       Asset[]
+  socialPosts  SocialPost[]
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
 
@@ -194,6 +226,7 @@ model Asset {
   width        Int?
   height       Int?
   durationSec  Float?      @map("duration_sec")
+  socialPosts  SocialPost[]
   createdAt    DateTime    @default(now()) @map("created_at")
 
   @@index([userId, createdAt])
@@ -249,6 +282,8 @@ model LedgerEntry {
   reason    LedgerReason
   stepId    String?      @map("step_id")
   step      Step?        @relation(fields: [stepId], references: [id], onDelete: SetNull)
+  socialPostId String?     @map("social_post_id")
+  socialPost SocialPost?   @relation(fields: [socialPostId], references: [id], onDelete: SetNull)
   note      String?
   createdAt DateTime     @default(now()) @map("created_at")
 
@@ -313,4 +348,80 @@ model EmailToken {
   createdAt DateTime @default(now()) @map("created_at")
   @@index([userId, purpose])
   @@map("email_tokens")
+}
+
+// A social account a user connected, so LabIA can publish to it. Tokens are sealed by src/lib/social/crypto.ts
+// and are null for aggregator (bundle.social) accounts, whose credentials live at the aggregator.
+model SocialAccount {
+  id String @id @default(cuid())
+  userId String @map("user_id")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  influencerId String? @map("influencer_id")
+  influencer Influencer? @relation(fields: [influencerId], references: [id], onDelete: SetNull)
+  network SocialNetwork
+  // "x" | "bundle" | "mock"
+  backend String
+  // The id on the network (X user id) or at the aggregator. One LabIA owner per external account.
+  providerAccountId String @map("provider_account_id")
+  handle String
+  displayName String? @map("display_name")
+  avatarUrl String? @map("avatar_url")
+  status SocialAccountStatus @default(CONNECTED)
+  accessToken String? @map("access_token")
+  refreshToken String? @map("refresh_token")
+  tokenExpiresAt DateTime? @map("token_expires_at")
+  scopes String?
+  connectedAt DateTime @default(now()) @map("connected_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  posts SocialPost[]
+  @@unique([backend, providerAccountId])
+  @@index([userId, network])
+  @@map("social_accounts")
+}
+
+// Aggregator-side grouping (a bundle.social team) per user and backend.
+model SocialTenant {
+  id String @id @default(cuid())
+  userId String @map("user_id")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  backend String
+  externalId String @map("external_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  @@unique([userId, backend])
+  @@map("social_tenants")
+}
+
+// One post to one account, now or scheduled. The estimate is reserved in the ledger when the post is created.
+model SocialPost {
+  id String @id @default(cuid())
+  userId String @map("user_id")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId String @map("account_id")
+  account SocialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  contentId String? @map("content_id")
+  content Content? @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  assetId String? @map("asset_id")
+  asset Asset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  text String
+  aiLabel Boolean @default(true) @map("ai_label")
+  scheduledAt DateTime @map("scheduled_at")
+  timezone String @default("America/Sao_Paulo")
+  status SocialPostStatus @default(SCHEDULED)
+  // One per (intent, account): a repeated submit returns the existing post and charges nothing.
+  operationKey String @unique @map("operation_key")
+  // Set when the status becomes PUBLISHING.
+  claimedAt DateTime? @map("claimed_at")
+  providerPostId String? @map("provider_post_id")
+  url String?
+  publishedAt DateTime? @map("published_at")
+  estimatedCostBrl Decimal @map("estimated_cost_brl") @db.Decimal(12, 4)
+  actualCostBrl Decimal? @map("actual_cost_brl") @db.Decimal(12, 4)
+  // Controlled PT-BR copy, never raw provider text.
+  error String?
+  ledger LedgerEntry[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@index([status, scheduledAt])
+  @@index([userId, createdAt])
+  @@map("social_posts")
 }
