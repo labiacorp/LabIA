@@ -1,6 +1,6 @@
 # LabIA
 
-Content pipeline for AI influencers, pay-per-use, with the cost shown before and after every generation (Next.js 16, Neon, Prisma 7, Auth.js, fal.ai). First product of a larger all-in-one; the goal now is to validate niche and business model. Owner: Felipe Zilli. Diego Pozzer: market and distribution.
+Content pipeline for AI influencers, sold as one monthly subscription (R$ 49,90) that grants credits; every generation shows its credit cost before and after (Next.js 16, Neon, Prisma 7, Auth.js, fal.ai). First product of a larger all-in-one; the goal now is to validate niche and business model. Owner: Felipe Zilli. Diego Pozzer: market and distribution.
 
 This file is identical to `AGENTS.md` (read by Codex). Edit one, mirror the other.
 
@@ -11,7 +11,7 @@ This file is identical to `AGENTS.md` (read by Codex). Edit one, mirror the othe
 - Branches: `main` is production (every push deploys); founders work and push straight to `main` (the `dev` branch rule is retired). Task branches `diego/<task>` / `felipe/<task>` are optional and merge into `main`.
 - Autonomy: work freely on `main` without asking: commit, push, merge task branches, pull/rebase, delete dead code and run mock (`FAL_MOCK=1`) flows. Before pushing run `npm run typecheck`, `npm run lint`, `npx vitest run` and `npm run build`. Still confirm first: a real paid call above R$ 5 (show the R$ estimate first, the real cost after) and destructive operations on real data.
 - Work in small blocks and commit at the end of each one. Commit with explicit paths, never `git add -A`.
-- Money-moving server actions recompute the price on the server.
+- Money-moving server actions recompute the price on the server. The ledger stays in reais of provider cost; the UI shows credits (`src/lib/plan.ts` holds price, credits per month and the credit value).
 - "It works" only after running it (test or real call). UI changes: check them in the browser at about 390px and desktop.
 - Before calling any UI done, run it through `PRODUCT_REVIEW_LENS.md` (look at the screenshot first).
 - UI/UX: follow the design reference in `design/reference/` (Claude Design handoff: `LabIA Design System.dc.html`, `LabIA Telas.dc.html`, `LabIA Telas - Casa e Acesso.dc.html`, `LabIA Header.dc.html`, tokens and components in `handoff/`, application map and copy rules in `handoff/MAPA-DE-APLICACAO.md`). The current build is too generic: improve layouts, states (loading, empty, error), header with the cost chip and mobile sheet, and PT-BR copy using it. It was drawn for an earlier information architecture (projects and flows), so adapt it to Influencers > Content > Steps instead of copying screens literally. Keep colors, type and spacing in the tokens so a later rebrand stays a token change. To view the mockups: `python3 -m http.server 4100 --directory design/reference` and open the `.dc.html` files.

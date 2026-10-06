@@ -18,8 +18,8 @@ When a pattern is already solved well, match its shape instead of inventing one:
 4. **Consistency**: reuse an existing pattern (button, chip, row, sheet) before inventing a new one.
 5. **The demo test**: shown to an investor or a first-time user, would any part look unfinished or need a "sorry, that part is rough"?
 6. **Empty, loading and error states**: every list, form and action has all three, not only the happy path.
-7. **Money (LabIA-specific)**: is the price shown before the action and the real cost after? Green is only for what costs money. A failed generation shows the refund. Never "R$ 0" for an unknown cost ("A calcular").
-8. **Copy**: PT-BR, short, says what happens next. No jargon, no "credits" (it is reais).
+7. **Money (LabIA-specific)**: is the credit cost shown before the action and the real cost after? Reais appear only for the subscription price. Green is only for what costs money. A failed generation shows the refund. Never "0" for an unknown cost ("A calcular").
+8. **Copy**: PT-BR, short, says what happens next. No jargon. Generations cost "créditos"; the plan costs reais.
 
 ## How to apply
 
