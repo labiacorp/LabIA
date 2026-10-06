@@ -35,8 +35,20 @@ export function InfluencerStudio({ influencers, history, initialBuilderOpen = fa
   const [motionState, motionAction, motionPending] = useActionState(createStudioMotion, {});
   const dialog = useRef<HTMLDialogElement>(null);
   const nameInput = useRef<HTMLInputElement>(null);
+  const scroller = useRef<HTMLDivElement>(null);
+  // One group open at a time; picking a single-choice option opens the next one, so the panel needs almost no scrolling.
+  const [openGroup, setOpenGroup] = useState<string | null>(STUDIO_GROUPS[0].id);
   const readyInfluencers = influencers.filter((item) => item.hasFace);
   const motion = MOTION_PRESETS.find((item) => item.id === motionId)!;
+
+  useEffect(() => {
+    if (!openGroup) return;
+    const group = document.getElementById(`studio-group-${openGroup}`);
+    const box = scroller.current;
+    if (!group || !box) return;
+    if (box.scrollHeight > box.clientHeight) box.scrollTo({ top: group.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - 8, behavior: "smooth" });
+    else group.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [openGroup]);
 
   useEffect(() => {
     if (preview) dialog.current?.showModal();
@@ -49,6 +61,21 @@ export function InfluencerStudio({ influencers, history, initialBuilderOpen = fa
     setMode("character"); setMobileOpen(true); setPreview(null);
     nameInput.current?.focus();
     document.getElementById("studio-builder")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function pick(group: string, value: string, index: number) {
+    if (!STUDIO_MULTI_GROUPS.has(group) && selections[group] !== value) setOpenGroup(STUDIO_GROUPS[index + 1]?.id ?? "personal");
+    setSelections((current) => {
+      const next = { ...current };
+      if (STUDIO_MULTI_GROUPS.has(group)) {
+        const previous = selectionValues(current[group]);
+        const values = previous.includes(value) ? previous.filter((item) => item !== value) : [...previous, value];
+        if (values.length) next[group] = values;
+        else delete next[group];
+      } else if (next[group] === value) delete next[group];
+      else next[group] = value;
+      return next;
+    });
   }
 
   function randomize() {
@@ -77,7 +104,7 @@ export function InfluencerStudio({ influencers, history, initialBuilderOpen = fa
         </div>
         {mode === "character" ? (
           <form id="character-panel" role="tabpanel" aria-labelledby="character-mode" action={characterAction} aria-busy={characterPending} className="studio-form">
-            <div className="studio-panel-scroll">
+            <div ref={scroller} className="studio-panel-scroll">
               <div className="studio-brief">
                 <div className="flex items-center gap-2 text-body-sm font-medium"><Sparkles size={16} />Quem você vai criar?</div>
                 <Field label="Nome" htmlFor="studio-name"><Input ref={nameInput} id="studio-name" name="name" required maxLength={60} placeholder="Nome do influencer" value={brief.name} onChange={(e) => setBrief({ ...brief, name: e.target.value })} /></Field>
@@ -88,31 +115,24 @@ export function InfluencerStudio({ influencers, history, initialBuilderOpen = fa
               </div>
               <input type="hidden" name="selections" value={JSON.stringify(selections)} />
               {STUDIO_GROUPS.map((category, index) => (
-                <details key={category.id} className="studio-category" open={index === 0}>
-                  <summary><span>{category.label}<small> · {category.options.length}</small></span><ChevronDown size={16} /></summary>
+                <details key={category.id} id={`studio-group-${category.id}`} className="studio-category" open={openGroup === category.id} data-chosen={selections[category.id] ? "true" : undefined}>
+                  <summary onClick={(event) => { event.preventDefault(); setOpenGroup(openGroup === category.id ? null : category.id); }}>
+                    <span>{category.label}<small> · {category.options.length}</small></span>
+                    <span className="studio-chosen">{selections[category.id] ? <><Check size={14} aria-hidden />{selectionValues(selections[category.id]).map((value) => category.options.find((option) => option.value === value)?.label).join(" · ")}</> : null}</span>
+                    <ChevronDown size={16} />
+                  </summary>
                   <div className={category.id === "character" ? "studio-character-types" : "studio-options"} role="group" aria-label={category.label}>
                     {category.options.map((option) => (
-                      <button type="button" key={option.value} aria-pressed={selectionValues(selections[category.id]).includes(option.value)} onClick={() => setSelections((current) => {
-                        const next = { ...current };
-                        if (STUDIO_MULTI_GROUPS.has(category.id)) {
-                          const previous = selectionValues(current[category.id]);
-                          const values = previous.includes(option.value) ? previous.filter((value) => value !== option.value) : [...previous, option.value];
-                          if (values.length) next[category.id] = values;
-                          else delete next[category.id];
-                        } else if (next[category.id] === option.value) delete next[category.id];
-                        else next[category.id] = option.value;
-                        return next;
-                      })}>
+                      <button type="button" key={option.value} aria-pressed={selectionValues(selections[category.id]).includes(option.value)} onClick={() => pick(category.id, option.value, index)}>
                         {category.id === "character" ? <span aria-hidden className={`studio-type-icon studio-type-${option.value.toLowerCase()}`}><UserRound size={32} /></span> : null}
                         {option.label}{selectionValues(selections[category.id]).includes(option.value) ? <Check size={12} aria-hidden /> : null}
                       </button>
                     ))}
                   </div>
-                  {selections[category.id] ? <span className="studio-selection-caption">{selectionValues(selections[category.id]).map((value) => category.options.find((option) => option.value === value)?.label).join(" · ")}</span> : null}
                 </details>
               ))}
-              <details className="studio-category">
-                <summary><span>Seu toque pessoal</span><ChevronDown size={16} /></summary>
+              <details id="studio-group-personal" className="studio-category" open={openGroup === "personal"}>
+                <summary onClick={(event) => { event.preventDefault(); setOpenGroup(openGroup === "personal" ? null : "personal"); }}><span>Seu toque pessoal</span><ChevronDown size={16} /></summary>
                 <div className="grid gap-4 px-3 pb-4">
                   <Field label="Assinatura visual" htmlFor="studio-signature"><Textarea id="studio-signature" name="visualSignature" maxLength={300} rows={3} value={brief.visualSignature} onChange={(e) => setBrief({ ...brief, visualSignature: e.target.value })} placeholder="O detalhe que sempre acompanha o personagem" /></Field>
                   <Field label="Personalidade" htmlFor="studio-persona"><Textarea id="studio-persona" name="persona" maxLength={400} rows={3} value={brief.persona} onChange={(e) => setBrief({ ...brief, persona: e.target.value })} placeholder="Como pensa, fala e se comporta" /></Field>
