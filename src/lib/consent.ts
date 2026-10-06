@@ -5,7 +5,7 @@
 // update LEGAL_UPDATED_AT with it. Accounts keep the version they accepted, so a re-consent can target
 // them. Nothing derives this from the text: editing the pages without bumping it means every account
 // silently reads as having accepted the new wording.
-export const CURRENT_TERMS_VERSION = "2026-10";
+export const CURRENT_TERMS_VERSION = "2026-10-06"; // subscription and credits (section 5)
 export const LEGAL_UPDATED_AT = "outubro de 2026";
 
 // The form field the sign-up checkbox and its server action share. Here, not in a client component:
