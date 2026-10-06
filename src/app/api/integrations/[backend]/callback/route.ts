@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { NextResponse, type NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
+import { redirectTo, socialOrigin } from "../../origin";
 import { requireOwner } from "@/lib/owner";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/session";
@@ -16,13 +17,20 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const userId = await requireUserId();
   if (backend === "bundle") await requireOwner();
 
-  const origin = process.env.NODE_ENV === "production" && process.env.LABIA_PUBLIC_URL ? process.env.LABIA_PUBLIC_URL : request.nextUrl.origin;
+  const origin = socialOrigin(request);
   const cookieName = `labia_social_${backend}`;
   const done = (query: string) => {
-    const response = NextResponse.redirect(new URL(`/integracoes?${query}`, origin));
-    response.cookies.set(cookieName, "", { path: `/api/integrations/${backend}`, maxAge: 0 });
+    const response = redirectTo(`/integracoes?${query}`);
+    response.cookies.set(cookieName, "", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: `/api/integrations/${backend}`,
+      maxAge: 0,
+    });
     return response;
   };
+  if (!origin) return done(`erro=${backend}`);
   if (!backendReady(backend)) return done("erro=config");
 
   const sealed = request.cookies.get(cookieName)?.value;

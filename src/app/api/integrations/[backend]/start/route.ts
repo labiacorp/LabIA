@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { NextResponse, type NextRequest } from "next/server";
+import { redirectTo, socialOrigin } from "../../origin";
 import { requireOwner } from "@/lib/owner";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/session";
@@ -14,9 +15,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const userId = await requireUserId();
   if (backend === "bundle") await requireOwner();
 
-  const origin = process.env.NODE_ENV === "production" && process.env.LABIA_PUBLIC_URL ? process.env.LABIA_PUBLIC_URL : request.nextUrl.origin;
-  const back = (query: string) => NextResponse.redirect(new URL(`/integracoes?${query}`, origin));
-  if (!backendReady(backend)) return back("erro=config");
+  const origin = socialOrigin(request);
+  if (!origin || !backendReady(backend)) return redirectTo("/integracoes?erro=config");
 
   const requested = request.nextUrl.searchParams.get("influencerId");
   const influencer = requested ? await prisma.influencer.findFirst({ where: { id: requested, userId }, select: { id: true } }) : null;
@@ -34,6 +34,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     });
     return response;
   } catch {
-    return back(`erro=${backend}`);
+    return redirectTo(`/integracoes?erro=${backend}`);
   }
 }
