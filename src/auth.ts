@@ -38,6 +38,18 @@ export function isAllowed(email?: string | null) {
   return allowed.length === 0 || allowed.includes(email.toLowerCase());
 }
 
+// Closed to the public: in production only owner accounts (granted with scripts/owner.ts) sign in, on any
+// provider; nobody else can sign in or create an account. LABIA_OPEN_SIGNUP=1 reopens it. Fails closed.
+export const ownersOnly = () => process.env.NODE_ENV === "production" && process.env.LABIA_OPEN_SIGNUP !== "1";
+async function isOwnerAccount(email?: string | null, googleSub?: string) {
+  if (!email) return false;
+  const owner = await prisma.user.findFirst({
+    where: { role: "OWNER", OR: [{ email: email.toLowerCase() }, ...(googleSub ? [{ googleSub }] : [])] },
+    select: { id: true },
+  });
+  return owner !== null;
+}
+
 // Right password, address never confirmed. Thrown only after the password matched, so the hint
 // reaches the account's owner and nobody else; the login form offers to resend the link.
 class UnverifiedEmail extends CredentialsSignin {
@@ -97,6 +109,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async signIn({ account, profile, user }) {
+      if (ownersOnly()) {
+        const google = account?.provider === "google";
+        if (google && profile?.email_verified !== true) return false;
+        return isOwnerAccount(google ? profile?.email : user.email, google ? account.providerAccountId : undefined);
+      }
       // The access code (or an invite link) guards every entry point, including a direct hit on /api/auth/*.
       if (!(await admitted())) return false;
       if (account?.provider === "google") {

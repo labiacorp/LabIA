@@ -8,7 +8,7 @@ test.afterAll(() => sql`DELETE FROM invite_requests WHERE email LIKE ${prefix + 
 test("a visitor on / sees the landing page", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle(/Conteúdo para influencers de IA/);
-  await expect(page.getByRole("link", { name: "Tenho um código" }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Pedir convite" }).first()).toBeVisible();
   await expect(page.getByText("Quatro etapas. Cada uma com custo.")).toBeVisible();
   await page.getByRole("link", { name: "Entrar", exact: true }).first().click();
   await expect(page).toHaveURL(/\/(login|acesso)/);
@@ -54,13 +54,13 @@ test("on a phone there is no sideways scroll and the CTAs fit", async ({ page })
   await seesLanding(page);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);
-  await expect(page.getByRole("link", { name: "Tenho um código" }).first()).toBeInViewport();
+  await expect(page.getByRole("link", { name: "Pedir convite" }).first()).toBeInViewport();
 });
 
 test("the landing links go to real pages", async ({ page, request }) => {
   await seesLanding(page);
   const hrefs = await page.locator("a[href^='/']").evaluateAll((els) => [...new Set(els.map((e) => e.getAttribute("href")!))]);
-  expect(hrefs).toEqual(expect.arrayContaining(["/login", "/acesso", "/termos", "/privacidade"]));
+  expect(hrefs).toEqual(expect.arrayContaining(["/login", "/termos", "/privacidade"]));
   for (const href of hrefs) expect((await request.get(href)).status(), href).toBeLessThan(400);
   for (const id of ["como", "preco", "telas", "duvidas", "convite"]) await expect(page.locator(`#${id}`)).toHaveCount(1);
 });

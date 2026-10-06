@@ -44,6 +44,8 @@ Character kit = step 1 sheet (nano-banana-2, 2K, 3:2) then step 2 portraits fron
 
 ## Access
 
+**Closed to the public (2026-10-06):** in production only OWNER accounts sign in, on any provider (`ownersOnly` in `src/auth.ts`); every other Google or password sign-in is refused and password sign-up is off. The landing has no code CTA, only the invite request. `LABIA_OPEN_SIGNUP=1` reopens. Development and tests are unaffected.
+
 `LABIA_ACCESS_CODE` + `AUTH_SECRET` gate sign-in (signed cookie, 8 tries/10 min/IP in Postgres, fails closed in production when unset); the check also runs in the Auth.js `signIn` callback. `ALLOWED_EMAILS` is an optional extra restriction.
 
 ## Accounts, owners and e-mail (2026-10-05)

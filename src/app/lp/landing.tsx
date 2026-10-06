@@ -44,7 +44,7 @@ const faqs = (n: LandingNumbers): [string, string][] => [
   ["E se a geração falhar?", "Os créditos reservados que não foram usados voltam e aparecem no extrato. Em alguns erros do provedor a gente confere antes de devolver, o que pode levar um tempo. O que já ficou pronto nas etapas anteriores continua salvo."],
   ["Posso cancelar?", "Quando quiser, na página Plano e créditos. Não há multa e os créditos que sobraram continuam na sua conta."],
   ["Por que o custo é \"previsto\"?", "Os modelos de IA cobram pelo que realmente processam. A gente mostra a melhor estimativa antes e o valor exato depois. Quase sempre o real sai igual ou abaixo."],
-  ["Preciso de convite?", "Por enquanto, sim. O LabIA está em beta fechado: quem já usa pode te passar um código de acesso."],
+  ["Preciso de convite?", "Por enquanto, sim. O LabIA ainda não está aberto ao público. Deixe seu e-mail no fim da página e a gente avisa quando abrir."],
   ["Posso usar a imagem da influencer em qualquer rede?", "Sim, o conteúdo gerado é seu. Você só precisa seguir as regras de cada rede para conteúdo feito com IA, como a sinalização de mídia sintética."],
 ];
 
@@ -126,7 +126,7 @@ export function Landing({ numbers }: { numbers: LandingNumbers }) {
         )}
         <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
           <Link href="/login" className="lp-nav" style={{ ...pill({ height: 44, padding: "0 14px", fontSize: 15, fontWeight: 500 }), color: T.ink, textDecoration: "none" }}>Entrar</Link>
-          <Link href="/acesso" style={ctaLight} onClick={() => track("landing_cta", { place: "header" })}>Tenho um código</Link>
+          <a href="#convite" style={ctaLight} onClick={() => track("landing_cta", { place: "header" })}>Pedir convite</a>
         </span>
       </header>
 
@@ -281,7 +281,7 @@ export function Landing({ numbers }: { numbers: LandingNumbers }) {
           <div style={{ display: "flex", flexDirection: "column", fontSize: 15, borderTop: `1px solid ${T.line}` }}>
             {[["Créditos por mês", cr(plan)], ["Vídeos de 15s, mais ou menos", String(reels)], ["Cancelamento", "quando quiser"]].map(([a, b]) => <div key={a} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "12px 0", borderBottom: `1px solid ${T.line}` }}><span style={{ color: T.ink2 }}>{a}</span><span style={{ fontFamily: /\d/.test(b) ? mono : undefined }}>{b}</span></div>)}
           </div>
-          <Link href="/acesso" onClick={() => track("landing_cta", { place: "plan" })} style={{ ...pill({ height: 56, justifyContent: "center", background: T.ink, color: T.bg, fontWeight: 600, fontSize: 16 }), textDecoration: "none" }}>Tenho um código</Link>
+          <a href="#convite" onClick={() => track("landing_cta", { place: "plan" })} style={{ ...pill({ height: 56, justifyContent: "center", background: T.ink, color: T.bg, fontWeight: 600, fontSize: 16 }), textDecoration: "none" }}>Pedir convite</a>
         </div>
       </section>
 
@@ -360,8 +360,7 @@ export function Landing({ numbers }: { numbers: LandingNumbers }) {
               <button type="submit" disabled={invitePending} style={{ flex: "0 0 auto", height: 56, padding: "0 26px", border: 0, borderRadius: 999, background: T.ink, color: T.onCost, fontWeight: 600, fontSize: 16, opacity: invitePending ? 0.6 : 1 }}>Pedir convite</button>
             </div>
             {invite.error ? <span role="alert" style={{ fontSize: 14, color: T.danger }}>{invite.error}</span> : null}
-            <span style={{ fontSize: 14, color: T.ink2 }}>Já tem código? <Link href="/acesso" onClick={() => track("landing_cta", { place: "footer" })} style={{ color: T.ink }}>Entrar com código</Link> · <Link href="/login" style={{ color: T.ink }}>Já tenho conta</Link></span>
-          </form>
+                      </form>
         )}
       </section>
 

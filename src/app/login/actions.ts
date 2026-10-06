@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { AuthError, CredentialsSignin } from "next-auth";
 import { z } from "zod";
 import { cookies } from "next/headers";
-import { isAllowed, signIn } from "@/auth";
+import { isAllowed, ownersOnly, signIn } from "@/auth";
 import { hashPassword, passwordError } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { clientIp, hit, TOO_MANY_ATTEMPTS } from "@/lib/rate-limit";
@@ -67,7 +67,7 @@ export async function authenticatePassword(
   if (!email.success) return { error: "Digite um e-mail válido." };
   if (!(await admitted())) redirect("/acesso");
   if (create) {
-    if (!emailEnabled()) return { error: "O cadastro com senha ainda não está disponível." };
+    if (ownersOnly() || !emailEnabled()) return { error: "O LabIA ainda não está aberto para novas contas." };
     const invalid = passwordError(password);
     if (invalid) return { error: invalid };
     if (form.get(CONSENT_FIELD) !== "on")
