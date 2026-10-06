@@ -12,6 +12,8 @@ Next.js 16 (App Router, Server Actions) + TypeScript + Tailwind 4 (legacy `tailw
 
 ## Screens (`src/app`)
 
+`/` shows the landing (`src/app/lp`, Claude Design 2026-10-05) to visitors without a session cookie (rewrite in `next.config.ts`); signed-in users get the studio. No invite-request backend yet: CTAs go to `/acesso` and `/login`.
+
 `/acesso` (shared access code), `/login`, `/painel` (dashboard), `/conta` (profile/photo/bio and effective format/view preferences, owned usage totals, balance, rolling 30-day net reservations, private JSON export), `/conta/seguranca` (e-mail, password, Google status, sign out everywhere, delete account), `/admin` (owners only), `/verificar-email`, `/esqueci-senha`, `/redefinir-senha/[token]`, `/termos`, `/privacidade`, `/consentimento`, `/influenciadores` (owned character list and search), `/conteudos` (owned production list, 24-item pages, search, character/status filters and reversible archives), `/conteudos/novo` (free draft creation with owned character and 9:16/16:9/1:1 format), `/saldo` (available balance and latest 100 ledger entries), `/biblioteca` (global owned media, filters, 24-item pages, details and downloads), `/conexoes` (read-only integration readiness), `/` (primary influencer studio: appearance builder, presets/sheet previews, owned characters, motion briefs, history), `/influencers/new` (redirect to studio), `/i/[id]` (tabs: Conteúdos, Personagem, Biblioteca, Perfil), `/i/[id]/c/[contentId]` (editable title/brief when no generation is running, free script, pipeline steps/canvas, final review and downloads). API: authenticated `GET /api/assets/[id]/download`, `POST /api/influencers/[id]/refresh` (polls running jobs), `/api/auth/*`.
 
 ## Reusable drafts and referrals
