@@ -157,6 +157,17 @@ describe("XPublisher publish", () => {
     expect(calls.some((c) => c.url.endsWith("/2/tweets"))).toBe(false);
   });
 
+  it("fails platform_error when a STATUS response has no processing_info", async () => {
+    vi.useFakeTimers();
+    queue.push(json(200, { data: { id: "v1" } }));
+    queue.push(json(200, {}));
+    queue.push(json(200, { data: { id: "v1", processing_info: { state: "pending", check_after_secs: 1 } } }));
+    queue.push(json(200, { data: { id: "v1" } }));
+    const p = x.publish(input({ media: media("VIDEO", 1000) }));
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(await p).toEqual({ state: "failed", reason: "platform_error" });
+  });
+
   it("fails platform_error when processing takes longer than 120 s", async () => {
     vi.useFakeTimers();
     queue.push(json(200, { data: { id: "v1" } }));

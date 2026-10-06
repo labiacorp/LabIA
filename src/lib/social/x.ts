@@ -15,6 +15,25 @@ class UploadFailure extends Error {
   }
 }
 
+type XBody = {
+  error?: unknown;
+  access_token?: unknown;
+  refresh_token?: unknown;
+  expires_in?: unknown;
+  scope?: unknown;
+  media_id_string?: unknown;
+  data?: {
+    id?: unknown;
+    username?: unknown;
+    name?: unknown;
+    profile_image_url?: unknown;
+    media_id_string?: unknown;
+    processing_info?: { state?: unknown; check_after_secs?: unknown };
+  };
+};
+
+const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
+
 const b64url = (buf: Buffer) => buf.toString("base64url");
 
 function basicAuth(): string {
@@ -27,9 +46,9 @@ function request(url: string, init: RequestInit = {}): Promise<Response> {
   return fetch(url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) });
 }
 
-async function readJson(res: Response): Promise<any> {
+async function readJson(res: Response): Promise<XBody> {
   try {
-    return await res.json();
+    return (await res.json()) as XBody;
   } catch {
     return {};
   }
@@ -43,7 +62,7 @@ async function tokenRequest(params: Record<string, string>): Promise<TokenSet> {
   });
   const body = await readJson(res);
   if (!res.ok) {
-    if (res.status === 400 && body?.error === "invalid_grant") throw new AuthExpiredError("X authorization expired");
+    if (res.status === 400 && body.error === "invalid_grant") throw new AuthExpiredError("X authorization expired");
     throw new Error(`X token request failed (${res.status})`);
   }
   if (typeof body.access_token !== "string") throw new Error("X token response invalid");
@@ -65,7 +84,7 @@ function uploadFailureFor(status: number): FailureReason {
   return "platform_error";
 }
 
-async function uploadCall(account: AccountRef, path: string, init: RequestInit): Promise<any> {
+async function uploadCall(account: AccountRef, path: string, init: RequestInit): Promise<XBody> {
   let res: Response;
   try {
     res = await request(`${API}${path}`, { ...init, headers: { ...bearer(account), ...(init.headers as Record<string, string> | undefined) } });
@@ -76,9 +95,9 @@ async function uploadCall(account: AccountRef, path: string, init: RequestInit):
   return readJson(res);
 }
 
-const mediaId = (body: any): string => {
-  const id = body?.data?.id ?? body?.data?.media_id_string ?? body?.media_id_string;
-  if (typeof id !== "string" || !id) throw new UploadFailure("platform_error");
+const mediaId = (body: XBody): string => {
+  const id = str(body.data?.id) ?? str(body.data?.media_id_string) ?? str(body.media_id_string);
+  if (!id) throw new UploadFailure("platform_error");
   return id;
 };
 
@@ -107,7 +126,7 @@ async function uploadVideo(account: AccountRef, media: MediaRef): Promise<string
     await uploadCall(account, `/media/upload/${id}/append`, { method: "POST", body: form });
   }
   const fin = await uploadCall(account, `/media/upload/${id}/finalize`, { method: "POST" });
-  let info = fin?.data?.processing_info;
+  let info = fin.data?.processing_info;
   let waited = 0;
   while (info && info.state !== "succeeded") {
     if (info.state === "failed") throw new UploadFailure("media_rejected");
@@ -116,7 +135,8 @@ async function uploadVideo(account: AccountRef, media: MediaRef): Promise<string
     await sleep(wait * 1000);
     waited += wait;
     const status = await uploadCall(account, `/media/upload?command=STATUS&media_id=${encodeURIComponent(id)}`, { method: "GET" });
-    info = status?.data?.processing_info;
+    info = status.data?.processing_info;
+    if (!info) throw new UploadFailure("platform_error");
   }
   return id;
 }
@@ -159,9 +179,11 @@ export class XPublisher implements Publisher {
     });
     const res = await request(`${API}/users/me?user.fields=profile_image_url`, { headers: { Authorization: `Bearer ${tokens.accessToken}` } });
     if (!res.ok) throw new Error(`X profile request failed (${res.status})`);
-    const me = (await readJson(res))?.data;
-    if (!me?.id || !me?.username) throw new Error("X profile response invalid");
-    return [{ network: "X", providerAccountId: String(me.id), handle: String(me.username), displayName: me.name ?? undefined, avatarUrl: me.profile_image_url ?? undefined, tokens }];
+    const me = (await readJson(res)).data;
+    const id = str(me?.id);
+    const handle = str(me?.username);
+    if (!id || !handle) throw new Error("X profile response invalid");
+    return [{ network: "X", providerAccountId: id, handle, displayName: str(me?.name), avatarUrl: str(me?.profile_image_url), tokens }];
   }
 
   refresh(refreshToken: string): Promise<TokenSet> {
@@ -194,8 +216,8 @@ export class XPublisher implements Publisher {
     if (res.status === 403 || res.status === 400) return { state: "failed", reason: "text_rejected" };
     if (res.status >= 500) return { state: "unknown" };
     if (!res.ok) return { state: "failed", reason: "platform_error" };
-    const id = (await readJson(res))?.data?.id;
-    if (typeof id !== "string" || !id) return { state: "unknown" };
+    const id = str((await readJson(res)).data?.id);
+    if (!id) return { state: "unknown" };
     return { state: "published", providerPostId: id, url: `https://x.com/${account.handle}/status/${id}` };
   }
 
