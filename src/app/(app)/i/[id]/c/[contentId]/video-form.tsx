@@ -9,7 +9,7 @@ import { CostChip } from "@/components/ui/cost-chip";
 import { Field, Select, Textarea } from "@/components/ui/field";
 import type { ContentState } from "./actions";
 
-import { costText, rateText } from "@/lib/plan";
+import { costText, DEFAULT_VIDEO, rateText } from "@/lib/plan";
 const totalPrice = { format: costText };
 const perSecond = { format: rateText };
 
@@ -40,23 +40,24 @@ type VideoFormProps = {
   options: VideoFormOption[];
 };
 
-const DEFAULT_VIDEO_MODEL = "minimax/h3-max-turbo/image-to-video";
 export function VideoForm({ action, intent, prompt, balanceBrl, blockedReason, options }: VideoFormProps) {
   const [state, formAction, pending] = useActionState(action, {});
 
-  const [quality, setQuality] = useState("720p");
+  const [quality, setQuality] = useState<string>(DEFAULT_VIDEO.resolution);
   function preferredIndex(item: VideoFormOption, resolution: string, audio?: boolean) {
     const match = (config: VideoFormOption["configurations"][number]) => config.resolution === resolution && (audio === undefined || config.audio === audio);
-    const standard = item.configurations.findIndex((config) => match(config) && config.duration === 5);
+    // The default model opens on the plan's 15s clip; other models on their 5s standard.
+    const usual = item.model === DEFAULT_VIDEO.model ? DEFAULT_VIDEO.duration : 5;
+    const standard = item.configurations.findIndex((config) => match(config) && config.duration === usual);
     if (standard >= 0) return standard;
     const sameAudio = item.configurations.findIndex(match);
     if (sameAudio >= 0) return sameAudio;
-    const sameDuration = item.configurations.findIndex((config) => config.resolution === resolution && config.duration === 5);
+    const sameDuration = item.configurations.findIndex((config) => config.resolution === resolution && config.duration === usual);
     return sameDuration >= 0 ? sameDuration : item.configurations.findIndex((config) => config.resolution === resolution);
   }
   const availableOptions = options;
   // MiniMax is what most people use, so it is the default pick; the Kling reel and the rest stay one tap away.
-  const firstAvailable = availableOptions.find((item) => item.model === DEFAULT_VIDEO_MODEL && preferredIndex(item, quality) >= 0) ?? availableOptions.find((item) => preferredIndex(item, quality) >= 0);
+  const firstAvailable = availableOptions.find((item) => item.model === DEFAULT_VIDEO.model && preferredIndex(item, quality) >= 0) ?? availableOptions.find((item) => preferredIndex(item, quality) >= 0);
   const [selection, setSelection] = useState({ key: firstAvailable?.key ?? "", index: firstAvailable ? preferredIndex(firstAvailable, quality) : 0 });
   const option = availableOptions.find((item) => item.key === selection.key) ?? firstAvailable;
   const configurations = option?.configurations ?? [];

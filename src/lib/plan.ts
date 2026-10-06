@@ -16,3 +16,6 @@ export const costText = (brl: number) => creditsText(costCredits(brl));
 export const balanceText = (brl: number) => creditsText(balanceCredits(brl));
 // Per-unit rates (per second, per image) can be fractions of a credit.
 export const rateText = (brl: number) => `${(brl / CREDIT_BRL).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} créditos`;
+
+// The default video the plan is sized on and the video form opens with: one native 15s clip.
+export const DEFAULT_VIDEO = { model: "minimax/h3-max-turbo/image-to-video", resolution: "768p", duration: 15 } as const;
