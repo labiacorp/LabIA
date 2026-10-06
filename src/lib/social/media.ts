@@ -16,7 +16,7 @@ export async function assetMedia(userId: string, assetId: string): Promise<Media
     publicUrl: providerMediaUrl(asset),
     async read() {
       if (asset.storageKey) return readReference(asset.storageKey);
-      const res = await fetch(asset.url);
+      const res = await fetch(asset.url, { signal: AbortSignal.timeout(30_000) });
       if (!res.ok) throw new Error("Media unavailable");
       return new Uint8Array(await res.arrayBuffer());
     },

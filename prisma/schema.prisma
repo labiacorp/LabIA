@@ -247,6 +247,7 @@ model LedgerEntry {
   createdAt DateTime     @default(now()) @map("created_at")
 
   @@index([userId, createdAt])
+  @@index([socialPostId])
   @@map("ledger_entries")
 }
 
@@ -382,5 +383,6 @@ model SocialPost {
   updatedAt DateTime @updatedAt @map("updated_at")
   @@index([status, scheduledAt])
   @@index([userId, createdAt])
+  @@index([accountId])
   @@map("social_posts")
 }

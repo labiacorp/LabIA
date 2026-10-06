@@ -3,6 +3,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 
 import { prisma } from "../prisma";
 import { saveConnectedAccounts } from "./accounts";
+import { sealToken } from "./crypto";
 import { MockPublisher } from "./mock";
 import { AuthExpiredError } from "./publisher";
 import { applyOutcome, cancelPost, createPosts, disconnectAccount, dispatchDuePosts, FAILURE_COPY, SocialError } from "./posts";
@@ -10,6 +11,7 @@ import { applyOutcome, cancelPost, createPosts, disconnectAccount, dispatchDuePo
 // Database tests: seed their own users and delete them in afterAll (cascade removes accounts, posts and ledger).
 const created: string[] = [];
 const MIN = 60_000;
+const TOKENS = { accessToken: "a", refreshToken: "r", expiresAt: new Date(Date.now() + 120 * MIN) };
 
 async function seed(balanceBrl = 10) {
   const user = await prisma.user.create({ data: { email: `qa-${randomUUID()}@labia.test` } });
@@ -168,7 +170,7 @@ describe.skipIf(!process.env.DATABASE_URL)("social posts core", () => {
 
   it("an expired refresh marks the account expired", async () => {
     const who = await seed();
-    await prisma.socialAccount.update({ where: { id: who.accountId }, data: { tokenExpiresAt: new Date(Date.now() - MIN) } });
+    await prisma.socialAccount.update({ where: { id: who.accountId }, data: { tokenExpiresAt: new Date(Date.now() - MIN), refreshToken: sealToken("r", who.accountId) } });
     vi.spyOn(MockPublisher.prototype, "refresh").mockRejectedValue(new AuthExpiredError("invalid_grant"));
     const { postIds } = await createPosts(input(who));
     const post = await prisma.socialPost.findUniqueOrThrow({ where: { id: postIds[0] } });
@@ -217,5 +219,122 @@ describe.skipIf(!process.env.DATABASE_URL)("social posts core", () => {
     const after = await prisma.socialAccount.findUniqueOrThrow({ where: { id: a.accountId } });
     expect(after.userId).toBe(a.userId);
     expect(after.handle).toBe("qa");
+  });
+
+  it("mock mode works without SOCIAL_TOKEN_KEY and stores no tokens", async () => {
+    vi.stubEnv("SOCIAL_TOKEN_KEY", "");
+    try {
+      const who = await seed();
+      const account = await prisma.socialAccount.findUniqueOrThrow({ where: { id: who.accountId } });
+      expect(account.accessToken).toBeNull();
+      expect(account.refreshToken).toBeNull();
+      expect(account.tokenExpiresAt).toBeNull();
+      const { postIds } = await createPosts(input(who));
+      expect((await prisma.socialPost.findUniqueOrThrow({ where: { id: postIds[0] } })).status).toBe("PUBLISHED");
+    } finally {
+      vi.stubEnv("SOCIAL_TOKEN_KEY", Buffer.alloc(32, 7).toString("base64"));
+    }
+  });
+
+  it("real backends still need the key to save tokens", async () => {
+    vi.stubEnv("SOCIAL_TOKEN_KEY", "");
+    try {
+      const user = await prisma.user.create({ data: { email: `qa-${randomUUID()}@labia.test` } });
+      created.push(user.id);
+      await expect(
+        saveConnectedAccounts(user.id, "x", [{ network: "X", providerAccountId: randomUUID(), handle: "q", tokens: TOKENS }]),
+      ).rejects.toThrow();
+    } finally {
+      vi.stubEnv("SOCIAL_TOKEN_KEY", Buffer.alloc(32, 7).toString("base64"));
+    }
+  });
+
+  it("budgetMs stops claiming new posts", async () => {
+    const who = await seed();
+    const first = await dueScheduled(who, { scheduledAt: new Date(Date.now() - 3 * MIN) });
+    const second = await dueScheduled(who, { scheduledAt: new Date(Date.now() - 2 * MIN) });
+    vi.spyOn(MockPublisher.prototype, "publish").mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      return { state: "published", providerPostId: "p", url: "https://example.com/p" };
+    });
+    const result = await dispatchDuePosts({ userId: who.userId, budgetMs: 5 });
+    expect(result.published).toBe(1);
+    expect((await prisma.socialPost.findUniqueOrThrow({ where: { id: first.id } })).status).toBe("PUBLISHED");
+    expect((await prisma.socialPost.findUniqueOrThrow({ where: { id: second.id } })).status).toBe("SCHEDULED");
+  });
+
+  it("an idempotent lookup is scoped to the user", async () => {
+    const a = await seed();
+    const b = await seed();
+    const intent = randomUUID();
+    await createPosts(input(a, { intentId: intent }));
+    // b guesses a's key: it must not receive a's post ids (it fails on its own account lookup instead).
+    await expect(createPosts(input(b, { intentId: intent, accountIds: [a.accountId] }))).rejects.toThrow(SocialError);
+  });
+
+  async function bundleAccount(userId: string) {
+    return prisma.socialAccount.create({
+      data: { userId, backend: "bundle", providerAccountId: randomUUID(), network: "X", handle: "bq", status: "CONNECTED" },
+    });
+  }
+
+  it("bundle accounts are owner-only in the core", async () => {
+    const who = await seed();
+    const account = await bundleAccount(who.userId);
+    const args = input(who, { accountIds: [account.id], assetId: null, expectedBrl: 0.081 });
+    await expect(createPosts(args)).rejects.toThrow("Esta rede ainda não está disponível para a sua conta.");
+    expect(await posts(who.userId)).toHaveLength(0);
+    expect(await ledgerSum({ userId: who.userId })).toBeCloseTo(10, 4);
+    await prisma.user.update({ where: { id: who.userId }, data: { role: "OWNER" } });
+    const { postIds } = await createPosts({ ...args, intentId: randomUUID() });
+    expect(postIds).toHaveLength(1);
+  });
+
+  it("a disconnected account can be re-claimed by another user; a live one cannot", async () => {
+    const a = await seed();
+    const b = await seed();
+    const providerAccountId = `mock-${randomUUID()}`;
+    const [id] = await saveConnectedAccounts(a.userId, "mock", [{ network: "X", providerAccountId, handle: "one", tokens: TOKENS }]);
+    await expect(saveConnectedAccounts(b.userId, "mock", [{ network: "X", providerAccountId, handle: "two", tokens: TOKENS }])).rejects.toThrow(SocialError);
+    await prisma.socialAccount.update({ where: { id }, data: { status: "DISCONNECTED" } });
+    const [again] = await saveConnectedAccounts(b.userId, "mock", [{ network: "X", providerAccountId, handle: "two", tokens: TOKENS }]);
+    expect(again).toBe(id);
+    const row = await prisma.socialAccount.findUniqueOrThrow({ where: { id } });
+    expect(row).toMatchObject({ userId: b.userId, handle: "two", status: "CONNECTED" });
+  });
+
+  describe("cancel of a bundle post whose time has come", () => {
+    const due = async (who: Who) => {
+      const account = await bundleAccount(who.userId);
+      await prisma.user.update({ where: { id: who.userId }, data: { role: "OWNER" } });
+      return prisma.socialPost.create({
+        data: {
+          userId: who.userId,
+          accountId: account.id,
+          text: "x",
+          scheduledAt: new Date(Date.now() - MIN),
+          providerPostId: "bundle-1",
+          operationKey: randomUUID(),
+          estimatedCostBrl: 0,
+        },
+      });
+    };
+
+    it("is refused when the backend already published it", async () => {
+      const who = await seed();
+      const post = await due(who);
+      const cancel = vi.spyOn(MockPublisher.prototype, "cancel");
+      await expect(cancelPost(who.userId, post.id)).rejects.toThrow("Esta publicação já foi enviada e não pode mais ser cancelada.");
+      expect(cancel).not.toHaveBeenCalled();
+      expect((await prisma.socialPost.findUniqueOrThrow({ where: { id: post.id } })).status).toBe("PUBLISHED");
+    });
+
+    it("proceeds when the backend says it is still scheduled", async () => {
+      const who = await seed();
+      const post = await due(who);
+      vi.spyOn(MockPublisher.prototype, "status").mockResolvedValue({ state: "scheduled", providerPostId: "bundle-1" });
+      await cancelPost(who.userId, post.id);
+      expect((await prisma.socialPost.findUniqueOrThrow({ where: { id: post.id } })).status).toBe("CANCELED");
+    });
   });
 });

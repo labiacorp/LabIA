@@ -113,6 +113,18 @@ Design and reasoning: `docs/social-integrations-design.md`. Connect a network, t
 - **Verified in mock mode only** (`FAL_MOCK=1`: unit and database tests, Playwright `tests/integrations.spec.ts` at desktop and 390px). The X adapter has not run against the real API (no X app yet); the bundle.social adapter was written from its docs and has not run against the real API (no key yet). No money spent.
 - **Founders' setup for real posts**: an X developer app (OAuth 2.0 Web App, callback `http://127.0.0.1:3000/api/integrations/x/callback` and the production domain, credits with a spending limit) with `X_CLIENT_ID` and `X_CLIENT_SECRET`; a bundle.social account and `BUNDLE_API_KEY` (plus `BUNDLE_WEBHOOK_SECRET`); `SOCIAL_TOKEN_KEY` and `CRON_SECRET` in `.env.local` and Vercel; the external scheduler above. The first real post needs Felipe's OK and a test account.
 
+### Known follow-ups
+
+- Mock and real backends can cross in a shared dev database.
+- Only one account per network is shown on the card.
+- Bundle posts are reconciled only when `/integracoes` opens (no cron reconcile), and bundle status DELETED is mapped to scheduled.
+- Account deletion disconnects before the guarded delete, and is not blocked by UNKNOWN posts.
+- An X 403 from depleted credits shows the `text_rejected` copy.
+- `made_with_ai` is unverified on the real X API.
+- No admin view for UNKNOWN social posts: manual reconciliation is by SQL today.
+- `/saldo` labels social ledger entries only "Conta LabIA".
+- e2e does not schedule a video.
+
 ## Environment
 
 Listed in `.env.example`; the social ones are `X_CLIENT_ID`, `X_CLIENT_SECRET`, `SOCIAL_TOKEN_KEY`, `BUNDLE_API_KEY`, `BUNDLE_WEBHOOK_SECRET` and `CRON_SECRET`. `DIRECT_URL` (unpooled) is used by Prisma migrations, `DATABASE_URL` (pooled) by the app. Sign-in: Google, or e-mail + password (scrypt, `users.password_hash`; signup is open unless `LABIA_ACCESS_CODE` or `ALLOWED_EMAILS` is set; min password 4 by decision until launch; the address must be confirmed before password sign-in; login and signup rate-limited). The passwordless e-mail login exists only when `NODE_ENV=development`.
@@ -121,7 +133,7 @@ Databases (Neon, org LabIA): "LabIA Prod" (green-pine-20802172, single branch `p
 
 ## Run and check
 
-`npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (165 tests; the money-path ones run against the database with their own seeded user, deleted afterwards), `npm run build`, `npm run test:e2e` (Playwright, 14 tests x desktop and 390px; starts its own `next dev` on port 3100 with `FAL_MOCK=1` and `AUTH_URL` on that origin, never the one on 3000; specs seed and delete their own accounts and clear only the local address's rate-limit counters).
+`npm run dev`, `npm run typecheck`, `npm run lint`, `npx vitest run` (285 tests; the DB-backed ones need an isolated local database and seed their own user, deleted afterwards), `npm run build`, `npm run test:e2e` (Playwright, 14 tests x desktop and 390px; starts its own `next dev` on port 3100 with `FAL_MOCK=1` and `AUTH_URL` on that origin, never the one on 3000; specs seed and delete their own accounts and clear only the local address's rate-limit counters).
 
 CI (`.github/workflows/ci.yml`): all of the above plus `npm audit --omit=dev --audit-level=high` on every push and PR, against a Postgres service container; no Neon, provider or production secret reaches it. Runs on GitHub Actions; pushing a change to a workflow file needs a token with the `workflow` scope. Dependabot is off on purpose (2026-10-05).
 

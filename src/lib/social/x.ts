@@ -214,7 +214,7 @@ export class XPublisher implements Publisher {
     if (res.status === 401) return { state: "failed", reason: "auth_expired" };
     if (res.status === 429) return { state: "failed", reason: "rate_limited" };
     if (res.status === 403 || res.status === 400) return { state: "failed", reason: "text_rejected" };
-    if (res.status >= 500) return { state: "unknown" };
+    if (res.status === 408 || res.status >= 500) return { state: "unknown" };
     if (!res.ok) return { state: "failed", reason: "platform_error" };
     const id = str((await readJson(res)).data?.id);
     if (!id) return { state: "unknown" };

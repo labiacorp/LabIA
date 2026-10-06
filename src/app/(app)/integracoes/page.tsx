@@ -10,6 +10,8 @@ import { backendReady } from "@/lib/social/publisher";
 import { NetworkCard, type CardAccount } from "./network-card";
 import { PostList, type PostRow } from "./post-list";
 
+export const maxDuration = 300;
+
 const ERRORS: Record<string, string> = {
   x: "Não foi possível conectar o X. Tente de novo.",
   ocupada: "Esta conta já está conectada a outro usuário da LabIA.",
@@ -27,7 +29,7 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
   const owner = role === "OWNER";
 
   try {
-    await dispatchDuePosts({ userId });
+    await dispatchDuePosts({ userId, limit: 2 });
     await reconcileScheduled(userId);
   } catch {
     // Best effort: the page renders even if a backend is down.

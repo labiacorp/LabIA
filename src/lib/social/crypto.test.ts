@@ -14,7 +14,12 @@ describe("token sealing", () => {
     expect(() => openToken(sealed, "acc_2")).toThrow("Token unavailable");
   });
 
-  const flip = (segment: string) => segment.slice(0, -1) + (segment.endsWith("A") ? "B" : "A");
+  // Corrupt a decoded byte: the last base64url char of a segment can carry ignored padding bits.
+  const flip = (segment: string) => {
+    const buf = Buffer.from(segment, "base64url");
+    buf[0] ^= 1;
+    return buf.toString("base64url");
+  };
 
   it("rejects a tampered ciphertext", () => {
     const [v, iv, tag, body] = sealToken("secret-token", "acc_1").split(":");
