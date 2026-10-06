@@ -46,6 +46,7 @@ export function getSheetOptions(card: CharacterCard) {
   return SHEET_DEFINITIONS.map((model) => ({
     model: model.id,
     name: model.name,
+    estimated: model.estimated === true,
     configurations: Object.keys(model.rates).flatMap((resolution) => {
       try { return [{ resolution, brl: quote([sheetItem(card, { model: model.id, resolution })]).totalBrl }]; } catch { return []; }
     }),
