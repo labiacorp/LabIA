@@ -150,6 +150,15 @@ describe("start route cookie and influencer", () => {
     expect(save).not.toHaveBeenCalled();
   });
 
+  it("in development prefers the AUTH_URL origin over the request origin", async () => {
+    vi.stubEnv("AUTH_URL", "http://127.0.0.1:3000");
+    const res = await start(new NextRequest("http://localhost:3000/api/integrations/x/start"), ctx("x"));
+    expect(res.headers.get("location")!.startsWith("http://127.0.0.1:3000/api/integrations/x/callback?")).toBe(true);
+    vi.stubEnv("AUTH_URL", "not a url");
+    const fallback = await start(new NextRequest("http://localhost:3000/api/integrations/x/start"), ctx("x"));
+    expect(fallback.headers.get("location")!.startsWith("http://localhost:3000/api/integrations/x/callback?")).toBe(true);
+  });
+
   it("keeps an owned influencer id and drops one owned by another user", async () => {
     const mine = await start(req("/api/integrations/x/start?influencerId=inf-mine"), ctx("x"));
     expect(sealedOf(mine).influencerId).toBe("inf-mine");
