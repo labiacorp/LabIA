@@ -9,6 +9,7 @@ const ui = Geist({ subsets: ["latin"], variable: "--font-ui" });
 const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = { title: "LabIA", description: "Esteira de conteúdo para influencers de IA." };
+export const viewport = { themeColor: "#0B0B0C" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

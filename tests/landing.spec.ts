@@ -107,3 +107,13 @@ test("security headers are sent and the in-app browser bar shows only inside Ins
   await expect(igPage.getByRole("link", { name: /Abrir no navegador/ })).toBeVisible();
   await ig.close();
 });
+
+test("the site has icons, a manifest and a robots file that hides the app", async ({ request }) => {
+  expect((await request.get("/icon.svg")).status()).toBe(200);
+  const manifest = await (await request.get("/manifest.webmanifest")).json();
+  expect(manifest).toMatchObject({ name: "LabIA", display: "standalone", theme_color: "#0B0B0C" });
+  for (const icon of manifest.icons) expect((await request.get(icon.src)).status(), icon.src).toBe(200);
+  const robots = await (await request.get("/robots.txt")).text();
+  expect(robots).toContain("Disallow: /painel");
+  expect(robots).toContain("Allow: /termos");
+});
