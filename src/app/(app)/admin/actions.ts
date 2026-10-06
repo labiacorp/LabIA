@@ -6,6 +6,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/owner";
 import { reconcileReservation, UserError } from "@/lib/generation";
+import { chargeBrl } from "@/lib/plan";
 
 export type AdminState = { ok: boolean; message: string };
 
@@ -22,7 +23,8 @@ export async function topUp(_previous: AdminState, form: FormData): Promise<Admi
   const actorId = await requireOwner();
   const input = topUpSchema.safeParse(Object.fromEntries(form));
   if (!input.success) return { ok: false, message: "Informe um valor entre R$ 0,01 e R$ 1.000 e uma nota." };
-  const { userId, amount, note, key } = input.data;
+  const { userId, note, key } = input.data;
+  const amount = chargeBrl(input.data.amount); // whole credits, like every ledger row
   try {
     await prisma.$transaction(async (tx) => {
       await tx.adminAction.create({ data: { actorId, action: "TOPUP", targetUserId: userId, data: { amount, note }, operationKey: key } });

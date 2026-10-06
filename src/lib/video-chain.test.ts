@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { chargeBrl } from "./plan";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { collectRunning, reconcileReservation, UserError } from "./generation";
 import { getBalanceBrl } from "./ledger";
@@ -46,7 +47,7 @@ describe.skipIf(!process.env.DATABASE_URL)("persisted 3x5s video chain", () => {
     const intentId = randomUUID();
     const starts = await Promise.all([run(who, { intentId }), run(who, { intentId }), run(who)]);
     expect(starts.reduce((sum, result) => sum + result.started, 0)).toBe(1);
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 5.67, 4);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - chargeBrl(5.67), 4);
     // Concurrent refreshes must not send the next phase twice.
     for (let i = 0; i < 6; i++) await Promise.all([1, 2, 3].map(() => collectRunning(who.userId, who.influencerId)));
     const done = await video(who.contentId);
@@ -66,7 +67,7 @@ describe.skipIf(!process.env.DATABASE_URL)("persisted 3x5s video chain", () => {
     const assembly = await prisma.step.findFirstOrThrow({ where: { contentId: who.contentId, kind: "ASSEMBLY" }, include: { assets: true } });
     expect(assembly.status).toBe("DONE"); expect(assembly.assets).toHaveLength(1);
     expect((await prisma.content.findUniqueOrThrow({ where: { id: who.contentId } })).status).toBe("REVIEW");
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 5.67, 4);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - chargeBrl(5.67), 4);
   });
 
   it("settles using the measured duration rather than the requested duration", async () => {
@@ -75,7 +76,7 @@ describe.skipIf(!process.env.DATABASE_URL)("persisted 3x5s video chain", () => {
     const done = await video(who.contentId);
     expect(done.assets.map((asset) => asset.durationSec)).toEqual([6, 6, 6]);
     expect(Number(done.actualCostBrl)).toBeCloseTo(3 * 6 * 0.07 * 5.4, 4);
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 6.804, 4);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - chargeBrl(6.804), 4);
     expect(await prisma.ledgerEntry.count({ where: { userId: who.userId, reason: "SPEND" } })).toBe(2);
   });
 
@@ -93,7 +94,7 @@ describe.skipIf(!process.env.DATABASE_URL)("persisted 3x5s video chain", () => {
     await prisma.asset.create({ data: { userId: who.userId, contentId: content.id, stepId: image.id, kind: "IMAGE", url: "/mock/portrait.svg" } });
     const results = await Promise.allSettled([run(who), run({ ...who, contentId: content.id })]);
     expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(0.33, 4);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(6 - chargeBrl(5.67), 4);
   });
 
   it("refunds only unused blocks when a later generation fails", async () => {
@@ -107,7 +108,7 @@ describe.skipIf(!process.env.DATABASE_URL)("persisted 3x5s video chain", () => {
     for (let i = 0; i < 4; i++) await collectRunning(who.userId, who.influencerId);
     const failed = await video(who.contentId);
     expect(failed.status).toBe("FAILED"); expect(Number(failed.actualCostBrl)).toBeCloseTo(1.89, 4);
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 1.89, 4);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - chargeBrl(1.89), 4);
     expect(await prisma.ledgerEntry.count({ where: { userId: who.userId, reason: "REFUND" } })).toBe(1);
   });
 
@@ -122,7 +123,7 @@ describe.skipIf(!process.env.DATABASE_URL)("persisted 3x5s video chain", () => {
     for (let i = 0; i < 7; i++) await collectRunning(who.userId, who.influencerId);
     const failed = await video(who.contentId);
     expect(failed.status).toBe("FAILED"); expect(Number(failed.actualCostBrl)).toBeCloseTo(7.56, 4);
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 7.56, 4);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - chargeBrl(7.56), 4);
     expect(await prisma.ledgerEntry.count({ where: { userId: who.userId, reason: "SPEND" } })).toBe(2);
   });
 
@@ -131,14 +132,14 @@ describe.skipIf(!process.env.DATABASE_URL)("persisted 3x5s video chain", () => {
     vi.stubEnv("FAL_MOCK_METADATA_FAIL", "1");
     for (let i = 0; i < 3; i++) await collectRunning(who.userId, who.influencerId);
     expect((await video(who.contentId)).submissionState).toBe("cost_unknown");
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 5.67, 4);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - chargeBrl(5.67), 4);
     expect(await prisma.ledgerEntry.count({ where: { userId: who.userId, reason: "REFUND" } })).toBe(0);
     const other = await seed();
     await expect(reconcileReservation(other.userId, (await video(who.contentId)).id, 1.89)).rejects.toThrow(/reconciliação/);
     const stepId = (await video(who.contentId)).id;
     const reconciled = await Promise.allSettled([reconcileReservation(who.userId, stepId, 1.89), reconcileReservation(who.userId, stepId, 1.89)]);
     expect(reconciled.filter((result) => result.status === "fulfilled")).toHaveLength(1);
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 1.89, 4);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - chargeBrl(1.89), 4);
     expect(await prisma.ledgerEntry.count({ where: { userId: who.userId, reason: "REFUND" } })).toBe(1);
   });
 
@@ -153,7 +154,7 @@ describe.skipIf(!process.env.DATABASE_URL)("persisted 3x5s video chain", () => {
     const uncertain = await seed(); await run(uncertain, { prompt: "[mock-submit-error]" });
     spy.mockClear(); await collectRunning(uncertain.userId, uncertain.influencerId);
     expect(spy).not.toHaveBeenCalled();
-    expect(await getBalanceBrl(uncertain.userId)).toBeCloseTo(10 - 5.67, 4);
+    expect(await getBalanceBrl(uncertain.userId)).toBeCloseTo(10 - chargeBrl(5.67), 4);
   });
 
   it("rejects another user's scene and refuses assembly before all clips are ready", async () => {

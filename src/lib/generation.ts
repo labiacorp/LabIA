@@ -1,5 +1,5 @@
 import { Prisma } from "@/generated/prisma/client";
-import { balanceText, costText } from "@/lib/plan";
+import { balanceText, chargeBrl, costCredits, costText } from "@/lib/plan";
 import type { AssetRole } from "@/generated/prisma/enums";
 import { getProvider, mockEnabled, providerConfigured } from "@/lib/provider";
 import { prisma } from "@/lib/prisma";
@@ -34,7 +34,7 @@ const MAX_POLL_ERRORS = 3;
 export function quote(plan: PlanItem[]): Quote {
   const items = plan.map((item) => ({
     ...item,
-    costBrl: round4(
+    costBrl: chargeBrl(
       getProvider(item.model).estimateCost(item.model, item.params).brl *
         (item.quantity ?? 1),
     ),
@@ -72,7 +72,8 @@ export async function startPlan(input: {
     );
   }
   const priced = quote(input.plan);
-  if (Math.abs(priced.totalBrl - input.expectedBrl) > 0.005) {
+  // Compared in credits, the unit the page shows: a rate drift that keeps the same credit count is not a change.
+  if (costCredits(priced.totalBrl) !== costCredits(input.expectedBrl)) {
     throw new UserError(
       `O custo mudou de ${costText(input.expectedBrl)} para ${costText(priced.totalBrl)}. Revise e confirme de novo.`,
     );
@@ -223,7 +224,7 @@ async function refund(step: RunningStep, message: string) {
     });
     // Chained video keeps the cost of completed clips; only unused reservation is returned.
     const unused = round4(
-      estimated - Number(step.actualCostBrl?.toString() ?? 0),
+      estimated - chargeBrl(Number(step.actualCostBrl?.toString() ?? 0)),
     );
     if (Math.abs(unused) > 0.0001)
       await tx.ledgerEntry.create({
@@ -314,7 +315,7 @@ async function complete(step: RunningStep, result: GenerationResult) {
         data: { faceAssetId },
       });
     const diff = round4(
-      Number(step.estimatedCostBrl?.toString() ?? 0) - actual,
+      Number(step.estimatedCostBrl?.toString() ?? 0) - chargeBrl(actual),
     );
     if (!unverified && Math.abs(diff) > 0.0001) {
       await tx.ledgerEntry.create({
@@ -453,7 +454,7 @@ export async function reconcileReservation(
       where: { id: step.id },
       data: { submissionState: "reconciled", actualCostBrl: actual },
     });
-    const diff = round4(Number(step.estimatedCostBrl ?? 0) - actual);
+    const diff = round4(Number(step.estimatedCostBrl ?? 0) - chargeBrl(actual));
     if (Math.abs(diff) > 0.0001)
       await tx.ledgerEntry.create({
         data: {

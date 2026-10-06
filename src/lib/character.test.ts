@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { type CharacterCard, getSheetOptions, kitSpent, portraitItem, PORTRAIT_ROLES, sheetItem, stepCost } from "./character";
 import { quote } from "./generation";
+import { costCredits } from "./plan";
 
 const card: CharacterCard = { name: "Iara", role: "TikTok Shop Creator", mood: "Confident, warm, upbeat", visualSignature: "soft shag haircut, silver hoops, navy tee", persona: "" };
 
@@ -25,10 +26,11 @@ describe("character kit", () => {
     for (const item of items) expect(item.params.image_urls).toEqual(["https://x/sheet.png"]);
   });
 
-  it("quotes the V1 prices at 5.40: sheet 2K R$0.648, three 1K portraits R$1.296", () => {
-    expect(quote([sheetItem(card)]).totalBrl).toBeCloseTo(0.648, 4);
+  it("charges the V1 prices at 5.40 in whole credits: sheet 2K R$0.648 -> 13, each 1K portrait R$0.432 -> 9", () => {
+    expect(quote([sheetItem(card)]).totalBrl).toBeCloseTo(0.65, 4);
     const portraits = PORTRAIT_ROLES.map((role) => portraitItem(role, card, "https://x/sheet.png"));
-    expect(quote(portraits).totalBrl).toBeCloseTo(1.296, 4);
+    expect(quote(portraits).items.map((item) => item.costBrl)).toEqual([0.45, 0.45, 0.45]);
+    expect(quote(portraits).totalBrl).toBeCloseTo(1.35, 4); // the total is the sum of the per-item charges
   });
 });
 
@@ -46,8 +48,15 @@ describe("kit cost after generation", () => {
   });
 
   it("sums the known costs and flags the total when any is unknown", () => {
-    expect(kitSpent([done, { ...done, actualCostBrl: "0.432" }])).toEqual({ unknown: false, brl: expect.closeTo(1.08, 4) });
-    expect(kitSpent([done, { ...done, actualCostBrl: null }])).toMatchObject({ unknown: true, brl: 0.648 });
+    expect(kitSpent([done, { ...done, actualCostBrl: "0.432" }])).toEqual({ unknown: false, brl: expect.closeTo(1.1, 4) });
+    expect(kitSpent([done, { ...done, actualCostBrl: null }])).toMatchObject({ unknown: true, brl: 0.65 });
+  });
+
+  it("totals the kit as the sum of its chips (13 + 9 + 9 + 9 = 40 credits)", () => {
+    const kit = [done, ...["0.432", "0.432", "0.432"].map((actualCostBrl) => ({ ...done, actualCostBrl }))];
+    const chips = kit.map((step) => costCredits(Number(step.actualCostBrl)));
+    expect(chips).toEqual([13, 9, 9, 9]);
+    expect(costCredits(kitSpent(kit).brl)).toBe(40);
   });
 });
 
@@ -64,12 +73,12 @@ describe("sheet model options", () => {
   it("prices every text-to-image model server-side and drops pairs the prompt cannot use", () => {
     const options = getSheetOptions(card);
     expect(options.map((option) => option.name)).toEqual(["Nano Banana 2", "GPT Image 2.5 Flare", "Grok Imagine 2.0", "Muse Image", "Seedream 5.0 Lite", "Nano Banana Pro"]);
-    // Every offered pair is priced; token-billed GPT is flagged as an estimate.
+    // Every offered pair is priced in whole credits (R$0.2225 -> 5, R$0.054 -> 2, R$0.648 -> 13); token-billed GPT is flagged as an estimate.
     expect(options.every((option) => option.configurations.length > 0)).toBe(true);
     expect(options.find((option) => option.name === "GPT Image 2.5 Flare")?.estimated).toBe(true);
-    expect(options.find((option) => option.name === "GPT Image 2.5 Flare")?.configurations.find((item) => item.resolution === "high")?.brl).toBeCloseTo(0.2225, 4);
-    expect(options.find((option) => option.name === "Muse Image")?.configurations).toEqual([{ resolution: "default", brl: 0.054 }]);
-    expect(options.find((option) => option.name === "Nano Banana 2")?.configurations.find((item) => item.resolution === "2K")?.brl).toBeCloseTo(0.648, 4);
+    expect(options.find((option) => option.name === "GPT Image 2.5 Flare")?.configurations.find((item) => item.resolution === "high")?.brl).toBeCloseTo(0.25, 4);
+    expect(options.find((option) => option.name === "Muse Image")?.configurations).toEqual([{ resolution: "default", brl: 0.1 }]);
+    expect(options.find((option) => option.name === "Nano Banana 2")?.configurations.find((item) => item.resolution === "2K")?.brl).toBeCloseTo(0.65, 4);
   });
 
   it("rejects an unknown model or quality before anything is charged", () => {
