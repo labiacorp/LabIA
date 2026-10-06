@@ -178,7 +178,7 @@ export function VideoForm({ action, intent, prompt, balanceBrl, blockedReason, o
         <Textarea id="video-prompt" name="prompt" defaultValue={prompt} required maxLength={2000} disabled={pending} aria-describedby="video-prompt-description" />
       </Field>
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" size="lg" loading={pending} disabled={!!blockedReason || unavailable || insufficientBalance}>Aprovar custo e gerar vídeo</Button>
+        <Button type="submit" variant="cost" size="lg" loading={pending} disabled={!!blockedReason || unavailable || insufficientBalance}>Aprovar custo e gerar vídeo</Button>
         <span aria-live="polite" aria-atomic="true">
           <CostChip state={configuration ? "estimated" : "unavailable"} value={configuration?.brl} prefix="total estimado" />
         </span>

@@ -51,7 +51,7 @@ export function SceneForm({ action, intent, options, balanceBrl, prompt, blocked
         <Textarea id={promptId} name="prompt" defaultValue={prompt} required maxLength={option?.maxPrompt ?? 2000} disabled={pending} />
       </Field>
       <div className="flex flex-wrap items-center gap-3">
-        <Button loading={pending} disabled={!!blockedReason || !configuration || insufficient}>{label}</Button>
+        <Button variant="cost" loading={pending} disabled={!!blockedReason || !configuration || insufficient}>{label}</Button>
         <CostChip state={configuration ? "estimated" : "unavailable"} value={configuration?.brl} prefix="total estimado" />
       </div>
       {insufficient ? <p className="text-caption text-lab-warning">Saldo insuficiente para esta imagem.</p> : null}
