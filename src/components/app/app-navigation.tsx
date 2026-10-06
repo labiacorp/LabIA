@@ -14,6 +14,7 @@ import {
   UserRound,
   LogOut,
   Library,
+  Share2,
   BookOpen,
   Plus,
   ArrowUpRight,
@@ -32,6 +33,7 @@ const links = [
   { href: "/trends", label: "Trends", icon: Sparkles },
   { href: "/modelos", label: "Modelos", icon: BookOpen },
   { href: "/biblioteca", label: "Biblioteca", icon: Library },
+  { href: "/integracoes", label: "Integrações", icon: Share2 },
 ];
 const itemClass =
   "flex min-h-11 items-center gap-3 rounded-control px-3 text-body-sm transition-colors hover:bg-lab-surface-2 focus-visible:outline-none focus-visible:shadow-lab-focus";
