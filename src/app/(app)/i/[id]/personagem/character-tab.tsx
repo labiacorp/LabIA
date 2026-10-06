@@ -14,14 +14,13 @@ import { prisma } from "@/lib/prisma";
 import { startKit } from "../kit-actions";
 import { KitForm } from "./kit-form";
 import { KitWatcher } from "./kit-watcher";
-import { RunProgress } from "@/components/app/run-progress";
 import { SheetForm } from "./sheet-form";
 
 function StepBadge({ step }: { step: KitStep }) {
-  const [variant, label] = step.status === "DONE" || step.status === "APPROVED" ? (["ready", "Pronto"] as const) : stepStatus[step.status];
+  const [variant, label] = stepStatus[step.status];
   const cost = stepCost(step);
   return (
-    <span className="flex flex-wrap items-center justify-end gap-2">
+    <span className="flex items-center gap-2">
       {cost.state === "known" ? <CostChip state="actual" value={cost.brl} size="sm" /> : null}
       {cost.state === "unknown" ? <CostChip state="unavailable" size="sm" /> : null}
       <Badge variant={variant} dot>
@@ -115,21 +114,6 @@ export async function CharacterTab({
   return (
     <div className="grid gap-6">
       <KitWatcher influencerId={influencerId} active={kit.running} />
-      {kit.running ? (
-        <RunProgress
-          title={`Criando ${influencer.name}`}
-          items={kit.steps
-            // The current batch: everything started since the oldest job still running.
-            .filter((step, _, all) => step.createdAt >= (all.find((item) => item.status === "RUNNING")?.createdAt ?? step.createdAt))
-            .map((step) => ({
-              label: ROLE_LABEL[step.role ?? "SHEET"],
-              status: step.status,
-              startedAt: step.startedAt?.toISOString() ?? null,
-              brl: step.actualCostBrl !== null ? Number(step.actualCostBrl) : step.estimatedCostBrl !== null ? Number(step.estimatedCostBrl) : null,
-              typicalSeconds: step.role === "SHEET" ? 90 : 60,
-            }))}
-        />
-      ) : null}
       {kit.steps.some((step) => stepCost(step).state !== "none") ? (
         <div className="flex flex-wrap items-center gap-2">
           <CostChip
@@ -204,7 +188,7 @@ export async function CharacterTab({
                   ) : (
                     <div className="lab-placeholder-media aspect-[3/4] rounded-control" />
                   )}
-                  <figcaption className="flex flex-wrap items-center justify-between gap-2 text-caption text-lab-text-dim">
+                  <figcaption className="flex items-center justify-between gap-2 text-caption text-lab-text-dim">
                     {ROLE_LABEL[role]}
                     {step ? <StepBadge step={step} /> : null}
                   </figcaption>
@@ -219,8 +203,6 @@ export async function CharacterTab({
             action={startKit.bind(null, influencerId, "PORTRAITS")}
             intent={randomUUID()}
             expectedBrl={portraitQuote.totalBrl}
-            items={portraitQuote.items.map((item) => ({ label: item.role ? ROLE_LABEL[item.role] : "Retrato", brl: item.costBrl }))}
-            balanceBrl={balance}
             label={
               portraitPlan.length < PORTRAIT_ROLES.length
                 ? "Tentar de novo os que faltam"

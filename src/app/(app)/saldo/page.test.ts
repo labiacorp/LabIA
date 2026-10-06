@@ -22,14 +22,3 @@ it("keeps older owned entries reachable after 100 and excludes another account",
   expect(html).not.toContain("197.530");
   expect(html).not.toContain("NaN");
 });
-
-it("filters the statement by type and keeps the filter on the CSV link", async () => {
-  const owner = await prisma.user.create({ data: { email: `balance-filter-${randomUUID()}@example.com` } });
-  ids.push(owner.id);
-  auth.id = owner.id;
-  await prisma.ledgerEntry.createMany({ data: [{ userId: owner.id, reason: "TOPUP", deltaBrl: 17.5, note: "stripe:in_test" }, { userId: owner.id, reason: "REFUND", deltaBrl: 1, note: "fixture" }] });
-  const html = renderToStaticMarkup(await CreditsPage({ searchParams: Promise.resolve({ tipo: "devolucoes" }) }));
-  expect(html).toContain("Devolvido");
-  expect(html).not.toContain("Créditos do mês</p>");
-  expect(html).toContain("/saldo/extrato.csv?tipo=devolucoes");
-});

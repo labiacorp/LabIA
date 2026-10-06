@@ -15,6 +15,7 @@ export async function updateAccount(
       name: z.string().trim().min(1).max(80),
       bio: z.string().trim().max(240).optional(),
       defaultAspectRatio: z.enum(["9:16", "16:9", "1:1"]).optional(),
+      defaultContentView: z.enum(["steps", "canvas"]).optional(),
     })
     .safeParse(Object.fromEntries(form));
   if (!result.success)

@@ -9,15 +9,6 @@ export type DraftStarter = {
 // Original editorial starters. They prepare free drafts, not generated media or provider presets.
 export const CONTENT_STARTERS: DraftStarter[] = [
   {
-    id: "hook-value-cta",
-    name: "Gancho, valor e chamada",
-    title: "Isso muda seu dia em 15 segundos",
-    idea: "Abra com uma frase que prenda nos três primeiros segundos, entregue uma coisa útil com um exemplo e termine pedindo uma ação.",
-    script:
-      "0–3s (gancho): [frase que faz parar de rolar].\n3–12s (valor): [a coisa útil, com um exemplo].\n12–15s (chamada): [o que a pessoa deve fazer agora].",
-    aspectRatio: "9:16",
-  },
-  {
     id: "product-demo",
     name: "Demonstração de produto",
     title: "Um produto, uma solução",

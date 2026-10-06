@@ -14,6 +14,7 @@ export async function GET() {
       _count: { select: { referrals: true } },
       avatar: true,
       defaultAspectRatio: true,
+      defaultContentView: true,
       email: true,
       createdAt: true,
       influencers: {

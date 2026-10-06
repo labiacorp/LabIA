@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/track";
-import { CostSummary, withCost } from "@/components/ui/cost-summary";
+import { CostChip } from "@/components/ui/cost-chip";
 import { Field, Select, Textarea } from "@/components/ui/field";
 import type { getImageOptions } from "@/lib/content-generation";
 import type { ContentState } from "./actions";
@@ -54,8 +54,10 @@ export function SceneForm({ action, intent, options, balanceBrl, prompt, blocked
         <Textarea id={promptId} name="prompt" defaultValue={prompt} required maxLength={option?.maxPrompt ?? 2000} disabled={pending} />
       </Field>
       {blockedReason || insufficient ? <Alert variant="warning" title={blockedReason ?? "Créditos insuficientes para esta imagem."}>{blockedReason ? null : <Link href="/saldo" className="underline">Ver plano e créditos</Link>}</Alert> : null}
-      {configuration ? <CostSummary items={[{ label: "Imagem", brl: configuration.brl }]} balanceBrl={balanceBrl} className="max-w-sm" /> : null}
-      <Button variant="cost" className="justify-self-start" onClick={() => track("generate_clicked", { kind: "image", estimate_brl: configuration?.brl ?? 0 })} loading={pending} disabled={!!blockedReason || !configuration || insufficient}>{withCost(label, configuration?.brl)}</Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="cost" onClick={() => track("generate_clicked", { kind: "image", estimate_brl: configuration?.brl ?? 0 })} loading={pending} disabled={!!blockedReason || !configuration || insufficient}>{label}</Button>
+        <CostChip state={configuration ? "estimated" : "unavailable"} value={configuration?.brl} prefix="total estimado" />
+      </div>
       {state.error ? <Alert variant="error" title={state.error} /> : null}
     </form>
   );

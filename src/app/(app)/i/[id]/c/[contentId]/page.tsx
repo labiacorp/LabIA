@@ -19,7 +19,6 @@ import { KitForm } from "../../personagem/kit-form";
 import { KitWatcher } from "../../personagem/kit-watcher";
 import { assembleVideo, generateScene, generateVideo } from "./actions";
 import { FlowCanvas } from "./flow-canvas";
-import { RunProgress } from "@/components/app/run-progress";
 import { SaveTemplate } from "../../../../modelos/save-template";
 import { ArchiveControl } from "../../../../conteudos/archive-control";
 import { BriefForm } from "./brief-form";
@@ -35,7 +34,9 @@ export const dynamic = "force-dynamic";
 
 export default async function ContentPage({
   params,
+  searchParams,
 }: {
+  searchParams: Promise<{ view?: string }>;
   params: Promise<{ id: string; contentId: string }>;
 }) {
   const userId = await requireUserId();
@@ -75,6 +76,15 @@ export default async function ContentPage({
 
   if (content.motion) return <MotionProduction userId={userId} contentId={contentId} />;
 
+  const requestedView = (await searchParams).view;
+  const preferences = requestedView
+    ? null
+    : await prisma.user.findUnique({
+        where: { id: userId },
+        select: { defaultContentView: true },
+      });
+  const canvasView =
+    (requestedView ?? preferences?.defaultContentView) === "canvas";
   const { steps } = content;
   const script =
     (
@@ -168,22 +178,26 @@ export default async function ContentPage({
           <div className="flex flex-col gap-0.5 border-l border-lab-border py-3 pl-3.5"><span className="font-mono text-caption text-lab-text-dim">total previsto</span><span className="font-mono text-[22px] text-lab-reagent-bright">{costText(planned)}</span></div>
         </div>
       </div>
-      {steps.some((step) => step.status === "RUNNING") ? (
-        <RunProgress
-          title="Gerando esta produção"
-          items={steps
-            .filter((step) => step.status === "RUNNING")
-            .map((step) => ({
-              label: PIPELINE.find((item) => item.kind === step.kind)?.title ?? "Etapa",
-              status: step.status,
-              startedAt: (step.startedAt ?? step.createdAt).toISOString(),
-              brl: step.estimatedCostBrl === null ? null : Number(step.estimatedCostBrl),
-              typicalSeconds: step.kind === "VIDEO" ? 240 : 60,
-            }))}
-        />
-      ) : null}
-      {/* The production as a graph on desktop; on a phone the list below is the view. */}
-      <div className="hidden md:block">
+      <nav aria-label="Visualização da produção" className="flex gap-2">
+        {[
+          { value: "steps", label: "Etapas" },
+          { value: "canvas", label: "Canvas" },
+        ].map((view) => (
+          <Link
+            key={view.value}
+            href={`/i/${id}/c/${contentId}?view=${view.value}`}
+            aria-current={
+              (canvasView ? "canvas" : "steps") === view.value
+                ? "page"
+                : undefined
+            }
+            className={`flex h-10 items-center rounded-full px-4 text-body-sm font-medium ${canvasView === (view.value === "canvas") ? "bg-lab-text text-lab-on-reagent" : "bg-lab-surface-2 text-lab-text-dim"}`}
+          >
+            {view.label}
+          </Link>
+        ))}
+      </nav>
+      {canvasView ? (
         <FlowCanvas
           contentId={contentId}
           steps={steps.map((step) => ({
@@ -194,8 +208,6 @@ export default async function ContentPage({
               "Etapa",
             status: step.status,
             assets: step.assets.length,
-            thumb: step.assets.find((asset) => asset.kind === "IMAGE")?.url ?? null,
-            video: step.assets.find((asset) => asset.kind === "VIDEO")?.url ?? null,
             actualCost:
               step.actualCostBrl === null ? null : Number(step.actualCostBrl),
             estimatedCost:
@@ -204,7 +216,7 @@ export default async function ContentPage({
                 : Number(step.estimatedCostBrl),
           }))}
         />
-      </div>
+      ) : null}
       <ol className="grid gap-3">
         {steps.map((step, index) => {
           const info = PIPELINE.find((item) => item.kind === step.kind)!;
