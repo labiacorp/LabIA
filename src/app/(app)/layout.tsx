@@ -36,21 +36,17 @@ export default async function AppLayout({
       >
         Ir para o conteúdo
       </a>
-      <header className="shell-header sticky top-0 z-header">
-        <AppNavigation
-          name={user.name}
-          email={user.email}
-          avatarVersion={user.avatarUpdatedAt?.getTime()}
-          balance={falUsd !== undefined ? (falUsd === null ? null : falUsd * videoUsdBrlRate()) : balance.ok ? balance.value : null}
-          owner={owner}
-        />
-      </header>
-      <main
-        id="app-content"
-        className="workspace-main mx-auto w-full max-w-wide px-4 pb-16 pt-6 md:px-8 md:pt-8"
+      <AppNavigation
+        name={user.name}
+        email={user.email}
+        avatarVersion={user.avatarUpdatedAt?.getTime()}
+        balance={falUsd !== undefined ? (falUsd === null ? null : falUsd * videoUsdBrlRate()) : balance.ok ? balance.value : null}
+        owner={owner}
       >
-        {children}
-      </main>
+        <main id="app-content" className="mx-auto w-full max-w-wide px-4 pb-16 pt-6 md:px-8 md:pt-8">
+          {children}
+        </main>
+      </AppNavigation>
     </>
   );
 }
