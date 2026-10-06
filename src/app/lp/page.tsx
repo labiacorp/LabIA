@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: "LabIA · Conteúdo para influencers de IA",
   description: "Crie sua influencer de IA e produza reels com ela. Uma assinatura, créditos todo mês, e o custo de cada etapa antes de gerar.",
   // A page-level openGraph replaces the inherited one, file-based image included: name the image again.
-  openGraph: { title: "LabIA · Reels com sua influencer de IA", description: "Uma assinatura, créditos todo mês. O custo antes, o real depois.", url: "/", images: [{ url: "/opengraph-image.png", width: 1200, height: 630, alt: "LabIA" }] },
+  openGraph: { title: "LabIA · Sua influencer de IA", description: "Crie sua influencer de IA e produza reels com ela.", url: "/", images: [{ url: "/opengraph-image.png", width: 1200, height: 630, alt: "LabIA" }] },
 };
 
 // The landing quotes the same numbers as the app: the plan, and the default reel priced on a fresh dollar quote.
