@@ -29,6 +29,21 @@ export default async function DashboardPage() {
   const last = recent[0];
   return <div className="mx-auto flex max-w-content flex-col gap-7">
     <div className="flex flex-col gap-1.5"><span className="lp-eyebrow">{today}</span><h1 className="font-display text-[clamp(40px,7vw,56px)] leading-[.9]">Olá, {first}</h1></div>
+    {influencers.length === 0 || recent.length === 0 ? <section className="rounded-sheet bg-lab-surface-1 p-5 shadow-[inset_0_0_0_1px_var(--lab-border)] md:p-6">
+      <span className="lp-eyebrow">Comece em 3 passos</span>
+      <ol className="mt-3 grid gap-2 md:grid-cols-3">
+        {[
+          { done: influencers.length > 0, n: "01", title: "Crie a influencer", text: "Defina o rosto, o nicho e o tom. Rascunhos são grátis.", href: "/?criar=1", cta: "Criar influencer" },
+          { done: recent.length > 0, n: "02", title: "Prepare um conteúdo", text: "Título, ideia e roteiro. Ainda sem gastar nada.", href: "/conteudos/novo", cta: "Novo conteúdo" },
+          { done: !!balance && balance > 0, n: "03", title: "Tenha saldo e gere", text: "Você vê o preço antes de cada etapa e o valor real depois.", href: "/saldo", cta: "Ver saldo" },
+        ].map((step) => <li key={step.n} className={`flex flex-col gap-2 rounded-card p-4 ${step.done ? "opacity-60" : "bg-lab-surface-2"}`}>
+          <span className="font-mono text-caption text-lab-text-dim">{step.n}{step.done ? " · feito ✓" : ""}</span>
+          <span className="font-display text-[26px] font-black uppercase leading-none">{step.title}</span>
+          <span className="text-body-sm text-lab-text-dim">{step.text}</span>
+          {step.done ? null : <Link href={step.href} className={buttonVariants({ size: "sm", className: "mt-auto self-start" })}>{step.cta}</Link>}
+        </li>)}
+      </ol>
+    </section> : null}
     <div className="grid gap-4 md:grid-cols-2">
       <div className={card}>
         <span className="lp-eyebrow">Saldo</span>

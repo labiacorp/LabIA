@@ -147,3 +147,15 @@ Workspace direction checks: all 104 tests passed, plus targeted library regressi
 Dashboard now presents a primary character-studio story, original code-based process artwork on desktop, three useful entry routes and real owned-image previews for recent productions. Large metric cards are replaced by a quiet linked summary. Mobile omits decorative process artwork so entry actions arrive earlier. No provider calls or generation were added. Imported filename search has a disposable-owner isolation regression test.
 
 Creation-home checks: 105 tests across 31 files pass, typecheck/lint/build pass. Content list and dashboard share ProductionCard and scoped real previews. Primary-action white text contrast was measured and adjusted above 4.5:1 in both themes.
+
+
+## Open items (2026-10-06)
+- **Stripe card top-ups** are built (`src/lib/stripe.ts`, `/api/stripe/webhook`, `saldo/topup.ts`) but never run against real Stripe: needs `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` on Vercel and the webhook registered (`checkout.session.completed`). Not handled yet: refunds/disputes (a refunded charge does not debit the ledger).
+- **Production migrations to deploy** before using the features: `20261006120000_mcp_tokens`, `20261006150000_stripe_topup_unique`, `20261006160000_invite_requests` (`npx prisma migrate deploy` against LabIA Prod; the build does not migrate).
+- **MCP** (`/api/mcp`, tokens by `scripts/mcp-token.ts`): read tools + free drafts only; paid generation stays a human confirmation. A per-token spend cap is needed before it can generate.
+- **PostHog** off until `NEXT_PUBLIC_POSTHOG_KEY` is set. No server-side events yet; LGPD consent for analytics undecided.
+- **Invite requests** are stored in `invite_requests`; there is no admin screen or e-mail to answer them yet (query the table).
+- **Video estimate vs real** (`scripts/eval-costs.ts`): Kling reel runs cost +20% to +33% above the shown estimate when the measured clips come out at ~6s instead of 5s (`settleVideo` prices measured duration). Needs a check against the fal invoice: if fal bills the requested 5s, the settlement overcharges users; if it bills measured seconds, the estimate needs an allowance.
+- **Model suggestion**: the landing says Seedance 2.5; the app default is Kling 2.5 Turbo Pro and `fal-models.ts` has only Seedance 2.0.
+- **Not covered by tests**: real Google sign-in under the CSP, in-app browser bar on a real phone, mobile e2e project (skipped on purpose), refunds.
+- `design/reference/handoff` is the old design and stale.

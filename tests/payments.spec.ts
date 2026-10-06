@@ -22,3 +22,12 @@ test("the balance page offers card top-ups (or says they are coming) and never P
   await page.goto("/saldo?pago=1");
   await expect(page.getByText("Pagamento recebido")).toBeVisible();
 });
+
+test("a brand-new account is walked through three steps on Início", async ({ page }) => {
+  const email = `${prefix}-novo@labia.test`;
+  await seedUser(email);
+  await signInDev(page, email);
+  await page.goto("/painel");
+  await expect(page.getByText("Comece em 3 passos")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Criar influencer" })).toBeVisible();
+});

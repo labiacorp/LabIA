@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useId, useState } from "react";
+import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/track";
@@ -51,12 +52,11 @@ export function SceneForm({ action, intent, options, balanceBrl, prompt, blocked
       <Field label={fieldLabel} htmlFor={promptId} description={description}>
         <Textarea id={promptId} name="prompt" defaultValue={prompt} required maxLength={option?.maxPrompt ?? 2000} disabled={pending} />
       </Field>
+      {blockedReason || insufficient ? <Alert variant="warning" title={blockedReason ?? "Saldo insuficiente para esta imagem."}>{blockedReason ? null : <Link href="/saldo" className="underline">Ver saldo e recarregar</Link>}</Alert> : null}
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="cost" onClick={() => track("generate_clicked", { kind: "image", estimate_brl: configuration?.brl ?? 0 })} loading={pending} disabled={!!blockedReason || !configuration || insufficient}>{label}</Button>
         <CostChip state={configuration ? "estimated" : "unavailable"} value={configuration?.brl} prefix="total estimado" />
       </div>
-      {insufficient ? <p className="text-caption text-lab-warning">Saldo insuficiente para esta imagem.</p> : null}
-      {blockedReason ? <p className="text-caption text-lab-warning">{blockedReason}</p> : null}
       {state.error ? <Alert variant="error" title={state.error} /> : null}
     </form>
   );

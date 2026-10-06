@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/track";
@@ -178,6 +179,7 @@ export function VideoForm({ action, intent, prompt, balanceBrl, blockedReason, o
       <Field label="Movimento e ação" htmlFor="video-prompt" description="Descreva o que acontece no vídeo. A imagem desta etapa será usada como referência.">
         <Textarea id="video-prompt" name="prompt" defaultValue={prompt} required maxLength={2000} disabled={pending} aria-describedby="video-prompt-description" />
       </Field>
+      {blockedReason || insufficientBalance ? <Alert variant="warning" title={blockedReason ?? "Saldo insuficiente para esta configuração."}>{blockedReason ? null : <>Escolha uma opção mais barata ou <Link href="/saldo" className="underline">recarregue o saldo</Link>.</>}</Alert> : null}
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" variant="cost" onClick={() => track("generate_clicked", { kind: "video", estimate_brl: configuration?.brl ?? 0 })} size="lg" loading={pending} disabled={!!blockedReason || unavailable || insufficientBalance}>Aprovar custo e gerar vídeo</Button>
         <span aria-live="polite" aria-atomic="true">
@@ -185,8 +187,6 @@ export function VideoForm({ action, intent, prompt, balanceBrl, blockedReason, o
         </span>
       </div>
       {unavailable ? <p role="status" className="text-caption text-lab-warning">Nenhuma configuração de vídeo disponível.</p> : null}
-      {insufficientBalance ? <p role="status" className="text-caption text-lab-warning">Saldo insuficiente para esta configuração. Escolha uma opção de menor custo ou adicione saldo.</p> : null}
-      {blockedReason ? <p className="text-caption text-lab-warning">{blockedReason}</p> : null}
       {state.error ? <Alert variant="error" title={state.error} /> : null}
     </form>
   );
