@@ -75,7 +75,7 @@ describe("JWT session revocation", () => {
 });
 
 describe("password sign-in", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => { vi.clearAllMocks(); vi.stubEnv("ALLOWED_EMAILS", ""); });
   it("refuses an unconfirmed address only after the password matched", async () => {
     const { hashPassword } = await import("@/lib/password");
     const authorize = (mocks.config.providers.find((p) => (p as { options?: { id?: string } }).options?.id === "password") as unknown as { options: { authorize: (c: unknown) => Promise<unknown> } }).options.authorize;
