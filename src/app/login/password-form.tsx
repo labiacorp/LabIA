@@ -15,13 +15,13 @@ export function PasswordLogin({ signup }: { signup: boolean }) {
   const [password, setPassword] = useState("");
   const [state, action, pending] = useActionState(authenticatePassword, { error: "" });
   return (
-    <form action={action} className="grid gap-3">
+    <form action={action} className="grid gap-5">
       <input type="hidden" name="mode" value={create ? "signup" : "login"} />
-      <label className="grid gap-2 text-caption">
+      <label className="grid gap-2 text-body-sm font-medium">
         E-mail
         <Input name="email" type="email" required autoComplete="email" placeholder="voce@exemplo.com" value={email} onChange={(event) => setEmail(event.target.value)} />
       </label>
-      <label className="grid gap-2 text-caption">
+      <label className="grid gap-2 text-body-sm font-medium">
         Senha
         <PasswordInput
           name="password"
@@ -40,7 +40,7 @@ export function PasswordLogin({ signup }: { signup: boolean }) {
           <span>Li e aceito os <Link href="/termos" target="_blank" className="underline">Termos de Uso</Link> e a <Link href="/privacidade" target="_blank" className="underline">Política de Privacidade</Link>.</span>
         </label>
       ) : null}
-      <Button size="lg" loading={pending}>
+      <Button size="lg" className="w-full" loading={pending}>
         {create ? "Criar conta" : "Entrar"}
       </Button>
       {state.error ? (

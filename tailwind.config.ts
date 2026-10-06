@@ -45,9 +45,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ["var(--font-inter)", "sans-serif"],
-        sans: ["var(--font-inter)", "sans-serif"],
-        mono: ["var(--font-jetbrains-mono)", "monospace"],
+        display: ["var(--font-display)", "sans-serif"],
+        sans: ["var(--font-ui)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "monospace"],
       },
       // NOVO · escala fixa — substitui text-[10px], text-[11px] e trackings soltos
       fontSize: {
@@ -57,7 +57,7 @@ const config: Config = {
         body: ["16px", { lineHeight: "24px" }],
         h3: ["18px", { lineHeight: "24px", fontWeight: "500" }],
         h2: ["24px", { lineHeight: "32px", fontWeight: "500", letterSpacing: "-0.01em" }],
-        h1: ["32px", { lineHeight: "40px", fontWeight: "700", letterSpacing: "-0.02em" }],
+        h1: ["32px", { lineHeight: "40px", fontWeight: "900", letterSpacing: "-0.02em" }],
         "h1-lg": ["40px", { lineHeight: "48px", fontWeight: "700", letterSpacing: "-0.02em" }],
         display: ["64px", { lineHeight: "64px", fontWeight: "700", letterSpacing: "-0.03em" }],
         "cost-lg": ["28px", { lineHeight: "32px", fontWeight: "600" }], // mono
@@ -65,7 +65,7 @@ const config: Config = {
       // espaçamento: usar a escala padrão (1=4 · 2=8 · 3=12 · 4=16 · 6=24 · 8=32 · 12=48 · 16=64); não criar valores fora dela
       maxWidth: { form: "var(--lab-w-form)", content: "var(--lab-w-content)", wide: "var(--lab-w-wide)" }, // NOVO
       height: { header: "56px", toolbar: "48px" }, // NOVO (h-14 / h-12 nomeados)
-      borderRadius: { lab: "12px", control: "8px" }, // MANTIDO
+      borderRadius: { lab: "12px", control: "12px", card: "20px", sheet: "28px" }, // MANTIDO
       boxShadow: {
         "lab-focus": "0 0 0 1px var(--lab-reagent), 0 0 24px var(--lab-reagent-dim)", // MANTIDO
         "lab-danger": "0 0 0 1px var(--lab-danger), 0 0 24px var(--lab-danger-dim)", // NOVO

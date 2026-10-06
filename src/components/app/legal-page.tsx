@@ -6,7 +6,7 @@ export type LegalSection = { heading: string; paragraphs: string[] };
 // Plain reading layout for /termos and /privacidade, outside the signed-in shell.
 export function LegalPage({ title, intro, sections }: { title: string; intro: string; sections: LegalSection[] }) {
   return <main className="mx-auto max-w-2xl px-5 py-12">
-    <Link href="/login" className="lab-wordmark text-h2">Lab<span>IA</span></Link>
+    <Link href="/login" className="lab-wordmark text-h2">Lab<span>I</span>A</Link>
     <h1 className="mt-8 font-display text-3xl font-semibold tracking-tight">{title}</h1>
     <p className="mt-2 text-caption text-lab-text-muted">Última atualização: {LEGAL_UPDATED_AT}</p>
     <p className="mt-6 text-body-sm leading-7 text-lab-text-dim">{intro}</p>

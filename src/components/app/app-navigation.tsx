@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 import { logout } from "@/app/(app)/actions";
 import { AccountAvatar } from "@/components/app/account-avatar";
-import { ThemeToggle } from "@/components/app/theme-toggle";
 import { CostChip } from "@/components/ui/cost-chip";
 
 const links = [
@@ -84,11 +83,10 @@ export function AppNavigation({
         aria-label="LabIA, painel"
         className="lab-wordmark rounded-control focus-visible:outline-none focus-visible:shadow-lab-focus"
       >
-        Lab<span>IA</span>
+        Lab<span>I</span>A
       </Link>
       <span className="hidden border-l border-lab-border pl-4 text-caption text-lab-text-muted md:block">{pathname.startsWith("/conta") ? "Conta" : pathname === "/saldo" ? "Saldo e extrato" : pathname.startsWith("/admin") ? "Admin" : links.find(link => active(link.href))?.label ?? "Produção"}</span>
       <div className="ml-auto flex items-center gap-3">
-        <ThemeToggle />
         <Link
           href="/saldo"
           aria-label="Ver saldo e extrato"

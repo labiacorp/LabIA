@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { AuthShell } from "@/components/app/auth-shell";
 import { Alert } from "@/components/ui/alert";
 import { gateMode } from "@/lib/access";
 import { AccessForm } from "./access-form";
@@ -11,13 +12,8 @@ export default function AccessPage() {
   if (mode === "off") redirect("/login");
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-form flex-col justify-center gap-6 px-5">
-      <div>
-        <p className="lab-wordmark text-h1">Lab<span>IA</span></p>
-        <h1 className="mt-4 font-display text-h2">Acesso restrito</h1>
-        <p className="mt-1 text-body-sm text-lab-text-dim">O LabIA está em beta fechado. Digite o código que você recebeu.</p>
-      </div>
+    <AuthShell title="Código de acesso" description="O LabIA está em acesso por convite. Digite o código que você recebeu.">
       {mode === "closed" ? <Alert variant="warning" title="O acesso está indisponível neste momento." /> : <AccessForm />}
-    </main>
+    </AuthShell>
   );
 }

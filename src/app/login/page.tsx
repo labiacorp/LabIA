@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { hasPass } from "@/lib/access";
 import { googleConfigured, loginErrorMessage } from "@/lib/auth-config";
 import { emailEnabled } from "@/lib/email";
+import { AuthShell } from "@/components/app/auth-shell";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DevelopmentLogin } from "./dev-form";
@@ -28,21 +29,11 @@ export default async function LoginPage({
   const message = loginErrorMessage(error);
   const notice = aviso ? notices[aviso] : undefined;
   return (
-    <main className="mx-auto flex min-h-screen max-w-form flex-col justify-center gap-6 px-5 py-8">
-      <div>
-        <p className="lab-wordmark text-h1">
-          Lab<span>IA</span>
-        </p>
-        <h1 className="mt-6 font-display text-h2">Entre no seu laboratório</h1>
-        <p className="mt-3 text-body-sm leading-6 text-lab-text-dim">
-          Seus personagens, produções e arquivos em um só lugar. Cada geração
-          mostra o custo antes de você confirmar.
-        </p>
-      </div>
+    <AuthShell title="Entrar" description="Cada geração mostra o custo antes de você confirmar. Pague só pelo que usar.">
       {message ? <Alert variant="error" title={message} /> : null}
       {notice ? <Alert variant="success" title={notice} /> : null}
       <PasswordLogin signup={emailEnabled()} />
-      <p className="text-center text-caption text-lab-text-muted">ou</p>
+      <p className="text-center text-body-sm text-lab-text-dim">ou</p>
       <form action={loginGoogle}>
         <Button
           size="lg"
@@ -69,12 +60,12 @@ export default async function LoginPage({
         </Alert>
       ) : null}
       {process.env.NODE_ENV === "development" ? <DevelopmentLogin /> : null}
-      <p className="text-caption text-lab-text-muted">
+      <p className="text-body-sm text-lab-text-dim">
         Beta fechada · use a conta que recebeu acesso.
       </p>
-      <p className="text-caption text-lab-text-muted">
+      <p className="text-body-sm text-lab-text-dim">
         <Link href="/termos" className="underline">Termos de Uso</Link> · <Link href="/privacidade" className="underline">Política de Privacidade</Link>
       </p>
-    </main>
+    </AuthShell>
   );
 }
