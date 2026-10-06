@@ -5,7 +5,8 @@ import { prepareImage, SHEET_DEFINITIONS } from "@/lib/providers/image-models";
 export type CharacterCard = { name: string; role: string; mood: string; visualSignature: string; persona: string };
 export type KitItem = { role: AssetRole; model: string; params: Record<string, unknown> };
 
-export type SheetSelection = { model: string; resolution: string };
+// `prompt`: the user's edited text; empty or missing means the standard prompt built from the character card.
+export type SheetSelection = { model: string; resolution: string; prompt?: string };
 export const DEFAULT_SHEET: SheetSelection = { model: "fal-ai/nano-banana-2", resolution: "2K" };
 const PORTRAIT_MODEL = "fal-ai/nano-banana-2/edit";
 export const PORTRAIT_ROLES = ["FRONT", "PROFILE", "DETAIL"] as const;
@@ -26,7 +27,7 @@ function identity(card: CharacterCard) {
 
 // One image with the whole kit, in the layout the founders use (turnaround, hero, poses, expressions, details, ID block).
 export function sheetItem(card: CharacterCard, selection: SheetSelection = DEFAULT_SHEET): KitItem {
-  const prompt = [
+  const standard = [
     "Character reference sheet for a social-media creator on a warm beige paper background, thin rust-colored section dividers and small-caps rust headings.",
     `The same single character appears in every panel: ${identity(card)}.`,
     "Panels: TURNAROUND (full body front, back and side), HERO (large central full-body portrait with two short handwritten rust annotations about the mood),",
@@ -35,6 +36,7 @@ export function sheetItem(card: CharacterCard, selection: SheetSelection = DEFAU
     `and a CHARACTER ID text block reading exactly: NAME: ${card.name} / ROLE: ${card.role} / CORE MOOD: ${card.mood} / VISUAL SIGNATURE: ${card.visualSignature || "-"} (write the values in English).`,
     "Photorealistic, natural skin, identical face, hair and outfit in all panels, sharp legible text, no watermark.",
   ].join(" ");
+  const prompt = selection.prompt?.trim() || standard;
   const item: KitItem = { role: "SHEET", model: selection.model, params: { prompt, aspect_ratio: "3:2", resolution: selection.resolution } };
   // Validates the model/quality pair and captures the per-image price used to settle the step.
   item.params.imagePricing = prepareImage(item.model, item.params, Number(process.env.USD_BRL_RATE) || 5.4).snapshot;
@@ -47,6 +49,7 @@ export function getSheetOptions(card: CharacterCard) {
     model: model.id,
     name: model.name,
     estimated: model.estimated === true,
+    maxPrompt: model.maxPrompt ?? 4000,
     configurations: Object.keys(model.rates).flatMap((resolution) => {
       try { return [{ resolution, brl: quote([sheetItem(card, { model: model.id, resolution })]).totalBrl }]; } catch { return []; }
     }),

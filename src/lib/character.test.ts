@@ -51,6 +51,15 @@ describe("kit cost after generation", () => {
   });
 });
 
+describe("edited sheet prompt", () => {
+  it("uses the user's text, falls back to the standard prompt when blank, and keeps the model's limit", () => {
+    const model = "fal-ai/nano-banana-2";
+    expect(sheetItem(card, { model, resolution: "2K", prompt: "  my own sheet prompt  " }).params.prompt).toBe("my own sheet prompt");
+    expect(sheetItem(card, { model, resolution: "2K", prompt: "   " }).params.prompt).toBe(sheetItem(card).params.prompt);
+    expect(() => sheetItem(card, { model, resolution: "2K", prompt: "x".repeat(4001) })).toThrow();
+  });
+});
+
 describe("sheet model options", () => {
   it("prices every text-to-image model server-side and drops pairs the prompt cannot use", () => {
     const options = getSheetOptions(card);

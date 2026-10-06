@@ -20,7 +20,7 @@ export async function startKit(influencerId: string, phase: "SHEET" | "PORTRAITS
     if (!influencer) return { error: "Influencer não encontrado." };
     const kit = await loadKit(influencerId);
     // The price is recomputed here from the chosen model; the browser's number is only compared against it.
-    const sheet = phase === "SHEET" ? { model: String(data.get("model") ?? ""), resolution: String(data.get("resolution") ?? "") } : undefined;
+    const sheet = phase === "SHEET" ? { model: String(data.get("model") ?? ""), resolution: String(data.get("resolution") ?? ""), prompt: String(data.get("prompt") ?? "") } : undefined;
     const plan = planFor(phase, cardOf(influencer), kit, sheet);
     if (plan.length === 0) return { error: "Não há nada para gerar." };
     await startPlan({ userId, influencerId, intentId, plan, expectedBrl });
