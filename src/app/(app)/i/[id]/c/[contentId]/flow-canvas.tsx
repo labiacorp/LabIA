@@ -15,7 +15,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { buttonVariants } from "@/components/ui/button";
 import { useMobile } from "@/lib/use-mobile";
-import { currency } from "@/lib/platform";
+import { costText } from "@/lib/plan";
 import { stepStatus } from "@/components/ui/badge";
 
 type StepData = {
@@ -62,9 +62,9 @@ function ProductionNode({ id, data, selected }: NodeProps<StepNode>) {
       <p className="mt-3 text-caption">{data.assets} arquivo(s)</p>
       <p className="mt-2 font-mono text-caption text-lab-text-dim">
         {data.actualCost !== null
-          ? `${currency(data.actualCost)} apurado`
+          ? `${costText(data.actualCost)} ✓`
           : data.estimatedCost !== null
-            ? `${currency(data.estimatedCost)} estimado`
+            ? `~${costText(data.estimatedCost)}`
             : "Custo a apurar"}
       </p>
       <div className="my-3 flex justify-between text-[10px] text-lab-text-muted">

@@ -12,3 +12,7 @@ export const costCredits = (brl: number) => Math.max(0, Math.ceil(brl / CREDIT_B
 export const balanceCredits = (brl: number) => Math.floor(brl / CREDIT_BRL + 1e-9);
 export const creditsText = (n: number) => `${fmt(n)} ${n === 1 ? "crédito" : "créditos"}`;
 export const planPriceText = () => PLAN_PRICE_BRL.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+export const costText = (brl: number) => creditsText(costCredits(brl));
+export const balanceText = (brl: number) => creditsText(balanceCredits(brl));
+// Per-unit rates (per second, per image) can be fractions of a credit.
+export const rateText = (brl: number) => `${(brl / CREDIT_BRL).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} créditos`;

@@ -5,7 +5,7 @@ import { Badge, stepStatus } from "@/components/ui/badge";
 import { CostChip } from "@/components/ui/cost-chip";
 import { DEFAULT_SHEET, getSheetOptions, kitSpent, PORTRAIT_ROLES, ROLE_LABEL, sheetItem, stepCost } from "@/lib/character";
 import { findImageDefinition, qualityLabel } from "@/lib/providers/image-models";
-import { currency } from "@/lib/platform";
+import { balanceText, costText } from "@/lib/plan";
 import { quote } from "@/lib/generation";
 import { cardOf, loadKit, planFor, type KitStep } from "@/lib/kit";
 import { getBalanceBrl } from "@/lib/ledger";
@@ -36,7 +36,7 @@ function Failure({ step }: { step: KitStep }) {
     <Alert variant="error" title="Esta geração falhou">
       {["submission_unknown", "cost_unknown"].includes(step.submissionState)
         ? "O custo precisa de conferência. Nada será reenviado automaticamente."
-        : "A geração não foi concluída. Confira o saldo antes de tentar novamente."}
+        : "A geração não foi concluída. Confira seus créditos antes de tentar novamente."}
     </Alert>
   );
 }
@@ -108,7 +108,7 @@ export async function CharacterTab({
     !providerConfigured()
       ? "A geração ainda precisa ser configurada pela equipe."
       : balance + 1e-9 < total
-        ? `Saldo insuficiente: você tem ${currency(balance)} e precisa de ${currency(total)}.`
+        ? `Créditos insuficientes: você tem ${balanceText(balance)} e precisa de ${costText(total)}.`
         : undefined;
 
   return (

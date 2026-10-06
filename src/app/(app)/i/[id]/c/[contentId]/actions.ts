@@ -19,7 +19,7 @@ export async function generateScene(influencerId: string, contentId: string, _pr
   } catch (error) {
     if (error instanceof UserError) return { error: error.message };
     console.error("[generateScene]", error);
-    return { error: "Não foi possível confirmar o pedido. Recarregue a página para conferir a etapa e o saldo antes de tentar novamente." };
+    return { error: "Não foi possível confirmar o pedido. Recarregue a página para conferir a etapa e os créditos antes de tentar novamente." };
   }
   revalidatePath(`/i/${influencerId}/c/${contentId}`);
   revalidatePath(`/i/${influencerId}`);
@@ -52,7 +52,7 @@ async function runVideoAction(influencerId: string, contentId: string, data: For
   } catch (error) {
     if (error instanceof UserError) return { error: error.message };
     console.error("[contentVideo]", error);
-    return { error: "Não foi possível confirmar o pedido. Recarregue para conferir a etapa e o saldo." };
+    return { error: "Não foi possível confirmar o pedido. Recarregue para conferir a etapa e os créditos." };
   }
   revalidatePath(`/i/${influencerId}/c/${contentId}`);
   revalidatePath(`/i/${influencerId}`);

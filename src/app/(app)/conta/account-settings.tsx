@@ -7,8 +7,9 @@ import { AccountAvatar } from "@/components/app/account-avatar";
 import { AccountForm } from "./account-form";
 import { AvatarForm } from "./avatar-form";
 import { ReferralLink } from "./referral-link";
+import { balanceCredits, creditsText } from "@/lib/plan";
 import { REFERRAL_BONUS_BRL, REFERRAL_CAP_BRL } from "@/lib/referral-rules";
-import { currency as brl } from "@/lib/platform";
+const brl = (v: number) => creditsText(balanceCredits(v));
 import { logout } from "../actions";
 
 export function SettingsDialog({ dialog, title, children }: { dialog: RefObject<HTMLDialogElement | null>; title: string; children: ReactNode }) {
@@ -31,7 +32,7 @@ export function AccountSettings({ name, email, avatarVersion, referralCode, refe
     <section className="account-settings-section" aria-labelledby="account-settings-title">
       <h2 id="account-settings-title">Sua conta</h2>
       <div className="account-settings-group">
-        <Link href="/saldo" className="account-settings-row"><span className="account-row-icon"><Wallet className="size-5" /></span><span className="account-row-label">Saldo e extrato</span><ChevronRight className="account-chevron" /></Link>
+        <Link href="/saldo" className="account-settings-row"><span className="account-row-icon"><Wallet className="size-5" /></span><span className="account-row-label">Plano e créditos</span><ChevronRight className="account-chevron" /></Link>
         <Link href="/conta/seguranca" className="account-settings-row"><span className="account-row-icon"><ShieldCheck className="size-5" /></span><span className="account-row-label">Acesso e segurança</span><ChevronRight className="account-chevron" /></Link>
         <a href="/api/account/export" className="account-settings-row"><span className="account-row-icon"><Download className="size-5" /></span><span className="account-row-label">Exportar meus dados</span><span className="account-row-value">JSON</span><ChevronRight className="account-chevron" /></a>
       </div>
@@ -43,9 +44,9 @@ export function AccountSettings({ name, email, avatarVersion, referralCode, refe
     </section>
     <form action={logout} className="account-signout"><button type="submit"><LogOut className="size-4" aria-hidden />Sair da conta</button></form>
     <SettingsDialog dialog={profile} title="Editar perfil"><AvatarForm name={name} version={avatarVersion} /><AccountForm name={name} /><div className="account-readonly-email"><span>E-mail de acesso</span><p>{email}</p></div></SettingsDialog>
-    <SettingsDialog dialog={referral} title="Convide alguém"><p className="text-body-sm leading-6 text-lab-text-dim">Na primeira recarga de quem você convidar, vocês dois ganham {brl(REFERRAL_BONUS_BRL)} em créditos.</p><ReferralLink code={referralCode} />
+    <SettingsDialog dialog={referral} title="Convide alguém"><p className="text-body-sm leading-6 text-lab-text-dim">No primeiro mês pago de quem você convidar, vocês dois ganham {brl(REFERRAL_BONUS_BRL)}.</p><ReferralLink code={referralCode} />
       <dl className="mt-4 grid grid-cols-3 gap-2 text-center">{([["Convites livres", String(stats.invites)], ["Contas criadas", String(stats.accounts)], ["Você ganhou", brl(stats.earnedBrl)]] as const).map(([label, value]) => <div key={label} className="rounded-lg bg-lab-bg p-3"><dt className="text-caption text-lab-text-muted">{label}</dt><dd className="font-display text-xl">{value}</dd></div>)}</dl>
-      {stats.accounts > stats.confirmed && <p className="mt-3 text-caption text-lab-text-muted">{stats.accounts - stats.confirmed} {stats.accounts - stats.confirmed === 1 ? "conta ainda não fez" : "contas ainda não fizeram"} a primeira recarga.</p>}
-      <details className="mt-3 text-body-sm text-lab-text-dim"><summary className="cursor-pointer py-2">Como funciona</summary><ul className="mt-2 grid list-disc gap-1 pl-5 leading-6"><li>Seu link deixa a pessoa entrar na beta sem código. Você tem 3 convites e ganha mais 3 a cada R$ 50 usados em gerações.</li><li>A indicação conta na primeira conta criada em até 30 dias neste navegador.</li><li>O bônus entra quando a pessoa faz a primeira recarga com cartão: {brl(REFERRAL_BONUS_BRL)} para ela e {brl(REFERRAL_BONUS_BRL)} para você, até {brl(REFERRAL_CAP_BRL)} por pessoa que indica.</li><li>Os créditos de bônus servem para gerar e não podem ser sacados.</li></ul></details></SettingsDialog>
+      {stats.accounts > stats.confirmed && <p className="mt-3 text-caption text-lab-text-muted">{stats.accounts - stats.confirmed} {stats.accounts - stats.confirmed === 1 ? "conta ainda não assinou" : "contas ainda não assinaram"}.</p>}
+      <details className="mt-3 text-body-sm text-lab-text-dim"><summary className="cursor-pointer py-2">Como funciona</summary><ul className="mt-2 grid list-disc gap-1 pl-5 leading-6"><li>Seu link deixa a pessoa entrar na beta sem código. Você tem 3 convites e ganha mais 3 a cada {brl(50)} usados em gerações.</li><li>A indicação conta na primeira conta criada em até 30 dias neste navegador.</li><li>O bônus entra quando a pessoa paga o primeiro mês: {brl(REFERRAL_BONUS_BRL)} para ela e {brl(REFERRAL_BONUS_BRL)} para você, até {brl(REFERRAL_CAP_BRL)} por pessoa que indica.</li><li>Os créditos de bônus servem para gerar e não viram dinheiro.</li></ul></details></SettingsDialog>
   </div>;
 }

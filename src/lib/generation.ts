@@ -1,4 +1,5 @@
 import { Prisma } from "@/generated/prisma/client";
+import { balanceText, costText } from "@/lib/plan";
 import type { AssetRole } from "@/generated/prisma/enums";
 import { getProvider, mockEnabled, providerConfigured } from "@/lib/provider";
 import { prisma } from "@/lib/prisma";
@@ -73,7 +74,7 @@ export async function startPlan(input: {
   const priced = quote(input.plan);
   if (Math.abs(priced.totalBrl - input.expectedBrl) > 0.005) {
     throw new UserError(
-      `O preço mudou de R$ ${input.expectedBrl.toFixed(2)} para R$ ${priced.totalBrl.toFixed(2)}. Revise e confirme de novo.`,
+      `O custo mudou de ${costText(input.expectedBrl)} para ${costText(priced.totalBrl)}. Revise e confirme de novo.`,
     );
   }
 
@@ -120,7 +121,7 @@ export async function startPlan(input: {
       const balance = Number(_sum.deltaBrl?.toString() ?? 0);
       if (!hasUnlimitedBalance(me?.email) && balance + 1e-9 < priced.totalBrl) {
         throw new UserError(
-          `Saldo insuficiente: você tem R$ ${balance.toFixed(2)} e precisa de R$ ${priced.totalBrl.toFixed(2)}.`,
+          `Créditos insuficientes: você tem ${balanceText(balance)} e precisa de ${costText(priced.totalBrl)}.`,
         );
       }
       const rows: Created[] = [];

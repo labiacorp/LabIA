@@ -9,8 +9,9 @@ import { CostChip } from "@/components/ui/cost-chip";
 import { Field, Select, Textarea } from "@/components/ui/field";
 import type { ContentState } from "./actions";
 
-const totalPrice = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-const perSecond = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 3, maximumFractionDigits: 4 });
+import { costText, rateText } from "@/lib/plan";
+const totalPrice = { format: costText };
+const perSecond = { format: rateText };
 
 export type VideoFormOption = {
   key: string;
@@ -149,7 +150,7 @@ export function VideoForm({ action, intent, prompt, balanceBrl, blockedReason, o
       {configuration && pricing?.baseFeesBrl?.[configuration.resolution] ? <p className="text-caption text-lab-text-dim">+ {totalPrice.format(pricing.baseFeesBrl[configuration.resolution])} por geração.</p> : null}
       {pricing?.imageFeeBrl ? <p className="text-caption text-lab-text-dim">+ {perSecond.format(pricing.imageFeeBrl)} por imagem de entrada.</p> : null}
       {pricing ? <details className="text-caption text-lab-text-dim"><summary className="cursor-pointer">Detalhes do preço</summary>
-        <p className="mt-2">{pricing.perClip ? "Cobrança por clipe; R$/s é um equivalente." : pricing.approximate ? "R$/s aproximado; a cobrança depende dos pixels e duração." : "Tarifa para a qualidade e áudio selecionados."} <a href={pricing.source} target="_blank" rel="noreferrer" className="underline">Fonte fal.ai</a> · Conferido em {pricing.checkedOn.split("-").reverse().join("/")}.</p>
+        <p className="mt-2">{pricing.perClip ? "Cobrança por clipe; o valor por segundo é um equivalente." : pricing.approximate ? "Valor por segundo aproximado; depende dos pixels e da duração." : "Tarifa para a qualidade e áudio selecionados."} <a href={pricing.source} target="_blank" rel="noreferrer" className="underline">Fonte fal.ai</a> · Conferido em {pricing.checkedOn.split("-").reverse().join("/")}.</p>
       </details> : null}
       {option?.strategy === "clip" && configuration ? (
         <>
@@ -181,7 +182,7 @@ export function VideoForm({ action, intent, prompt, balanceBrl, blockedReason, o
       <Field label="Movimento e ação" htmlFor="video-prompt" description="Descreva o que acontece no vídeo. A imagem desta etapa será usada como referência.">
         <Textarea id="video-prompt" name="prompt" defaultValue={prompt} required maxLength={2000} disabled={pending} aria-describedby="video-prompt-description" />
       </Field>
-      {blockedReason || insufficientBalance ? <Alert variant="warning" title={blockedReason ?? "Saldo insuficiente para esta configuração."}>{blockedReason ? null : <>Escolha uma opção mais barata ou <Link href="/saldo" className="underline">recarregue o saldo</Link>.</>}</Alert> : null}
+      {blockedReason || insufficientBalance ? <Alert variant="warning" title={blockedReason ?? "Créditos insuficientes para esta configuração."}>{blockedReason ? null : <>Escolha uma opção mais barata ou <Link href="/saldo" className="underline">veja seu plano</Link>.</>}</Alert> : null}
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" variant="cost" onClick={() => track("generate_clicked", { kind: "video", estimate_brl: configuration?.brl ?? 0 })} size="lg" loading={pending} disabled={!!blockedReason || unavailable || insufficientBalance}>Aprovar custo e gerar vídeo</Button>
         <span aria-live="polite" aria-atomic="true">

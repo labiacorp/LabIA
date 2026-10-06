@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { REFERRAL_BONUS_BRL } from "@/lib/referral-rules";
-import { currency } from "@/lib/platform";
+import { balanceCredits, creditsText } from "@/lib/plan";
 export default async function InvitationPage({
   searchParams,
 }: {
@@ -10,7 +10,7 @@ export default async function InvitationPage({
   const { invalid } = await searchParams;
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 p-6">
-      <p className="text-caption text-lab-text-muted">LABIA · INDICAÇÕES</p>
+      <p className="text-caption text-lab-text-muted">Convite</p>
       <h1 className="font-display text-3xl">
         {invalid
           ? "Este link de indicação não está disponível"
@@ -19,7 +19,7 @@ export default async function InvitationPage({
       <p className="text-body-lg text-lab-text-dim">
         {invalid
           ? "Peça um novo link a quem indicou a LabIA. Você também pode continuar pelo acesso habitual."
-          : `Alguém que já cria na LabIA convidou você. Crie sua conta e, na primeira recarga, ganhe ${currency(REFERRAL_BONUS_BRL)} a mais em créditos.`}
+          : `Alguém que já cria na LabIA convidou você. Crie sua conta e, no primeiro mês pago, ganhe ${creditsText(balanceCredits(REFERRAL_BONUS_BRL))} a mais.`}
       </p>
       {!invalid && (
         <p className="text-body-sm leading-6 text-lab-text-muted">
