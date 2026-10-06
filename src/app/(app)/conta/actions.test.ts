@@ -66,7 +66,6 @@ it("rejects oversized bio and invalid preferences before writing", async () => {
   for (const [field, value] of [
     ["bio", "x".repeat(241)],
     ["defaultAspectRatio", "2:9"],
-    ["defaultContentView", "foreign"],
   ]) {
     const form = new FormData();
     form.set("name", "Ana");

@@ -23,6 +23,8 @@ type StepData = {
   status: keyof typeof stepStatus;
   kind: string;
   assets: number;
+  thumb: string | null;
+  video: string | null;
   actualCost: number | null;
   estimatedCost: number | null;
   inputType: string;
@@ -59,7 +61,14 @@ function ProductionNode({ id, data, selected }: NodeProps<StepNode>) {
       <p className="mt-2 text-caption text-lab-text-dim">
         {stepStatus[data.status][1]}
       </p>
-      <p className="mt-3 text-caption">{data.assets} arquivo(s)</p>
+      {data.video ? (
+        <video src={data.video} muted loop playsInline preload="metadata" className="nodrag mt-3 aspect-[9/16] max-h-40 w-full rounded-control bg-lab-bg object-cover" onMouseEnter={(event) => void event.currentTarget.play().catch(() => {})} onMouseLeave={(event) => event.currentTarget.pause()} />
+      ) : data.thumb ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={data.thumb} alt="" className="mt-3 aspect-[9/16] max-h-40 w-full rounded-control object-cover" />
+      ) : (
+        <div className="lab-placeholder-media mt-3 flex h-20 items-center justify-center rounded-control text-caption text-lab-text-muted">{data.status === "RUNNING" ? "Gerando…" : "Sem arquivo ainda"}</div>
+      )}
       <p className="mt-2 font-mono text-caption text-lab-text-dim">
         {data.actualCost !== null
           ? `${costText(data.actualCost)} ✓`
@@ -104,6 +113,8 @@ export function FlowCanvas({
     title: string;
     status: keyof typeof stepStatus;
     assets: number;
+    thumb: string | null;
+    video: string | null;
     actualCost: number | null;
     estimatedCost: number | null;
   }[];

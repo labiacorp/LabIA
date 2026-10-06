@@ -1,11 +1,11 @@
 "use client";
 
-import { rateText } from "@/lib/plan";
+import { costText } from "@/lib/plan";
 import { useActionState, useState } from "react";
 
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CostChip } from "@/components/ui/cost-chip";
+import { CostSummary, withCost } from "@/components/ui/cost-summary";
 import { Field, Select, Textarea } from "@/components/ui/field";
 import type { getSheetOptions, SheetSelection } from "@/lib/character";
 import { qualityLabel } from "@/lib/providers/image-models";
@@ -23,7 +23,7 @@ type Props = {
   balanceBrl: number;
 };
 
-const price = { format: rateText };
+const price = { format: costText };
 
 // Pick the model and quality for the sheet. The price shown is sent back and recomputed on the server: if it differs, nothing is charged.
 export function SheetForm({ action, intent, options, initial, prompt, label, variant = "primary", blockedReason, balanceBrl }: Props) {
@@ -66,10 +66,8 @@ export function SheetForm({ action, intent, options, initial, prompt, label, var
         </div>
         {option ? <p className="mt-2"><a href={option.source} target="_blank" rel="noreferrer" className="underline">Página do modelo na fal.ai</a></p> : null}
       </details>
-      <div className="flex flex-wrap items-center gap-3">
-        <Button variant={variant} loading={pending} disabled={!!blockedReason || !configuration || insufficient || tooLong || !text.trim()}>{label}</Button>
-        <CostChip state={configuration ? "estimated" : "unavailable"} value={configuration?.brl} prefix="custo" />
-      </div>
+      {configuration ? <CostSummary items={[{ label: `Ficha ${qualityLabel(configuration.resolution)}`, brl: configuration.brl }]} balanceBrl={balanceBrl} className="max-w-sm" /> : null}
+      <Button variant={variant} className="justify-self-start" loading={pending} disabled={!!blockedReason || !configuration || insufficient || tooLong || !text.trim()}>{withCost(label, configuration?.brl)}</Button>
       {insufficient ? <p className="text-caption text-lab-warning">Créditos insuficientes para esta ficha.</p> : null}
       {blockedReason ? <p className="text-caption text-lab-warning">{blockedReason}</p> : null}
       {state.error ? <Alert variant="error" title={state.error} /> : null}
