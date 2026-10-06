@@ -1,5 +1,6 @@
 import type { NetworkId } from "./networks";
 import { mockEnabled } from "../provider";
+import { BundlePublisher } from "./bundle";
 import { MockPublisher } from "./mock";
 import { XPublisher } from "./x";
 
@@ -29,11 +30,10 @@ export interface Publisher {
 
 export class AuthExpiredError extends Error {}
 
-// Task 9 replaces the "bundle" throw with its adapter.
 export function getPublisher(backend: Backend): Publisher {
   if (backend === "mock" || mockEnabled()) return new MockPublisher();
   if (backend === "x") return new XPublisher();
-  throw new Error("Backend unavailable");
+  return new BundlePublisher();
 }
 
 export function connectBackend(backend: "x" | "bundle"): Backend {

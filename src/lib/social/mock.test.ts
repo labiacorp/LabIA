@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { BundlePublisher } from "./bundle";
 import { MockPublisher } from "./mock";
 import { XPublisher } from "./x";
 import { backendReady, connectBackend, getPublisher, type AccountRef, type PublishInput } from "./publisher";
@@ -80,10 +81,10 @@ describe("getPublisher / connectBackend / backendReady", () => {
     expect(backendReady("bundle")).toBe(true);
   });
 
-  it("returns the X adapter and throws for bundle when not mocked", () => {
+  it("returns the X and bundle adapters when not mocked", () => {
     vi.stubEnv("FAL_MOCK", "");
     expect(getPublisher("x")).toBeInstanceOf(XPublisher);
-    expect(() => getPublisher("bundle")).toThrow("Backend unavailable");
+    expect(getPublisher("bundle")).toBeInstanceOf(BundlePublisher);
     expect(connectBackend("bundle")).toBe("bundle");
   });
 
