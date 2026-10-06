@@ -40,7 +40,7 @@ const STEPS: [string, string, LucideIcon, string, string, number][] = [
   ["06", "Montagem", Scissors, "Corte final em 9:16, pronto pra postar.", "R$ 0,00", 0],
 ];
 const FAQS: [string, string][] = [
-  ["Como funciona o saldo?", "Você recarrega via Pix a partir de R$ 20. Cada etapa mostra o custo previsto, reserva esse valor quando você confirma e cobra só o real quando termina. A diferença volta na hora."],
+  ["Como funciona o saldo?", "Você recarrega por cartão de crédito a partir de R$ 20. Cada etapa mostra o custo previsto, reserva esse valor quando você confirma e cobra só o real quando termina. A diferença volta na hora."],
   ["E se a geração falhar?", "O valor reservado volta inteiro para o seu saldo e aparece no extrato como estorno. Você pode tentar de novo sem perder o que já foi feito nas etapas anteriores."],
   ["Por que o preço é \"previsto\"?", "Os modelos de IA cobram pelo que realmente processam. A gente mostra a melhor estimativa antes e o valor exato depois. Quase sempre o real sai igual ou abaixo."],
   ["Preciso de convite?", "Por enquanto, sim. O LabIA está em beta fechado: quem já usa pode te passar um código de acesso."],
@@ -252,7 +252,7 @@ export function Landing() {
                 {[["Vídeo · Lia · 3 hábitos", "~5,67", "−R$ 5,41"], ["Imagem · Lia · 3 hábitos", "~0,44", "−R$ 0,41"], ["Lip sync · falhou", "estorno", "R$ 0,00"]].map(([a, b, c]) => (
                   <div key={a} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto auto", gap: 14, alignItems: "center", minHeight: 48, borderBottom: `1px solid ${T.line}`, fontSize: 14 }}><span>{a}</span><span style={{ fontFamily: mono, color: T.ink2, textDecoration: b.startsWith("~") ? "line-through" : "none" }}>{b}</span><span style={{ fontFamily: mono }}>{c}</span></div>
                 ))}
-                <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: 14, alignItems: "center", minHeight: 48, fontSize: 14 }}><span>Recarga via Pix</span><span style={{ fontFamily: mono, color: T.cost }}>+R$ 50,00</span></div>
+                <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: 14, alignItems: "center", minHeight: 48, fontSize: 14 }}><span>Recarga no cartão</span><span style={{ fontFamily: mono, color: T.cost }}>+R$ 50,00</span></div>
               </div>
             </div>
           </div>
@@ -278,7 +278,7 @@ export function Landing() {
           <div style={{ display: "flex", flexDirection: "column", gap: 6, paddingTop: 20, borderTop: `1px solid ${T.line}` }}>
             <span style={{ fontFamily: mono, fontSize: 12, color: T.ink2 }}>por mês, aproximado</span>
             <span style={{ fontFamily: display, fontWeight: 900, fontSize: "clamp(64px,8vw,104px)", lineHeight: 0.85, color: T.cost }}>~R$ {brl(monthly)}</span>
-            <span style={{ fontFamily: mono, fontSize: 13, color: T.ink2 }}>{n} × ~R$ 7,02 · recarga sugerida R$ {pack} via Pix</span>
+            <span style={{ fontFamily: mono, fontSize: 13, color: T.ink2 }}>{n} × ~R$ 7,02 · recarga sugerida R$ {pack} no cartão</span>
           </div>
           <Link href="/acesso" onClick={() => track("landing_cta", { place: "calculator", videos: n })} style={{ ...pill({ height: 56, justifyContent: "center", background: T.ink, color: T.bg, fontWeight: 600, fontSize: 16 }), textDecoration: "none" }}>Tenho um código</Link>
         </div>
@@ -320,10 +320,10 @@ export function Landing() {
               <div style={{ padding: "16px 14px", display: "flex", flexDirection: "column", gap: 12 }}>
                 <span style={{ fontFamily: mono, fontSize: 11, letterSpacing: ".08em", color: T.ink2 }}>SALDO</span>
                 <span style={{ fontFamily: display, fontWeight: 900, fontSize: 68, lineHeight: 0.85, color: T.cost }}>R$ 36,69</span>
-                <div style={pill({ height: 44, background: T.ink, color: T.bg, justifyContent: "center", fontWeight: 600, fontSize: 14 })}>Recarregar via Pix</div>
+                <div style={pill({ height: 44, background: T.ink, color: T.bg, justifyContent: "center", fontWeight: 600, fontSize: 14 })}>Recarregar no cartão</div>
                 <span style={{ fontFamily: mono, fontSize: 11, letterSpacing: ".08em", color: T.ink2, marginTop: 6 }}>EXTRATO · HOJE</span>
                 <div style={{ display: "flex", flexDirection: "column", fontSize: 13 }}>
-                  {[["Vídeo · Lia", "−5,41 ✓", T.ink], ["Imagem · Lia", "−0,41 ✓", T.ink], ["Roteiro e voz · Lia", "−0,32 ✓", T.ink], ["Lip sync · estorno", "0,00", T.ink2], ["Recarga Pix", "+50,00", T.cost]].map(([a, b, c], i, arr) => (
+                  {[["Vídeo · Lia", "−5,41 ✓", T.ink], ["Imagem · Lia", "−0,41 ✓", T.ink], ["Roteiro e voz · Lia", "−0,32 ✓", T.ink], ["Lip sync · estorno", "0,00", T.ink2], ["Recarga cartão", "+50,00", T.cost]].map(([a, b, c], i, arr) => (
                     <div key={a} style={{ display: "flex", justifyContent: "space-between", gap: 10, minHeight: 44, alignItems: "center", borderBottom: i < arr.length - 1 ? `1px solid ${T.line}` : 0 }}><span style={{ color: i === 3 ? T.ink2 : T.ink }}>{a}</span><span style={{ fontFamily: mono, color: c }}>{b}</span></div>
                   ))}
                 </div>
