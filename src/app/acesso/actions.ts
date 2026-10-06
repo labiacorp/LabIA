@@ -1,9 +1,8 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { ACCESS_COOKIE, ACCESS_TTL_SECONDS, codeMatches, gateMode, signAccessPass } from "@/lib/access";
+import { codeMatches, gateMode, grantPass } from "@/lib/access";
 import { clientIp, hit, TOO_MANY_ATTEMPTS } from "@/lib/rate-limit";
 
 export type UnlockState = { error?: string };
@@ -17,12 +16,6 @@ export async function unlockAction(_previous: UnlockState, formData: FormData): 
   // One answer for any miss: nothing says how close the guess was.
   if (!codeMatches(String(formData.get("code") ?? ""))) return { error: "Código incorreto." };
 
-  (await cookies()).set(ACCESS_COOKIE, signAccessPass(), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: ACCESS_TTL_SECONDS,
-  });
+  await grantPass();
   redirect("/login");
 }

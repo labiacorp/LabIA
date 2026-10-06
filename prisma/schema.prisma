@@ -56,6 +56,7 @@ enum LedgerReason {
   TOPUP
   SPEND
   REFUND
+  REFERRAL
 }
 
 model User {

@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { grantReferralBonus } from "@/lib/referrals";
 
 // Card payments through Stripe Checkout (hosted page: card data never touches this server).
 export const TOPUP_PACKS_BRL = [20, 50, 100, 200] as const;
@@ -16,9 +17,11 @@ export async function creditPaidSession(session: Pick<Stripe.Checkout.Session, "
   if (!user) return "ignored" as const;
   try {
     await prisma.ledgerEntry.create({ data: { userId: user.id, deltaBrl: session.amount_total / 100, reason: "TOPUP", note: `stripe:${session.id}` } });
-    return "credited" as const;
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") return "duplicate" as const;
-    throw error;
+    if (!(error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002")) throw error;
+    await grantReferralBonus(user.id);
+    return "duplicate" as const;
   }
+  await grantReferralBonus(user.id);
+  return "credited" as const;
 }

@@ -20,7 +20,7 @@ export default async function BalancePage({ searchParams }: { searchParams: Prom
   const page = Number.isSafeInteger(requested) && requested > 0 ? Math.min(requested,pages) : 1;
   const entries = await prisma.ledgerEntry.findMany({ where: { userId }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], skip:(page-1)*25, take: 25, include: { step: { select: { content: { select: { title: true } }, influencer: { select: { name: true } } } } } });
   const falUsd = balance === Infinity ? await getFalCreditsUsd() : undefined;
-  const labels = { TOPUP: "Crédito adicionado", SPEND: "Reserva para geração", REFUND: "Devolução de reserva" };
+  const labels = { TOPUP: "Crédito adicionado", SPEND: "Reserva para geração", REFUND: "Devolução de reserva", REFERRAL: "Bônus de indicação" };
   const big = "font-display text-[clamp(64px,10vw,104px)] font-black uppercase leading-[.85] text-lab-reagent-bright";
   return <div className="mx-auto flex max-w-content flex-col gap-8 [&>div:first-child]:mb-0">
     <PageHeading title="Saldo e extrato" description="Seus créditos e o histórico de uso, centavo por centavo." />

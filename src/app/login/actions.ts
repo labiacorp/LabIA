@@ -4,11 +4,10 @@ import { AuthError, CredentialsSignin } from "next-auth";
 import { z } from "zod";
 import { cookies } from "next/headers";
 import { isAllowed, signIn } from "@/auth";
-import { hasPass } from "@/lib/access";
 import { hashPassword, passwordError } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { clientIp, hit, TOO_MANY_ATTEMPTS } from "@/lib/rate-limit";
-import { registerSignIn, REFERRAL_COOKIE } from "@/lib/referrals";
+import { admitted, registerSignIn, REFERRAL_COOKIE } from "@/lib/referrals";
 import { googleConfigured } from "@/lib/auth-config";
 import { emailEnabled } from "@/lib/email";
 import { issueEmailToken } from "@/lib/email-tokens";
@@ -66,7 +65,7 @@ export async function authenticatePassword(
   const email = z.email().safeParse(String(form.get("email") ?? "").trim().toLowerCase());
   const password = String(form.get("password") ?? "");
   if (!email.success) return { error: "Digite um e-mail válido." };
-  if (!(await hasPass())) redirect("/acesso");
+  if (!(await admitted())) redirect("/acesso");
   if (create) {
     if (!emailEnabled()) return { error: "O cadastro com senha ainda não está disponível." };
     const invalid = passwordError(password);

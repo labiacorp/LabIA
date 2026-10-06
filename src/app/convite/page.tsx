@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import { REFERRAL_BONUS_BRL } from "@/lib/referral-rules";
+import { currency } from "@/lib/platform";
 export default async function InvitationPage({
   searchParams,
 }: {
@@ -12,20 +14,22 @@ export default async function InvitationPage({
       <h1 className="font-display text-3xl">
         {invalid
           ? "Este link de indicação não está disponível"
-          : "Sua próxima criação começa aqui"}
+          : "Seu convite para a LabIA chegou"}
       </h1>
       <p className="text-body-lg text-lab-text-dim">
         {invalid
           ? "Peça um novo link a quem indicou a LabIA. Você também pode continuar pelo acesso habitual."
-          : "Você recebeu uma indicação para conhecer a LabIA. Ao criar sua primeira conta neste navegador em até 30 dias, a indicação será registrada."}
+          : `Alguém que já cria na LabIA convidou você. Crie sua conta e, na primeira recarga, ganhe ${currency(REFERRAL_BONUS_BRL)} a mais em créditos.`}
       </p>
-      <p className="text-body-sm leading-6 text-lab-text-muted">
-        Estamos em beta fechada. A indicação não substitui o código de acesso
-        nem a liberação do seu e-mail. Solicite esses dados à equipe antes de
-        entrar. Não há bônus ou créditos neste programa.
-      </p>
+      {!invalid && (
+        <p className="text-body-sm leading-6 text-lab-text-muted">
+          A LabIA está em beta fechada: este convite libera a entrada sem código
+          enquanto quem convidou tiver convites livres. Se eles acabarem, peça o
+          código à equipe.
+        </p>
+      )}
       <Link href="/login" className={buttonVariants({ size: "lg" })}>
-        Continuar para o acesso
+        Criar minha conta
       </Link>
       <Link href="/" className="text-center text-body-sm underline">
         Conhecer a LabIA

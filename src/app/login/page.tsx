@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { hasPass } from "@/lib/access";
+import { admitted } from "@/lib/referrals";
 import { googleConfigured, loginErrorMessage } from "@/lib/auth-config";
 import { emailEnabled } from "@/lib/email";
 import { AuthShell } from "@/components/app/auth-shell";
@@ -23,7 +23,7 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string; aviso?: string }>;
 }) {
   if ((await auth())?.user) redirect("/painel");
-  if (!(await hasPass())) redirect("/acesso");
+  if (!(await admitted())) redirect("/acesso");
   const enabled = googleConfigured();
   const { error, aviso } = await searchParams;
   const message = loginErrorMessage(error);

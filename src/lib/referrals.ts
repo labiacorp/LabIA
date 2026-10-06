@@ -1,5 +1,14 @@
 import { randomBytes } from "node:crypto";
+import { cookies } from "next/headers";
+import { gateMode, hasPass } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
+
+import { REFERRAL_BONUS_BRL, REFERRAL_CAP_BRL } from "@/lib/referral-rules";
+
+// The referral program (docs/research/referrals.md). Values are a first guess to validate with real users.
+const INVITES_BASE = 3;
+const INVITES_PER_STEP = 3;
+const INVITES_STEP_BRL = 50;
 
 export const REFERRAL_COOKIE = "labia_referral";
 export const REFERRAL_TTL = 30 * 24 * 60 * 60;
@@ -70,4 +79,53 @@ export async function registerSignIn(
         referrer && referrer.email !== email ? referrer.id : undefined,
     },
   });
+}
+
+// Invites still open on a link: 3 to start, 3 more per R$ 50 spent on generations. Every account created
+// through the link uses one.
+export async function invitesLeft(userId: string) {
+  const [{ _sum }, used] = await Promise.all([
+    prisma.ledgerEntry.aggregate({ where: { userId, reason: { in: ["SPEND", "REFUND"] } }, _sum: { deltaBrl: true } }),
+    prisma.user.count({ where: { referredById: userId } }),
+  ]);
+  const spent = Math.max(0, -Number(_sum.deltaBrl?.toString() ?? 0));
+  return Math.max(0, INVITES_BASE + INVITES_PER_STEP * Math.floor(spent / INVITES_STEP_BRL) - used);
+}
+
+// Through the beta gate: the access code, or a referral link that still has invites.
+// ponytail: the count is read, not reserved, so people signing up in the same second can overshoot by one or two.
+export async function admitted() {
+  if (await hasPass()) return true;
+  const code = (await cookies()).get(REFERRAL_COOKIE)?.value;
+  if (gateMode() !== "on" || !validReferralCode(code)) return false;
+  const referrer = await prisma.user.findUnique({ where: { referralCode: code }, select: { id: true } });
+  return !!referrer && (await invitesLeft(referrer.id)) > 0;
+}
+
+// Paid top-up of a referred account: R$ 10 for them and R$ 10 for whoever invited them (up to R$ 100 in total).
+// Called on every paid top-up; the unique index on "referral%" notes makes all but the first a no-op.
+export async function grantReferralBonus(userId: string) {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { referredById: true } });
+  if (!user?.referredById) return;
+  const { _sum } = await prisma.ledgerEntry.aggregate({
+    where: { userId: user.referredById, reason: "REFERRAL", note: { startsWith: "referral:" } },
+    _sum: { deltaBrl: true },
+  });
+  const capped = Number(_sum.deltaBrl?.toString() ?? 0) + REFERRAL_BONUS_BRL > REFERRAL_CAP_BRL;
+  await prisma.ledgerEntry.createMany({
+    skipDuplicates: true,
+    data: [
+      { userId, deltaBrl: REFERRAL_BONUS_BRL, reason: "REFERRAL", note: `referral-welcome:${userId}` },
+      ...(capped ? [] : [{ userId: user.referredById, deltaBrl: REFERRAL_BONUS_BRL, reason: "REFERRAL" as const, note: `referral:${userId}` }]),
+    ],
+  });
+}
+
+export async function referralStats(userId: string) {
+  const [accounts, { _sum, _count }, invites] = await Promise.all([
+    prisma.user.count({ where: { referredById: userId } }),
+    prisma.ledgerEntry.aggregate({ where: { userId, reason: "REFERRAL", note: { startsWith: "referral:" } }, _sum: { deltaBrl: true }, _count: true }),
+    invitesLeft(userId),
+  ]);
+  return { accounts, confirmed: _count, earnedBrl: Number(_sum.deltaBrl?.toString() ?? 0), invites };
 }

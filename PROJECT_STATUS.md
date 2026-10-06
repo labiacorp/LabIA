@@ -22,7 +22,7 @@ App UI follows the Claude Design "Corte" handoff (2026-10-05): dark only (light 
 
 - `/modelos` offers five original editable script starters and owned saved briefing/script snapshots. Save is idempotent per source production; reuse and duplication create fresh free pipeline steps without copying media, charges or approval. Personal models can be deleted without affecting their productions and are included in account export.
 - Character profile selects and previews a completed owned FRONT portrait. Scene UI and execution use this explicit selection, including when newer portraits exist.
-- `/conta#indicacoes` exposes a stable personal referral link and new-account count. `/r/[code]` captures first-touch attribution for 30 days; the sign-in creation branch attributes only new accounts. `/convite` explains beta restrictions. No financial reward, email sending or access-gate bypass. See `docs/research/referrals.md`.
+- Referrals (`src/lib/referrals.ts`, values in `referral-rules.ts`): `/conta#indicacoes` shows the link, free invites, accounts created and R$ earned. `/r/[code]` sets a 30-day first-touch cookie; only new accounts are attributed. A link with invites left passes the beta gate (3 invites, +3 per R$ 50 spent; only matters when `LABIA_ACCESS_CODE` is on). On a referred account's first paid Stripe top-up both sides get R$ 10 (`REFERRAL` ledger entries, unique per account; inviter capped at R$ 100). Not handled: refunds do not reverse the bonus, no card-fingerprint check. See `docs/research/referrals.md`.
 
 ## Motion recreation and imported references
 

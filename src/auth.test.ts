@@ -19,7 +19,7 @@ vi.mock("@/lib/rate-limit", () => ({ hit: async () => true, clearHits: async () 
 vi.mock("@/lib/prisma", () => ({
   prisma: { user: { findUnique: mocks.find, upsert: mocks.upsert } },
 }));
-vi.mock("@/lib/access", () => ({ hasPass: vi.fn() }));
+vi.mock("@/lib/access", () => ({ hasPass: vi.fn(), gateMode: () => "off", grantPass: vi.fn() }));
 import "./auth";
 describe("JWT session revocation", () => {
   beforeEach(() => vi.clearAllMocks());

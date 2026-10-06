@@ -57,3 +57,13 @@ export function hasAccessPass(value: string | undefined, now = Date.now()) {
 }
 
 export const hasPass = async () => hasAccessPass((await cookies()).get(ACCESS_COOKIE)?.value);
+
+export async function grantPass() {
+  (await cookies()).set(ACCESS_COOKIE, signAccessPass(), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: ACCESS_TTL_SECONDS,
+  });
+}
