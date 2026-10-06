@@ -1,4 +1,17 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "if [ \"$VERCEL_ENV\" = \"production\" ]; then npx prisma migrate deploy; fi && npm run build"
+  "buildCommand": "if [ \"$VERCEL_ENV\" = \"production\" ]; then npx prisma migrate deploy; fi && npm run build",
+  "redirects": [
+    {
+      "source": "/((?!api/stripe/webhook).*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "labia-hazel.vercel.app"
+        }
+      ],
+      "destination": "https://labia.studio/$1",
+      "permanent": false
+    }
+  ]
 }
