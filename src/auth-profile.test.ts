@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({ upsert: vi.fn().mockResolvedValue({ id: "exist
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
 vi.mock("next-auth", () => ({ CredentialsSignin: class extends Error {}, default: (config: typeof mocks.config) => { mocks.config = config; return {}; } }));
 vi.mock("@/lib/prisma", () => ({ prisma: { user: { upsert: mocks.upsert } } }));
-vi.mock("@/lib/access", () => ({ hasPass: vi.fn() }));
+vi.mock("@/lib/access", () => ({ hasPass: vi.fn(), gateMode: () => "off", grantPass: vi.fn() }));
 import "./auth";
 
 describe("profile on subsequent sign-in", () => {

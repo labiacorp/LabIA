@@ -7,7 +7,9 @@ export function googleConfigured() {
 export function loginErrorMessage(error?: string) {
   if (!error) return null;
   if (error === "AccessDenied")
-    return "Este e-mail não tem acesso à beta. Confira a conta escolhida e o código de acesso.";
+    return "O LabIA ainda não está aberto ao público. Entre com uma conta da equipe.";
+  if (error === "consent")
+    return "Para continuar com o Google, aceite os Termos de Uso e a Política de Privacidade.";
   if (error === "Configuration")
     return "O login com Google ainda precisa ser configurado pela equipe.";
   if (error === "OAuthAccountNotLinked")

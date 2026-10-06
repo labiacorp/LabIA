@@ -1,3 +1,4 @@
+import { usdBrlRate } from "@/lib/fx";
 import { FalProvider } from "./fal";
 import { ffmpegResult, MERGE_MODEL, METADATA_MODEL } from "./ffmpeg";
 import { findFalVideoModel } from "./fal-models";
@@ -7,7 +8,7 @@ import type { CostEstimate, GenParams, GenerationResult, JobHandle, ModelInfo, M
 // Dev/test only (FAL_MOCK=1, never in production): no network, no spend. Prices come from the real catalog.
 // Prompt switches simulate failures: "[mock-submit-error]" fails on submit, "[mock-fail]" fails the job.
 const delayMs = () => Number(process.env.FAL_MOCK_DELAY_MS ?? 3500);
-const prices = () => new FalProvider({ usdBrlRate: Number(process.env.USD_BRL_RATE) || 5.4 });
+const prices = () => new FalProvider({ usdBrlRate: usdBrlRate() });
 
 export class MockProvider implements ModelProvider {
   id = "fal";

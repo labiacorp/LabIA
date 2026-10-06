@@ -36,3 +36,6 @@ next-env.d.ts
 # Playwright
 /test-results/
 /playwright-report/
+
+# Brand files (kept out of git, like Leaner Graphics)
+LabIA Graphics/

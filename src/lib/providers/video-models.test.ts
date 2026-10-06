@@ -30,7 +30,7 @@ describe("selectable fal video model contracts", () => {
       VIDEO_DEFINITIONS.reverse();
       const options = getVideoOptions({ width: 1280, height: 720 });
       expect(options[0]).toMatchObject({ key: "legacy-reel", model: "fal-ai/kling-video/v2.5-turbo/pro/image-to-video", strategy: "reel" });
-      expect(options[0].configurations[0].brl).toBeCloseTo(5.67, 4);
+      expect(options[0].configurations[0].brl).toBeCloseTo(5.67 * 1.2, 4);
     } finally { VIDEO_DEFINITIONS.splice(0, VIDEO_DEFINITIONS.length, ...original); }
   });
   it("uses the updated catalog rate when quoting an existing selectable endpoint", () => {

@@ -21,8 +21,8 @@ export function BriefForm({
     { error: "", message: "" },
   );
   return (
-    <details className="my-6 rounded-lab border border-lab-border bg-lab-surface-1 p-5">
-      <summary className="cursor-pointer font-medium">
+    <details className="group my-3 [&[open]]:rounded-card [&[open]]:bg-lab-surface-1 [&[open]]:p-5 [&[open]]:shadow-[inset_0_0_0_1px_var(--lab-border)]">
+      <summary className="inline-flex min-h-11 cursor-pointer items-center text-body-sm text-lab-text-dim underline underline-offset-4 hover:text-lab-text">
         Editar título e ideia
       </summary>
       <form action={action} className="mt-5 grid gap-4">

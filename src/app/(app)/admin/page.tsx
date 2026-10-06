@@ -20,6 +20,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   await requireOwner();
   const q = ((await searchParams).q ?? "").trim().slice(0, 100);
   const where = q ? { OR: [{ email: { contains: q, mode: "insensitive" as const } }, { name: { contains: q, mode: "insensitive" as const } }] } : {};
+  const invites = await prisma.inviteRequest.findMany({ orderBy: { createdAt: "desc" }, take: 50, select: { id: true, email: true, createdAt: true } });
   const [users, total, uncertain, recent] = await Promise.all([
     prisma.user.findMany({ where, orderBy: { createdAt: "desc" }, take: PAGE, select: { id: true, email: true, name: true, role: true, createdAt: true, referredBy: { select: { email: true } } } }),
     prisma.user.count({ where }),
@@ -42,6 +43,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       <h2 id="admin-uncertain" className="mb-2 font-display text-xl">Custos a confirmar</h2>
       <p className="mb-4 max-w-2xl text-body-sm leading-6 text-lab-text-dim">Gerações cujo envio ou custo final não pôde ser confirmado. A reserva continua retida até você informar o custo verificado no painel do provedor.</p>
       {uncertain.length ? <ul className="divide-y divide-lab-border overflow-hidden rounded-lab border border-lab-border bg-lab-surface-1">{uncertain.map((step) => <li key={step.id} className="p-5"><p className="break-words text-body-sm font-medium">{step.content?.title || step.influencer?.name || "Etapa"} · {step.kind}{step.model ? ` · ${step.model}` : ""}</p><p className="mt-1 break-words text-caption text-lab-text-dim">{step.influencer?.user.email} · reservado {currency(Number(step.estimatedCostBrl ?? 0))} · {dateLabel(step.createdAt)}</p><ReconcileForm stepId={step.id} video={step.kind === "VIDEO"} /></li>)}</ul> : <p className="text-body-sm text-lab-text-dim">Nenhuma geração aguardando confirmação.</p>}
+    </section>
+    <section className="mb-10" aria-labelledby="admin-invites">
+      <h2 id="admin-invites" className="mb-2 font-display text-xl">Pedidos de convite ({invites.length})</h2>
+      {invites.length ? <ul className="divide-y divide-lab-border rounded-lab border border-lab-border">{invites.map((invite) => <li key={invite.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-body-sm"><a className="underline" href={`mailto:${invite.email}?subject=${encodeURIComponent("Seu convite para o LabIA")}`}>{invite.email}</a><span className="text-caption text-lab-text-dim">{dateLabel(invite.createdAt)}</span></li>)}</ul> : <p className="text-body-sm text-lab-text-dim">Nenhum pedido ainda.</p>}
     </section>
     <section aria-labelledby="admin-log">
       <h2 id="admin-log" className="mb-4 font-display text-xl">Registro</h2>

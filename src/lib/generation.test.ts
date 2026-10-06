@@ -119,7 +119,7 @@ describe.skipIf(!process.env.DATABASE_URL)("character kit money path", () => {
 
   it("refuses when the price shown is not the price now", async () => {
     const who = await seed(10);
-    await expect(start(who, sheetPlan(), randomUUID(), 0.01)).rejects.toThrow(/preço mudou/);
+    await expect(start(who, sheetPlan(), randomUUID(), 0.01)).rejects.toThrow(/custo mudou/);
     expect(await steps(who.influencerId)).toHaveLength(0);
   });
 
@@ -260,8 +260,8 @@ describe.skipIf(!process.env.DATABASE_URL)("content scene money path", () => {
 
   it("refuses changed prices and insufficient funds without updating the placeholder", async () => {
     const who = await contentSeed(0.1);
-    await expect(runScene(who, { expectedBrl: 0.01 })).rejects.toThrow(/preço mudou/);
-    await expect(runScene(who)).rejects.toThrow(/Saldo insuficiente/);
+    await expect(runScene(who, { expectedBrl: 0.01 })).rejects.toThrow(/custo mudou/);
+    await expect(runScene(who)).rejects.toThrow(/Créditos insuficientes/);
     expect((await image(who.contentId)).status).toBe("PENDING");
     expect(await getBalanceBrl(who.userId)).toBeCloseTo(0.1, 4);
   });

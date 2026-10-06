@@ -10,7 +10,7 @@ describe("login availability", () => {
     expect(googleConfigured()).toBe(true);
   });
   it("renders controlled copy instead of an arbitrary auth error payload", () => {
-    expect(loginErrorMessage("AccessDenied")).toContain("e-mail");
+    expect(loginErrorMessage("AccessDenied")).toContain("não está aberto");
     expect(loginErrorMessage("<script>secret</script>")).not.toContain(
       "script",
     );

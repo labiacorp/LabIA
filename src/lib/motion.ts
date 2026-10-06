@@ -1,3 +1,4 @@
+import { usdBrlRate } from "@/lib/fx";
 import { z } from "zod";
 export const MOTION_MODEL = "higgsfield/genjutsu/motion-transfer/v1.0";
 export const motionSchema = z.object({
@@ -59,10 +60,6 @@ export function motionEstimate(
   const seconds = Math.ceil(duration);
   const usd =
     seconds * { "480p": 0.318, "720p": 0.681, "1080p": 1.632 }[resolution];
-  const configuredRate = Number(process.env.USD_BRL_RATE);
-  const rate =
-    Number.isFinite(configuredRate) && configuredRate > 0
-      ? configuredRate
-      : 5.4;
+  const rate = usdBrlRate();
   return { usd, brl: Math.round(usd * rate * 10000) / 10000, seconds, rate };
 }

@@ -3,9 +3,10 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 
 import { cookies } from "next/headers";
-import { registerSignIn, REFERRAL_COOKIE } from "@/lib/referrals";
+import { consentAcceptedNow, GOOGLE_TERMS_COOKIE } from "@/lib/consent";
+import { admitted, registerSignIn, REFERRAL_COOKIE } from "@/lib/referrals";
 import { z } from "zod";
-import { hasPass } from "@/lib/access";
+import { gateMode, grantPass } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/password";
 import { clearHits, clientIp, hit } from "@/lib/rate-limit";
@@ -35,6 +36,18 @@ export function isAllowed(email?: string | null) {
     .map((item) => item.trim().toLowerCase())
     .filter(Boolean);
   return allowed.length === 0 || allowed.includes(email.toLowerCase());
+}
+
+// Closed to the public: in production only owner accounts (granted with scripts/owner.ts) sign in, on any
+// provider; nobody else can sign in or create an account. LABIA_OPEN_SIGNUP=1 reopens it. Fails closed.
+export const ownersOnly = () => process.env.NODE_ENV === "production" && process.env.LABIA_OPEN_SIGNUP !== "1";
+async function isOwnerAccount(email?: string | null, googleSub?: string) {
+  if (!email) return false;
+  const owner = await prisma.user.findFirst({
+    where: { role: "OWNER", OR: [{ email: email.toLowerCase() }, ...(googleSub ? [{ googleSub }] : [])] },
+    select: { id: true },
+  });
+  return owner !== null;
 }
 
 // Right password, address never confirmed. Thrown only after the password matched, so the hint
@@ -96,8 +109,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async signIn({ account, profile, user }) {
-      // The access code guards every entry point, including a direct hit on /api/auth/*.
-      if (!(await hasPass())) return false;
+      if (ownersOnly()) {
+        const google = account?.provider === "google";
+        if (google && profile?.email_verified !== true) return false;
+        return isOwnerAccount(google ? profile?.email : user.email, google ? account.providerAccountId : undefined);
+      }
+      // The access code (or an invite link) guards every entry point, including a direct hit on /api/auth/*.
+      if (!(await admitted())) return false;
       if (account?.provider === "google") {
         if (profile?.email_verified !== true || !isAllowed(profile.email)) return false;
         // An address already bound to another Google account is not taken over by this one.
@@ -114,6 +132,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           (await cookies()).get(REFERRAL_COOKIE)?.value,
           account?.provider === "google" ? account.providerAccountId : undefined,
         );
+        // Accepted on the login page before the Google round trip (see loginGoogle): record it on the account.
+        if (account?.provider === "google" && (await cookies()).get(GOOGLE_TERMS_COOKIE)?.value === "1")
+          await prisma.user.updateMany({ where: { id: row.id, consentAcceptedAt: null }, data: consentAcceptedNow() });
+        // Whoever got in keeps a pass, so an invited account does not need the code next time.
+        if (gateMode() === "on") await grantPass();
         token.uid = row.id;
         token.tokenVersion = row.tokenVersion;
         token.authMethod = account?.provider;

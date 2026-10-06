@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { CURRENT_TERMS_VERSION } from "../src/lib/consent";
 import { sql, codeIn, deleteUsers, lastEmail, linkIn, runPrefix, seedUser, signInPassword, resetLocalRateLimits } from "./helpers";
 
 const prefix = runPrefix();
@@ -11,7 +12,7 @@ test("sign-up confirms the address before the first sign-in, by code", async ({ 
   await page.getByRole("button", { name: /criar com senha/ }).click();
   await page.getByPlaceholder("voce@exemplo.com").first().fill(email);
   await page.getByPlaceholder(/Mínimo de/).fill("abcd");
-  await page.getByRole("checkbox").check();
+  await page.locator("form", { has: page.locator("input[name=password]") }).getByRole("checkbox").check();
   await page.getByRole("button", { name: "Criar conta" }).click();
   await expect(page).toHaveURL(/\/verificar-email\?email=/);
   await page.screenshot({ path: `test-results/verify-${info.project.name}.png`, fullPage: true });
@@ -29,7 +30,7 @@ test("sign-up confirms the address before the first sign-in, by code", async ({ 
   await expect(page.getByText("E-mail confirmado. Entre com sua senha.")).toBeVisible();
   await signInPassword(page, email, "abcd");
   const [row] = await sql`SELECT consent_terms_version FROM users WHERE email = ${email}`;
-  expect(row.consent_terms_version).toBe("2026-10");
+  expect(row.consent_terms_version).toBe(CURRENT_TERMS_VERSION);
 });
 
 test("sign-up with a taken address answers the same and mails the owner instead", async ({ page }, info) => {
@@ -39,7 +40,7 @@ test("sign-up with a taken address answers the same and mails the owner instead"
   await page.getByRole("button", { name: /criar com senha/ }).click();
   await page.getByPlaceholder("voce@exemplo.com").first().fill(email);
   await page.getByPlaceholder(/Mínimo de/).fill("outra");
-  await page.getByRole("checkbox").check();
+  await page.locator("form", { has: page.locator("input[name=password]") }).getByRole("checkbox").check();
   await page.getByRole("button", { name: "Criar conta" }).click();
   await expect(page).toHaveURL(/\/verificar-email\?email=/);
   expect((await lastEmail(email)).subject).toBe("Você já tem uma conta na LabIA");

@@ -1,3 +1,4 @@
+import { usdBrlRate } from "@/lib/fx";
 import { HiggsfieldProvider } from "@/lib/providers/higgsfield";
 import { MOTION_MODEL } from "@/lib/motion";
 import { FalProvider } from "@/lib/providers/fal";
@@ -34,6 +35,6 @@ export function getProvider(model?: string): PollableProvider {
   if (model === MOTION_MODEL) return new HiggsfieldProvider(mockEnabled());
   if (mockEnabled()) return new MockProvider();
   return new FalProvider({
-    usdBrlRate: Number(process.env.USD_BRL_RATE) || undefined,
+    usdBrlRate: usdBrlRate(),
   });
 }

@@ -1,3 +1,4 @@
+import { usdBrlRate } from "@/lib/fx";
 import { findImageDefinition, IMAGE_DEFINITIONS, prepareImage, imageCost, type ImagePricingSnapshot } from "./image-models";
 import { fal } from "@fal-ai/client";
 import { ffmpegCost, ffmpegInput, ffmpegResult, isFfmpeg } from "./ffmpeg";
@@ -109,7 +110,7 @@ function getPrompt(params: GenParams) {
 }
 
 function getUsdBrlRate(explicitRate?: number) {
-  const rawRate = explicitRate ?? Number(process.env.USD_BRL_RATE);
+  const rawRate = explicitRate ?? usdBrlRate();
   return Number.isFinite(rawRate) && rawRate > 0 ? rawRate : DEFAULT_USD_BRL_RATE;
 }
 

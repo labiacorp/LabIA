@@ -1,16 +1,18 @@
 # LabIA: current state
 
-Production is `main`; integration is `dev` (see the branch rule in `CLAUDE.md`). V2 was rewritten from scratch on 2026-10-03. Describes what exists, nothing else. If this file and the code disagree, the code wins; fix this file in the same commit as the change.
+Production is `main` and it is the only branch (all others merged and deleted on 2026-10-06; work goes straight to `main`). V2 was rewritten from scratch on 2026-10-03. Describes what exists, nothing else. If this file and the code disagree, the code wins; fix this file in the same commit as the change.
 
 ## What it is
 
-A pipeline to produce content with AI influencers: Influencer (face, niche, tone) > Content (one piece) > Steps (script, image, video, final assembly). UI in PT-BR. Cost is quoted before and recorded after each step.
+A pipeline to produce content with AI influencers: Influencer (face, niche, tone) > Content (one piece) > Steps (script, image, video, final assembly). UI in PT-BR. Sold as one monthly subscription (R$ 49,90, Stripe) that grants credits; every step shows its credit cost before and records the real cost after.
 
 ## Stack
 
 Next.js 16 (App Router, Server Actions) + TypeScript + Tailwind 4 (legacy `tailwind.config.ts` via `@config`), Prisma 7 on Neon (`@prisma/adapter-neon`), Auth.js v5 (Google only, JWT sessions, closed beta by `ALLOWED_EMAILS`), fal.ai for generation. Design system: tokens and `components/ui` from the Claude Design handoff (`Proposta LabIA com Design System/`, 2026-10-02).
 
 ## Screens (`src/app`)
+
+App UI follows the Claude Design "Corte" handoff (2026-10-05): dark only (light theme and ThemeToggle deleted), `--lab-*` tokens in `globals.css`, Big Shoulders / Geist / Geist Mono, pill buttons (`Button` variant `cost` is the only green CTA, for paid steps), shell = sidebar + header with balance chip (`app-navigation.tsx`). `design/reference/handoff` is the OLD design and stale. e2e needs `ALLOWED_EMAILS=` empty and no other `next dev` on this folder.
 
 `/` shows the landing (`src/app/lp`, Claude Design 2026-10-05) to visitors without a session cookie (rewrite in `next.config.ts`); signed-in users get the studio. No invite-request backend yet: CTAs go to `/acesso` and `/login`.
 
@@ -20,7 +22,7 @@ Next.js 16 (App Router, Server Actions) + TypeScript + Tailwind 4 (legacy `tailw
 
 - `/modelos` offers five original editable script starters and owned saved briefing/script snapshots. Save is idempotent per source production; reuse and duplication create fresh free pipeline steps without copying media, charges or approval. Personal models can be deleted without affecting their productions and are included in account export.
 - Character profile selects and previews a completed owned FRONT portrait. Scene UI and execution use this explicit selection, including when newer portraits exist.
-- `/conta#indicacoes` exposes a stable personal referral link and new-account count. `/r/[code]` captures first-touch attribution for 30 days; the sign-in creation branch attributes only new accounts. `/convite` explains beta restrictions. No financial reward, email sending or access-gate bypass. See `docs/research/referrals.md`.
+- Referrals (`src/lib/referrals.ts`, values in `referral-rules.ts`): `/conta#indicacoes` shows the link, free invites, accounts created and R$ earned. `/r/[code]` sets a 30-day first-touch cookie; only new accounts are attributed. A link with invites left passes the beta gate (3 invites, +3 per R$ 50 spent; only matters when `LABIA_ACCESS_CODE` is on). On a referred account's first paid Stripe top-up both sides get R$ 10 (`REFERRAL` ledger entries, unique per account; inviter capped at R$ 100). Not handled: refunds do not reverse the bonus, no card-fingerprint check. See `docs/research/referrals.md`.
 
 ## Motion recreation and imported references
 
@@ -41,6 +43,8 @@ Character kit = step 1 sheet (nano-banana-2, 2K, 3:2) then step 2 portraits fron
 - `FAL_MOCK=1` (dev/test only, ignored in production) swaps fal for a fake provider with real prices; prompt markers `[mock-fail]` and `[mock-submit-error]` simulate failures.
 
 ## Access
+
+**Closed to the public (2026-10-06):** in production only OWNER accounts sign in, on any provider (`ownersOnly` in `src/auth.ts`); every other Google or password sign-in is refused and password sign-up is off. The landing has no code CTA, only the invite request. `LABIA_OPEN_SIGNUP=1` reopens. Development and tests are unaffected.
 
 `LABIA_ACCESS_CODE` + `AUTH_SECRET` gate sign-in (signed cookie, 8 tries/10 min/IP in Postgres, fails closed in production when unset); the check also runs in the Auth.js `signIn` callback. `ALLOWED_EMAILS` is an optional extra restriction.
 
@@ -170,3 +174,27 @@ Workspace direction checks: all 104 tests passed, plus targeted library regressi
 Dashboard now presents a primary character-studio story, original code-based process artwork on desktop, three useful entry routes and real owned-image previews for recent productions. Large metric cards are replaced by a quiet linked summary. Mobile omits decorative process artwork so entry actions arrive earlier. No provider calls or generation were added. Imported filename search has a disposable-owner isolation regression test.
 
 Creation-home checks: 105 tests across 31 files pass, typecheck/lint/build pass. Content list and dashboard share ProductionCard and scoped real previews. Primary-action white text contrast was measured and adjusted above 4.5:1 in both themes.
+
+
+## Session 2026-10-06 (redesign, subscription, closed access)
+
+- **Business model**: subscription only, R$ 49,90/month, credits (Higgsfield-style). The app shows credits, never reais per generation (`CostChip`, header, Início, forms, errors, statement); reais only on the plan price. Admin stays in R$.
+- **Closed to the public**: in production only OWNER accounts sign in (`ownersOnly` in `src/auth.ts`, `LABIA_OPEN_SIGNUP=1` reopens); no sign-up; the landing asks for an invite (no code CTA). Locally and in tests sign-in works as before.
+- **Landing**: copy for the subscription, numbers from `estimateReel()` on the server (`lp/page.tsx`, revalidate 1h); 4 real steps (voice and lip sync "em breve"); og:image restored (it was missing in production).
+- **Brand**: link card is only the lime I and the wordmark; favicon/app icons are the real I glyph; brand kit (guide PDF/HTML, wordmark, I mark, SVGs in outlines) in `LabIA Graphics/` (gitignored, like Leaner Graphics).
+- **Legal drafts**: terms section 5 describes subscription and credits; privacy names Stripe; `CURRENT_TERMS_VERSION` 2026-10-06. Still need the MEI name/CNPJ as controller and a lawyer's read.
+- **Merged**: Felipe's social integrations (X adapter, bundle.social, cron dispatcher, OAuth connect routes; migration `20261006120000_social_integrations` applied in production). Needs `X_CLIENT_ID/SECRET`, `SOCIAL_TOKEN_KEY`, `BUNDLE_*`, `CRON_SECRET`; without them the cron answers 503 and connect routes require sign-in.
+- **Pending decisions**: credits per month (350 ≈ 4 reels of 15s), credit expiry, referral bonus in credits (R$ 10 = 200 credits), brand gender (a/o LabIA), app headings option B (Big Shoulders only on page titles), brand line for the landing hero.
+
+## Open items (2026-10-06)
+- **Subscription** (`src/lib/plan.ts`, `src/lib/stripe.ts`, `saldo/subscribe.ts`, `/api/stripe/webhook`): Checkout in subscription mode (price set inline, `subscription_data.metadata.userId`); every paid `invoice.paid` (first month and renewals) grants `PLAN_CREDITS` once (note `stripe:<invoice id>`, unique). "Active" = a subscription invoice paid in the last 35 days, read from the ledger. Card, invoices and cancellation in the Stripe billing portal. Ledger stays in reais of provider cost; 1 credit = `CREDIT_BRL` (R$ 0,05) and the plan grants 350 credits (R$ 17,50 of provider budget, 35% of the price): placeholders until the founders fix the numbers. Unused credits stay after cancellation (no expiry yet). Card top-up packs were removed. Team accounts (UNLIMITED_EMAILS) also see the plan card so they can test it. Not handled yet: refunds/disputes, failed renewals (no grant, nothing revoked).
+- **Stripe live (2026-10-06):** live account is the former Leaner account renamed "LABIA" (`acct_1TxqNzCzXppnOXCZ`, Diego's MEI CNPJ). The `/saldo` error page was the "Assinar" server action crashing on an expired `sk_test_` key in Vercel Production (it was never the live key); a Stripe failure now returns to `/saldo?erro=assinatura` (`subscribe.test.ts`). Live webhook `labia-prod` (`we_1UNc5q…`, `invoice.paid`, API 2026-08-26.dahlia) created; the Leaner one (useleaner.com) disabled; live portal saved (invoices, card, cancel at period end, no plan switch). Production needs the live `sk_live_` key and the `labia-prod` `whsec_` pasted by the founders, then a redeploy and one real subscription test. Sandbox ("LABIA CORP sandbox") stays as before.
+- **Migrations**: `vercel.json` runs `prisma migrate deploy` on every production build, so the MCP, Stripe-index and invite-request migrations go out with the deploy.
+- **MCP** (`/api/mcp`, tokens by `scripts/mcp-token.ts`): read tools + free drafts only (cap 50 drafts per token per 24h); paid generation stays a human confirmation, so no spend cap is needed yet.
+- **PostHog** off until `NEXT_PUBLIC_POSTHOG_KEY` is set. No server-side events yet; LGPD consent for analytics undecided.
+- **Invite requests** are listed in /admin (mailto link); there is no automatic e-mail yet (e-mail is off in production).
+- **Video estimate vs real** (`scripts/eval-costs.ts`): the Kling reel is now reserved at 6s/clip (x1.2, `KLING_REEL_ALLOWANCE`) and the difference is returned on settlement. Still worth one check against a fal invoice to confirm fal bills measured seconds.
+- **FX**: prices follow the live USD→BRL quote (`src/lib/fx.ts`, 5 min cache, AwesomeAPI then open.er-api, sane-range guard; `/api/fx` shows the rate in use). Pin with `USD_BRL_RATE_FIXED`, add a margin with `USD_BRL_SPREAD_PCT` (IOF/spread of the card is not included: decide a %). Vercel has an old `USD_BRL_RATE` (now only the fallback).
+- **Default video model** is MiniMax H3 Max Turbo 768p 15s (`DEFAULT_VIDEO` in `plan.ts`); the video form opens on it (it used to fall to Grok Lite 5s because MiniMax has no 720p) and `estimateReel` prices it, so the landing, Início and plan page quote the same number (`video-form.test.ts`). The Kling three-clip reel stays in the form.
+- **Not covered by tests**: real Google sign-in under the CSP, in-app browser bar on a real phone, mobile e2e project (skipped on purpose), refunds.
+- `design/reference/handoff` is the old design and stale.

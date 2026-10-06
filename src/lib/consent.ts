@@ -5,7 +5,7 @@
 // update LEGAL_UPDATED_AT with it. Accounts keep the version they accepted, so a re-consent can target
 // them. Nothing derives this from the text: editing the pages without bumping it means every account
 // silently reads as having accepted the new wording.
-export const CURRENT_TERMS_VERSION = "2026-10";
+export const CURRENT_TERMS_VERSION = "2026-10-06"; // subscription and credits (section 5)
 export const LEGAL_UPDATED_AT = "outubro de 2026";
 
 // The form field the sign-up checkbox and its server action share. Here, not in a client component:
@@ -20,3 +20,6 @@ export const needsConsent = (user: { createdAt: Date; consentAcceptedAt: Date | 
   user.consentAcceptedAt === null && user.createdAt >= CONSENT_TRACKING_SINCE;
 
 export const consentAcceptedNow = () => ({ consentAcceptedAt: new Date(), consentTermsVersion: CURRENT_TERMS_VERSION });
+
+// Set by the login page when the terms box is ticked before Google sign-in; read by auth.ts when the account is created.
+export const GOOGLE_TERMS_COOKIE = "labia_terms";

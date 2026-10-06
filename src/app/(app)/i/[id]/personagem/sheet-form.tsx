@@ -1,5 +1,6 @@
 "use client";
 
+import { rateText } from "@/lib/plan";
 import { useActionState, useState } from "react";
 
 import { Alert } from "@/components/ui/alert";
@@ -22,7 +23,7 @@ type Props = {
   balanceBrl: number;
 };
 
-const price = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 4 });
+const price = { format: rateText };
 
 // Pick the model and quality for the sheet. The price shown is sent back and recomputed on the server: if it differs, nothing is charged.
 export function SheetForm({ action, intent, options, initial, prompt, label, variant = "primary", blockedReason, balanceBrl }: Props) {
@@ -69,7 +70,7 @@ export function SheetForm({ action, intent, options, initial, prompt, label, var
         <Button variant={variant} loading={pending} disabled={!!blockedReason || !configuration || insufficient || tooLong || !text.trim()}>{label}</Button>
         <CostChip state={configuration ? "estimated" : "unavailable"} value={configuration?.brl} prefix="custo" />
       </div>
-      {insufficient ? <p className="text-caption text-lab-warning">Saldo insuficiente para esta ficha.</p> : null}
+      {insufficient ? <p className="text-caption text-lab-warning">Créditos insuficientes para esta ficha.</p> : null}
       {blockedReason ? <p className="text-caption text-lab-warning">{blockedReason}</p> : null}
       {state.error ? <Alert variant="error" title={state.error} /> : null}
     </form>

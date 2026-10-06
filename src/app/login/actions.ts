@@ -3,19 +3,22 @@ import { redirect } from "next/navigation";
 import { AuthError, CredentialsSignin } from "next-auth";
 import { z } from "zod";
 import { cookies } from "next/headers";
-import { isAllowed, signIn } from "@/auth";
-import { hasPass } from "@/lib/access";
+import { isAllowed, ownersOnly, signIn } from "@/auth";
 import { hashPassword, passwordError } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { clientIp, hit, TOO_MANY_ATTEMPTS } from "@/lib/rate-limit";
-import { registerSignIn, REFERRAL_COOKIE } from "@/lib/referrals";
+import { admitted, registerSignIn, REFERRAL_COOKIE } from "@/lib/referrals";
 import { googleConfigured } from "@/lib/auth-config";
 import { emailEnabled } from "@/lib/email";
 import { issueEmailToken } from "@/lib/email-tokens";
-import { CONSENT_FIELD, consentAcceptedNow } from "@/lib/consent";
+import { CONSENT_FIELD, consentAcceptedNow, GOOGLE_TERMS_COOKIE } from "@/lib/consent";
 import { sendAccountExists, sendVerifyEmail } from "@/lib/account-emails";
-export async function loginGoogle() {
+// Terms are accepted BEFORE the Google account is created: the checkbox is required here, and the cookie
+// carries the acceptance across the OAuth round trip so the new account is recorded as having accepted.
+export async function loginGoogle(form: FormData) {
   if (!googleConfigured()) return;
+  if (form.get(CONSENT_FIELD) !== "on") redirect("/login?error=consent");
+  (await cookies()).set(GOOGLE_TERMS_COOKIE, "1", { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", maxAge: 900, path: "/" });
   try {
     await signIn("google", { redirectTo: "/painel" });
   } catch (error) {
@@ -62,9 +65,9 @@ export async function authenticatePassword(
   const email = z.email().safeParse(String(form.get("email") ?? "").trim().toLowerCase());
   const password = String(form.get("password") ?? "");
   if (!email.success) return { error: "Digite um e-mail válido." };
-  if (!(await hasPass())) redirect("/acesso");
+  if (!(await admitted())) redirect("/acesso");
   if (create) {
-    if (!emailEnabled()) return { error: "O cadastro com senha ainda não está disponível." };
+    if (ownersOnly() || !emailEnabled()) return { error: "O LabIA ainda não está aberto para novas contas." };
     const invalid = passwordError(password);
     if (invalid) return { error: invalid };
     if (form.get(CONSENT_FIELD) !== "on")

@@ -1,9 +1,10 @@
 import type { VideoFormOption } from "@/app/(app)/i/[id]/c/[contentId]/video-form";
 import { prepareVideo, VIDEO_DEFINITIONS } from "./providers/video-models";
-import { REEL } from "./content-plan";
+import { KLING_REEL_ALLOWANCE, REEL } from "./content-plan";
 
 export type VideoSelection = { model: string; duration: number; resolution: string; audio: boolean; strategy: "clip" | "reel" };
-export const videoUsdBrlRate = () => Number(process.env.USD_BRL_RATE) || 5.4;
+import { usdBrlRate as videoUsdBrlRate } from "@/lib/fx";
+export { videoUsdBrlRate };
 
 export function getVideoOptions(source?: { width: number | null; height: number | null }): VideoFormOption[] {
   const options: VideoFormOption[] = VIDEO_DEFINITIONS.map((model) => {
@@ -31,5 +32,5 @@ export function getVideoOptions(source?: { width: number | null; height: number 
     } };
   });
   const legacy = prepareVideo(REEL.video.model, { prompt: "estimate", image_url: "https://estimate", duration: 5, resolution: "default", generate_audio: false }, videoUsdBrlRate());
-  return [{ key: "legacy-reel", model: legacy.definition.id, name: "Kling 2.5 — sequência de 15s (3 clipes)", strategy: "reel", configurations: [{ duration: 15, resolution: "default", audio: false, brl: Math.round(legacy.cost.brl * 3 * 10000) / 10000 }], pricing: options.find((option) => option.model === REEL.video.model)?.pricing }, ...options];
+  return [{ key: "legacy-reel", model: legacy.definition.id, name: "Kling 2.5 — sequência de 15s (3 clipes)", strategy: "reel", configurations: [{ duration: 15, resolution: "default", audio: false, brl: Math.round(legacy.cost.brl * 3 * KLING_REEL_ALLOWANCE * 10000) / 10000 }], pricing: options.find((option) => option.model === REEL.video.model)?.pricing }, ...options];
 }

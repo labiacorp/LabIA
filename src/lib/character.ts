@@ -1,3 +1,4 @@
+import { usdBrlRate } from "@/lib/fx";
 import type { AssetRole } from "@/generated/prisma/enums";
 import { quote } from "@/lib/generation";
 import { prepareImage, SHEET_DEFINITIONS } from "@/lib/providers/image-models";
@@ -39,7 +40,7 @@ export function sheetItem(card: CharacterCard, selection: SheetSelection = DEFAU
   const prompt = selection.prompt?.trim() || standard;
   const item: KitItem = { role: "SHEET", model: selection.model, params: { prompt, aspect_ratio: "3:2", resolution: selection.resolution } };
   // Validates the model/quality pair and captures the per-image price used to settle the step.
-  item.params.imagePricing = prepareImage(item.model, item.params, Number(process.env.USD_BRL_RATE) || 5.4).snapshot;
+  item.params.imagePricing = prepareImage(item.model, item.params, usdBrlRate()).snapshot;
   return item;
 }
 

@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { CURRENT_TERMS_VERSION } from "../src/lib/consent";
 import { acceptConsent, deleteUsers, resetLocalRateLimits, runPrefix, seedUser, signInPassword, sql } from "./helpers";
 
 const prefix = runPrefix();
@@ -18,7 +19,7 @@ test("an account with no acceptance on record is held at the Terms until it acce
   await page.screenshot({ path: `test-results/consent-${info.project.name}.png`, fullPage: true });
   await acceptConsent(page);
   const [row] = await sql`SELECT consent_accepted_at, consent_terms_version FROM users WHERE email = ${email}`;
-  expect(row.consent_terms_version).toBe("2026-10");
+  expect(row.consent_terms_version).toBe(CURRENT_TERMS_VERSION);
   await page.goto("/consentimento");
   await expect(page).toHaveURL(/\/painel/);
 });
@@ -35,4 +36,13 @@ test("the legal pages are public", async ({ page }) => {
   await expect(page.locator("h1")).toHaveText("Termos de Uso");
   await page.goto("/privacidade");
   await expect(page.locator("h1")).toHaveText("Política de Privacidade");
+});
+
+test("the login page asks for the terms before the Google button, not after the account exists", async ({ page }) => {
+  await page.goto("/login");
+  const box = page.getByRole("checkbox", { name: /Li e aceito/ }).last();
+  await expect(box).toBeVisible();
+  await expect(page.getByRole("button", { name: "Continuar com Google" })).toBeDisabled();
+  await page.goto("/login?error=consent");
+  await expect(page.getByRole("alert").first()).toContainText("aceite os Termos de Uso");
 });

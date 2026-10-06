@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   config: {} as NextAuthConfig,
   find: vi.fn(),
+  findFirst: vi.fn(),
   upsert: vi.fn(),
 }));
 vi.mock("next/headers", () => ({
@@ -17,9 +18,9 @@ vi.mock("next-auth", () => ({
 }));
 vi.mock("@/lib/rate-limit", () => ({ hit: async () => true, clearHits: async () => {}, clientIp: async () => "test" }));
 vi.mock("@/lib/prisma", () => ({
-  prisma: { user: { findUnique: mocks.find, upsert: mocks.upsert } },
+  prisma: { user: { findUnique: mocks.find, findFirst: mocks.findFirst, upsert: mocks.upsert } },
 }));
-vi.mock("@/lib/access", () => ({ hasPass: vi.fn() }));
+vi.mock("@/lib/access", () => ({ hasPass: vi.fn(), gateMode: () => "off", grantPass: vi.fn() }));
 import "./auth";
 describe("JWT session revocation", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -74,7 +75,7 @@ describe("JWT session revocation", () => {
 });
 
 describe("password sign-in", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => { vi.clearAllMocks(); vi.stubEnv("ALLOWED_EMAILS", ""); });
   it("refuses an unconfirmed address only after the password matched", async () => {
     const { hashPassword } = await import("@/lib/password");
     const authorize = (mocks.config.providers.find((p) => (p as { options?: { id?: string } }).options?.id === "password") as unknown as { options: { authorize: (c: unknown) => Promise<unknown> } }).options.authorize;
@@ -83,5 +84,21 @@ describe("password sign-in", () => {
     await expect(authorize({ email: "a@example.com", password: "certa" })).rejects.toMatchObject({ code: "unverified" });
     mocks.find.mockResolvedValue({ id: "u1", passwordHash: await hashPassword("certa"), emailVerifiedAt: new Date() });
     expect(await authorize({ email: "a@example.com", password: "certa" })).toEqual({ id: "u1", email: "a@example.com" });
+  });
+});
+
+describe("closed to the public in production", () => {
+  beforeEach(() => { vi.clearAllMocks(); vi.stubEnv("NODE_ENV", "production"); });
+  const signIn = (args: object) => mocks.config.callbacks!.signIn!(args as never);
+  it("lets an owner in through Google or password, and nobody else", async () => {
+    mocks.findFirst.mockResolvedValueOnce({ id: "owner" });
+    expect(await signIn({ account: { provider: "google", providerAccountId: "g1" }, profile: { email: "Owner@x.com", email_verified: true }, user: {} })).toBe(true);
+    expect(mocks.findFirst.mock.calls[0][0].where).toMatchObject({ role: "OWNER", OR: [{ email: "owner@x.com" }, { googleSub: "g1" }] });
+    mocks.findFirst.mockResolvedValueOnce(null);
+    expect(await signIn({ account: { provider: "google", providerAccountId: "g2" }, profile: { email: "stranger@x.com", email_verified: true }, user: {} })).toBe(false);
+    mocks.findFirst.mockResolvedValueOnce(null);
+    expect(await signIn({ account: { provider: "password" }, user: { email: "stranger@x.com" } })).toBe(false);
+    expect(await signIn({ account: { provider: "google", providerAccountId: "g1" }, profile: { email: "owner@x.com", email_verified: false }, user: {} })).toBe(false);
+    vi.unstubAllEnvs();
   });
 });
