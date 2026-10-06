@@ -4,8 +4,7 @@ import { Check, ChevronLeft, CircleCheck, CircleDashed, Clapperboard, FileText, 
 import Link from "next/link";
 import { InAppBrowserBar } from "@/components/app/in-app-browser-bar";
 import { track } from "@/lib/track";
-import { useActionState, useEffect, useRef, useState, type CSSProperties } from "react";
-import { requestInvite } from "./invite";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 // Port of design/reference "LabIA Landing" (Claude Design). Colors map to the --lab-* tokens.
 const T = {
@@ -44,7 +43,6 @@ const faqs = (n: LandingNumbers): [string, string][] => [
   ["E se a geração falhar?", "Os créditos reservados que não foram usados voltam e aparecem no extrato. Em alguns erros do provedor a gente confere antes de devolver, o que pode levar um tempo. O que já ficou pronto nas etapas anteriores continua salvo."],
   ["Posso cancelar?", "Quando quiser, na página Plano e créditos. Não há multa e os créditos que sobraram continuam na sua conta."],
   ["Por que o custo é \"previsto\"?", "Os modelos de IA cobram pelo que realmente processam. A gente mostra a melhor estimativa antes e o valor exato depois. Quase sempre o real sai igual ou abaixo."],
-  ["Preciso de convite?", "Por enquanto, sim. O LabIA ainda não está aberto ao público. Deixe seu e-mail no fim da página e a gente avisa quando abrir."],
   ["Posso usar a imagem da influencer em qualquer rede?", "Sim, o conteúdo gerado é seu. Você só precisa seguir as regras de cada rede para conteúdo feito com IA, como a sinalização de mídia sintética."],
 ];
 
@@ -55,6 +53,7 @@ function Wordmark({ size, style }: { size: number | string; style?: CSSPropertie
 export function Landing({ numbers, open }: { numbers: LandingNumbers; open: boolean }) {
   const STEPS = steps(numbers);
   const FAQS = faqs(numbers);
+  // Every call to action creates an account. If production is ever closed (LABIA_CLOSED), they all disappear.
   const { plan, image, video, reels, price } = numbers;
   const real = Math.max(1, video - 2);
   const [lp, setLp] = useState(0);
@@ -68,7 +67,6 @@ export function Landing({ numbers, open }: { numbers: LandingNumbers; open: bool
   const stickyRef = useRef<HTMLDivElement>(null);
   const iRef = useRef<HTMLSpanElement>(null);
   const paused = useRef(false);
-  const [invite, inviteAction, invitePending] = useActionState(requestInvite, {});
 
   useEffect(() => {
     const onScroll = () => {
@@ -126,7 +124,7 @@ export function Landing({ numbers, open }: { numbers: LandingNumbers; open: bool
         )}
         <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
           {open ? <Link href="/login" className="lp-nav" style={{ ...pill({ height: 44, padding: "0 14px", fontSize: 15, fontWeight: 500 }), color: T.ink, textDecoration: "none" }}>Entrar</Link> : null}
-          <a href="#convite" style={ctaLight} onClick={() => track("landing_cta", { place: "header" })}>Pedir convite</a>
+          {open ? <Link href="/login" style={ctaLight} onClick={() => track("landing_cta", { place: "header" })}>Criar conta</Link> : null}
         </span>
       </header>
 
@@ -281,7 +279,7 @@ export function Landing({ numbers, open }: { numbers: LandingNumbers; open: bool
           <div style={{ display: "flex", flexDirection: "column", fontSize: 15, borderTop: `1px solid ${T.line}` }}>
             {[["Créditos por mês", cr(plan)], ["Vídeos de 15s, mais ou menos", String(reels)], ["Cancelamento", "quando quiser"]].map(([a, b]) => <div key={a} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "12px 0", borderBottom: `1px solid ${T.line}` }}><span style={{ color: T.ink2 }}>{a}</span><span style={{ fontFamily: /\d/.test(b) ? mono : undefined }}>{b}</span></div>)}
           </div>
-          <a href="#convite" onClick={() => track("landing_cta", { place: "plan" })} style={{ ...pill({ height: 56, justifyContent: "center", background: T.ink, color: T.bg, fontWeight: 600, fontSize: 16 }), textDecoration: "none" }}>Pedir convite</a>
+          {open ? <Link href="/login" onClick={() => track("landing_cta", { place: "plan" })} style={{ ...pill({ height: 56, justifyContent: "center", background: T.ink, color: T.bg, fontWeight: 600, fontSize: 16 }), textDecoration: "none" }}>Criar conta</Link> : null}
         </div>
       </section>
 
@@ -349,20 +347,11 @@ export function Landing({ numbers, open }: { numbers: LandingNumbers; open: bool
         </div>
       </section>
 
-      <section id="convite" style={{ borderTop: `1px solid ${T.line}`, padding: "clamp(80px,12vw,160px) clamp(16px,4vw,40px)", display: "flex", flexDirection: "column", alignItems: "center", gap: 32, textAlign: "center" }}>
+      {open ? <section id="comecar" style={{ borderTop: `1px solid ${T.line}`, padding: "clamp(80px,12vw,160px) clamp(16px,4vw,40px)", display: "flex", flexDirection: "column", alignItems: "center", gap: 32, textAlign: "center" }}>
         <Wordmark size="clamp(96px,20vw,280px)" />
-        <p style={{ margin: 0, fontSize: "clamp(17px,2vw,20px)", lineHeight: 1.5, color: T.ink2, maxWidth: 520 }}>Acesso por convite enquanto a gente cresce com calma. Deixe seu e-mail e a gente manda o código.</p>
-        {invite.ok ? <div role="status" style={{ width: "100%", maxWidth: 520, padding: "16px 18px", borderRadius: 20, background: T.s2, boxShadow: `inset 0 0 0 1px ${T.lineStrong}`, textAlign: "left", fontSize: 15, lineHeight: 1.45 }}>Pedido recebido. Quando abrir uma vaga, a gente responde no seu e-mail.</div> : (
-          <form action={inviteAction} onSubmit={() => track("landing_invite_request")} style={{ width: "100%", maxWidth: 520, display: "flex", flexDirection: "column", gap: 10, textAlign: "left" }}>
-            <label htmlFor="lp-email" style={{ fontSize: 14, fontWeight: 500 }}>Seu e-mail</label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              <input id="lp-email" name="email" type="email" required autoComplete="email" placeholder="voce@email.com" aria-invalid={!!invite.error} style={{ flex: "1 1 240px", minWidth: 0, height: 56, padding: "0 18px", borderRadius: 999, border: `1.5px solid ${invite.error ? T.danger : T.lineStrong}`, background: T.s2, color: T.ink, fontSize: 16, outline: "none" }} />
-              <button type="submit" disabled={invitePending} style={{ flex: "0 0 auto", height: 56, padding: "0 26px", border: 0, borderRadius: 999, background: T.ink, color: T.onCost, fontWeight: 600, fontSize: 16, opacity: invitePending ? 0.6 : 1 }}>Pedir convite</button>
-            </div>
-            {invite.error ? <span role="alert" style={{ fontSize: 14, color: T.danger }}>{invite.error}</span> : null}
-                      </form>
-        )}
-      </section>
+        <p style={{ margin: 0, fontSize: "clamp(17px,2vw,20px)", lineHeight: 1.5, color: T.ink2, maxWidth: 520 }}>Crie sua conta e comece pela sua primeira influencer.</p>
+        <Link href="/login" onClick={() => track("landing_cta", { place: "final" })} style={{ ...ctaLight, height: 56, padding: "0 28px", fontSize: 16 }}>Criar conta</Link>
+      </section> : null}
 
       <footer style={{ borderTop: `1px solid ${T.line}`, padding: "28px clamp(16px,4vw,40px)", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px 20px", fontSize: 14, color: T.ink2 }}>
         <Wordmark size={20} style={{ color: T.ink }} />

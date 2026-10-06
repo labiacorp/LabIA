@@ -23,8 +23,14 @@ it("while closed, the sign-in form exists only behind the team code", async () =
   expect(renderToStaticMarkup(await page())).toContain("Acesso da equipe");
 });
 
-it("the landing offers Entrar only when access is open", () => {
+it("the landing never mentions invites and offers sign-in only when access is open", () => {
   const numbers = { price: "R$ 49,90", plan: 350, image: 13, video: 70, reels: 4 };
   expect(renderToStaticMarkup(createElement(Landing, { numbers, open: false }))).not.toContain('href="/login"');
-  expect(renderToStaticMarkup(createElement(Landing, { numbers, open: true }))).toContain('href="/login"');
+  const closed = renderToStaticMarkup(createElement(Landing, { numbers, open: false }));
+  expect(closed).not.toContain("Criar conta");
+  expect(closed).not.toContain("convite");
+  const open = renderToStaticMarkup(createElement(Landing, { numbers, open: true }));
+  expect(open).toContain('href="/login"');
+  expect(open).toContain("Criar conta");
+  expect(open).not.toContain("convite");
 });

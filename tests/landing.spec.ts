@@ -1,14 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { runPrefix, signInDev, sql } from "./helpers";
-
-const prefix = runPrefix();
-test.afterAll(() => sql`DELETE FROM invite_requests WHERE email LIKE ${prefix + "%"}`);
+import { signInDev } from "./helpers";
 
 // A visitor (no session cookie) lands on the landing at "/"; a signed-in user keeps the studio there.
 test("a visitor on / sees the landing page", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle(/Conteúdo para influencers de IA/);
-  await expect(page.getByRole("link", { name: "Pedir convite" }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Criar conta" }).first()).toBeVisible();
   await expect(page.getByText("Quatro etapas. Cada uma com custo.")).toBeVisible();
   await page.getByRole("link", { name: "Entrar", exact: true }).first().click();
   await expect(page).toHaveURL(/\/(login|acesso)/);
@@ -54,7 +51,7 @@ test("on a phone there is no sideways scroll and the CTAs fit", async ({ page })
   await seesLanding(page);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);
-  await expect(page.getByRole("link", { name: "Pedir convite" }).first()).toBeInViewport();
+  await expect(page.getByRole("link", { name: "Criar conta" }).first()).toBeInViewport();
 });
 
 test("the landing links go to real pages", async ({ page, request }) => {
@@ -62,7 +59,7 @@ test("the landing links go to real pages", async ({ page, request }) => {
   const hrefs = await page.locator("a[href^='/']").evaluateAll((els) => [...new Set(els.map((e) => e.getAttribute("href")!))]);
   expect(hrefs).toEqual(expect.arrayContaining(["/login", "/termos", "/privacidade"]));
   for (const href of hrefs) expect((await request.get(href)).status(), href).toBeLessThan(400);
-  for (const id of ["como", "preco", "telas", "duvidas", "convite"]) await expect(page.locator(`#${id}`)).toHaveCount(1);
+  for (const id of ["como", "preco", "telas", "duvidas", "comecar"]) await expect(page.locator(`#${id}`)).toHaveCount(1);
 });
 
 test("the plan card, the steps and the FAQ respond", async ({ page }) => {
@@ -121,19 +118,11 @@ test("the site has icons, a manifest and a robots file that hides the app", asyn
   expect(robots).toContain("Allow: /termos");
 });
 
-test("asking for an invite validates the e-mail, stores it once and answers the same twice", async ({ page }) => {
+// Development and e2e run with access open (accessOpen), so every call to action creates an account.
+// The closed state (LABIA_CLOSED=1: no sign-in anywhere) is covered by src/app/login/page.test.ts.
+test("with access open, every call to action leads to creating an account", async ({ page }) => {
   await page.goto("/");
-  const field = page.getByLabel("Seu e-mail");
-  await field.fill("sem-arroba");
-  await page.getByRole("button", { name: "Pedir convite" }).click();
-  await expect(page.locator("#lp-email:invalid")).toHaveCount(1); // the browser stops it first
-  const email = `${prefix}-fila@labia.test`;
-  for (let i = 0; i < 2; i++) {
-    await page.goto("/");
-    await page.getByLabel("Seu e-mail").fill(email);
-    await page.getByRole("button", { name: "Pedir convite" }).click();
-    await expect(page.getByText("Pedido recebido")).toBeVisible();
-  }
-  const rows = await sql`SELECT count(*)::int AS n FROM invite_requests WHERE email = ${email}`;
-  expect(rows[0].n).toBe(1);
+  await expect(page.getByText("convite")).toHaveCount(0);
+  await page.getByRole("link", { name: "Criar conta" }).last().click();
+  await expect(page).toHaveURL(/\/login/);
 });

@@ -27,8 +27,3 @@ export async function sendEmailChangedNotice(to: string, newEmail: string) {
   await sendEmail({ to, subject: "O e-mail da sua conta LabIA mudou", ...emailBody([`O e-mail de acesso da sua conta LabIA agora é ${newEmail}.`, "Se não foi você, responda a este e-mail ou fale com a equipe imediatamente."]) });
 }
 
-// Team entrance while the product is closed: an owner who asks for an invite with their own address gets this.
-export async function sendTeamAccessEmail(to: string, token: string) {
-  const url = `${await appUrl()}/acesso/${token}`;
-  await sendEmail({ to, subject: "Seu acesso à LabIA", ...emailBody(["Use o botão para abrir a entrada da equipe neste navegador. O link vale por 15 minutos e só funciona uma vez.", "Se não foi você, ignore este e-mail: sem o link, ninguém entra."], { label: "Abrir a entrada", url }) });
-}
