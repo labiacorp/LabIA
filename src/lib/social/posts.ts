@@ -9,7 +9,7 @@ import { NETWORKS, textLength } from "./networks";
 import type { NetworkId } from "./networks";
 import { quotePost } from "./pricing";
 import { AuthExpiredError, getPublisher } from "./publisher";
-import type { AccountRef, Backend, FailureReason, MediaRef, PublishOutcome } from "./publisher";
+import type { AccountRef, Backend, FailureReason, MediaRef, PublishOutcome, Publisher } from "./publisher";
 
 export { SocialError };
 
@@ -51,6 +51,12 @@ type CreateInput = {
 
 export async function createPosts(input: CreateInput): Promise<{ postIds: string[] }> {
   const text = input.text;
+  // A retry of the same intent returns what exists, before any validation or quote.
+  const priorKeys = [...new Set(input.accountIds)].map((id) => `${input.intentId}:${id}`);
+  if (priorKeys.length) {
+    const prior = await prisma.socialPost.findMany({ where: { operationKey: { in: priorKeys } }, select: { id: true } });
+    if (prior.length) return { postIds: prior.map((p) => p.id) };
+  }
   if (!text.trim()) throw new SocialError("Escreva o texto da publicação.");
   const accountIds = [...new Set(input.accountIds)];
   if (!accountIds.length) throw new SocialError("Escolha ao menos uma conta.");
@@ -156,16 +162,18 @@ export async function dispatchDuePosts(opts: { userId?: string; now?: Date; limi
     // Compare-and-set claim: only the winner talks to the backend.
     const claim = await prisma.socialPost.updateMany({
       where: { id: post.id, status: "SCHEDULED", providerPostId: null },
-      data: { status: "PUBLISHING", claimedAt: now },
+      data: { status: "PUBLISHING", claimedAt: new Date() },
     });
     if (claim.count !== 1) continue;
 
     let outcome: PublishOutcome;
     let account: AccountRef | undefined;
+    let publisher: Publisher | undefined;
     let media: MediaRef | null = null;
     let reason: FailureReason | null = null;
     try {
       if (post.account.status !== "CONNECTED") throw new AuthExpiredError("Account not connected");
+      publisher = getPublisher(post.account.backend as Backend);
       account = await accountRef(post.accountId);
     } catch (error) {
       reason = error instanceof AuthExpiredError ? "auth_expired" : "platform_error";
@@ -177,11 +185,11 @@ export async function dispatchDuePosts(opts: { userId?: string; now?: Date; limi
         reason = "media_rejected";
       }
     }
-    if (reason || !account) {
+    if (reason || !account || !publisher) {
       outcome = { state: "failed", reason: reason ?? "platform_error" }; // nothing was sent
     } else {
       try {
-        outcome = await getPublisher(post.account.backend as Backend).publish({
+        outcome = await publisher.publish({
           account,
           text: post.text,
           media,
@@ -239,9 +247,10 @@ export async function cancelPost(userId: string, postId: string): Promise<void> 
     // Scheduled at the backend: it must drop the post before we refund.
     try {
       const publisher = getPublisher(post.account.backend as Backend);
-      await publisher.cancel?.({ account: await accountRef(post.accountId), providerPostId: post.providerPostId });
+      if (!publisher.cancel) throw new Error("No cancel");
+      await publisher.cancel({ account: await accountRef(post.accountId), providerPostId: post.providerPostId });
     } catch {
-      throw new SocialError("Não foi possível cancelar agora. Tente de novo em instantes.");
+      throw new SocialError("Não foi possível cancelar esta publicação.");
     }
   }
   const estimate = num(post.estimatedCostBrl);

@@ -86,7 +86,7 @@ export async function accountRef(accountId: string): Promise<AccountRef> {
             },
           });
         },
-        { timeout: 20_000 },
+        { timeout: 35_000, maxWait: 10_000 },
       );
     } catch (error) {
       if (error instanceof AuthExpiredError) {

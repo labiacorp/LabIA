@@ -178,6 +178,26 @@ describe.skipIf(!process.env.DATABASE_URL)("social posts core", () => {
     expect((await prisma.socialAccount.findUniqueOrThrow({ where: { id: who.accountId } })).status).toBe("EXPIRED");
   });
 
+  it("two intents in parallel that exceed the balance: one succeeds", async () => {
+    const who = await seed(0.1);
+    const results = await Promise.allSettled([createPosts(input(who)), createPosts(input(who))]);
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    const failed = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
+    expect(String(failed.reason.message)).toMatch(/Saldo insuficiente/);
+    expect(await posts(who.userId)).toHaveLength(1);
+  });
+
+  it("a publish that throws becomes unknown and is never resent", async () => {
+    const who = await seed();
+    const publish = vi.spyOn(MockPublisher.prototype, "publish").mockRejectedValue(new Error("socket hang up"));
+    const { postIds } = await createPosts(input(who));
+    const post = await prisma.socialPost.findUniqueOrThrow({ where: { id: postIds[0] } });
+    expect(post.status).toBe("UNKNOWN");
+    expect(await ledgerSum({ socialPostId: post.id })).toBeCloseTo(-0.081, 4);
+    await dispatchDuePosts({ userId: who.userId });
+    expect(publish).toHaveBeenCalledTimes(1);
+  });
+
   it("applyOutcome is forward-only", async () => {
     const who = await seed();
     const { postIds } = await createPosts(input(who));
