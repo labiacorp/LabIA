@@ -1,6 +1,7 @@
 import type { NetworkId } from "./networks";
 import { mockEnabled } from "../provider";
 import { MockPublisher } from "./mock";
+import { XPublisher } from "./x";
 
 export type Backend = "x" | "bundle" | "mock";
 export type TokenSet = { accessToken: string; refreshToken: string | null; expiresAt: Date | null; scopes?: string };
@@ -28,9 +29,10 @@ export interface Publisher {
 
 export class AuthExpiredError extends Error {}
 
-// Tasks 5 and 9 replace the "x" and "bundle" throws with their adapters.
+// Task 9 replaces the "bundle" throw with its adapter.
 export function getPublisher(backend: Backend): Publisher {
   if (backend === "mock" || mockEnabled()) return new MockPublisher();
+  if (backend === "x") return new XPublisher();
   throw new Error("Backend unavailable");
 }
 

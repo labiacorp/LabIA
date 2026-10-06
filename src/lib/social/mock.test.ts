@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MockPublisher } from "./mock";
+import { XPublisher } from "./x";
 import { backendReady, connectBackend, getPublisher, type AccountRef, type PublishInput } from "./publisher";
 
 const account: AccountRef = { id: "a1", network: "X", providerAccountId: "mock-u", handle: "labia_teste", accessToken: "mock-access" };
@@ -79,9 +80,10 @@ describe("getPublisher / connectBackend / backendReady", () => {
     expect(backendReady("bundle")).toBe(true);
   });
 
-  it("throws for real backends that are not wired yet", () => {
+  it("returns the X adapter and throws for bundle when not mocked", () => {
     vi.stubEnv("FAL_MOCK", "");
-    expect(() => getPublisher("x")).toThrow("Backend unavailable");
+    expect(getPublisher("x")).toBeInstanceOf(XPublisher);
+    expect(() => getPublisher("bundle")).toThrow("Backend unavailable");
     expect(connectBackend("bundle")).toBe("bundle");
   });
 
