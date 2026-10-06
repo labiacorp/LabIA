@@ -38,7 +38,7 @@ export default async function DashboardPage() {
         {[
           { done: influencers.length > 0, n: "01", title: "Crie a influencer", text: "Defina o rosto, o nicho e o tom. Rascunhos são grátis.", href: "/?criar=1", cta: "Criar influencer" },
           { done: recent.length > 0, n: "02", title: "Prepare um conteúdo", text: "Título, ideia e roteiro. Ainda sem gastar nada.", href: "/conteudos/novo", cta: "Novo conteúdo" },
-          { done: !!balance && balance > 0, n: "03", title: "Tenha saldo e gere", text: "Você vê o preço antes de cada etapa e o valor real depois.", href: "/saldo", cta: "Ver saldo" },
+          { done: !!balance && balance > 0, n: "03", title: "Assine e gere", text: "Créditos todo mês. Você vê quantos cada etapa usa antes de gerar.", href: "/saldo", cta: "Ver plano" },
         ].map((step) => <li key={step.n} className={`flex flex-col gap-2 rounded-card p-4 ${step.done ? "opacity-60" : "bg-lab-surface-2"}`}>
           <span className="font-mono text-caption text-lab-text-dim">{step.n}{step.done ? " · feito ✓" : ""}</span>
           <span className="font-display text-[26px] font-black uppercase leading-none">{step.title}</span>
