@@ -51,14 +51,17 @@ Out of scope: analytics, editing a published post, threads or replies, multi-ima
 
 ### Publisher interface
 
+Adapters are stateless HTTP clients; the core owns the database, token sealing and the locked refresh. Exact types live in the implementation plan (Task 3).
+
 ```ts
 interface Publisher {
-  connectUrl(input: { userId: string; returnTo: string }): Promise<{ url: string; cookie?: SealedCookie }>;
-  completeConnect(input: { userId: string; params: URLSearchParams; cookie?: string }): Promise<ConnectedAccount[]>;
-  publish(input: { account: AccountWithTokens; text: string; media: MediaRef | null; aiLabel: boolean; scheduledAt: Date | null; operationKey: string }): Promise<PublishOutcome>;
-  status(input: { account: AccountWithTokens; providerPostId: string }): Promise<PublishOutcome>;
-  cancel?(input: { account: AccountWithTokens; providerPostId: string }): Promise<void>;
-  disconnect(input: { account: AccountWithTokens }): Promise<void>;
+  startConnect(input: { userId: string; redirectUri: string }): Promise<{ url: string; secret: string | null }>;
+  finishConnect(input: { userId: string; redirectUri: string; params: URLSearchParams; secret: string | null }): Promise<ConnectedAccount[]>;
+  refresh?(refreshToken: string): Promise<TokenSet>;
+  publish(input: { account: AccountRef; text: string; media: MediaRef | null; aiLabel: boolean; scheduledAt: Date | null; operationKey: string }): Promise<PublishOutcome>;
+  status(input: { account: AccountRef; providerPostId: string }): Promise<PublishOutcome>;
+  cancel?(input: { account: AccountRef; providerPostId: string }): Promise<void>;
+  disconnect(input: { account: AccountRef }): Promise<void>;
 }
 type PublishOutcome =
   | { state: "published"; providerPostId: string; url: string | null }
@@ -152,7 +155,7 @@ model SocialPost {
 ### Scheduling trigger
 - `GET /api/cron/social` runs `dispatchDuePosts`, protected by `CRON_SECRET` (Bearer, constant-time compare).
 - Opening `/integracoes` also dispatches the signed-in user's due posts, so development and a missed tick still converge.
-- The Vercel Cron entry (every minute) is added to `vercel.json` only after the founders confirm the plan is Pro: on Hobby a per-minute cron fails the deploy. If the plan is Hobby, the alternative is Upstash QStash (1,000 free messages per day) calling the same route.
+- The Vercel project is on Hobby (confirmed 2026-10-06): a per-minute Vercel Cron fails the deploy, so `vercel.json` gets no cron. An external scheduler calls the route every minute with the secret (cron-job.org free, or Upstash QStash with 1,000 free messages per day); the founders create that account when X goes live. Moving to Pro later only adds the `vercel.json` entry. Note that Vercel Hobby is for non-commercial use.
 
 ## Screens and copy (PT-BR)
 
