@@ -95,3 +95,15 @@ test("a signed-in user gets the studio on /, and the landing stays on /lp", asyn
   await page.goto("/lp");
   await expect(page.getByText("Seis etapas. Cada uma com preço.")).toBeVisible();
 });
+
+test("security headers are sent and the in-app browser bar shows only inside Instagram", async ({ page, browser }) => {
+  const res = await page.goto("/login");
+  expect(res!.headers()["content-security-policy"]).toContain("frame-ancestors 'none'");
+  expect(res!.headers()["x-content-type-options"]).toBe("nosniff");
+  await expect(page.getByText(/Abrir no navegador|Abrir no navegador/)).toHaveCount(0);
+  const ig = await browser.newContext({ userAgent: "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/126 Mobile Safari/537.36 Instagram 330.0.0.0" });
+  const igPage = await ig.newPage();
+  await igPage.goto("/login");
+  await expect(igPage.getByRole("link", { name: /Abrir no navegador/ })).toBeVisible();
+  await ig.close();
+});

@@ -23,8 +23,7 @@ const csp = [
 const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/(.*)", headers: [
-      // Off until checked on a production build (Google sign-in, fal media, fonts): set CSP_ENABLED=1 to turn on.
-      ...(process.env.CSP_ENABLED === "1" ? [{ key: "Content-Security-Policy", value: csp }] : []),
+      { key: "Content-Security-Policy", value: csp },
       { key: "X-Content-Type-Options", value: "nosniff" },
       { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
       { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
