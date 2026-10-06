@@ -2,6 +2,7 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
 const VERSION = "v1";
+const TAG_LENGTH = 16;
 
 function key(): Buffer {
   const k = Buffer.from(process.env.SOCIAL_TOKEN_KEY ?? "", "base64");
@@ -22,9 +23,11 @@ export function openToken(sealed: string, aad: string): string {
   try {
     const [version, iv, tag, body, ...rest] = sealed.split(":");
     if (version !== VERSION || !iv || !tag || body === undefined || rest.length) throw new Error();
-    const decipher = createDecipheriv("aes-256-gcm", key(), Buffer.from(iv, "base64url"));
+    const tagBytes = Buffer.from(tag, "base64url");
+    if (tagBytes.length !== TAG_LENGTH) throw new Error();
+    const decipher = createDecipheriv("aes-256-gcm", key(), Buffer.from(iv, "base64url"), { authTagLength: TAG_LENGTH });
     decipher.setAAD(Buffer.from(aad));
-    decipher.setAuthTag(Buffer.from(tag, "base64url"));
+    decipher.setAuthTag(tagBytes);
     return Buffer.concat([decipher.update(Buffer.from(body, "base64url")), decipher.final()]).toString("utf8");
   } catch {
     throw new Error("Token unavailable");

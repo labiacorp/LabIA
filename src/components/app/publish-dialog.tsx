@@ -9,8 +9,11 @@ import { CostChip } from "@/components/ui/cost-chip";
 import { Textarea } from "@/components/ui/field";
 import { NETWORKS, textLength } from "@/lib/social/networks";
 import { hasUrl, quotePost } from "@/lib/social/pricing";
+import { saoPauloIso } from "@/lib/social/schedule";
 
+// The server enforces 5 minutes; the picker asks for 6 so the minimum is still valid by the time it is submitted.
 const MIN_LEAD_MS = 5 * 60_000;
+const PICKER_LEAD_MS = 6 * 60_000;
 const MAX_LEAD_MS = 30 * 24 * 60 * 60_000;
 // America/Sao_Paulo is UTC-03:00 all year (no DST since 2019), independent of the browser's zone.
 const SAO_PAULO_OFFSET_MS = -3 * 60 * 60_000;
@@ -20,21 +23,19 @@ function toLocalInput(ms: number): string {
   return new Date(ms + SAO_PAULO_OFFSET_MS).toISOString().slice(0, 16);
 }
 
-// A datetime-local value ("YYYY-MM-DDTHH:mm") read as Sao Paulo time, as an ISO string with the offset.
-export function saoPauloIso(value: string): string | null {
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return null;
-  const iso = `${value}:00-03:00`;
-  return Number.isNaN(new Date(iso).getTime()) ? null : iso;
-}
-
 function leadOk(iso: string): boolean {
   const lead = new Date(iso).getTime() - Date.now();
   return lead >= MIN_LEAD_MS && lead <= MAX_LEAD_MS;
 }
 
+function pickerBounds() {
+  const now = Date.now();
+  return { min: toLocalInput(now + PICKER_LEAD_MS), max: toLocalInput(now + MAX_LEAD_MS) };
+}
+
 const round4 = (n: number) => Math.round(n * 10_000) / 10_000;
 
-function PublishForm({ assetId, contentId }: { assetId: string; contentId: string | null }) {
+function PublishForm({ assetId, contentId, onPending }: { assetId: string; contentId: string | null; onPending: (pending: boolean) => void }) {
   const [intentId] = useState(() => crypto.randomUUID());
   const [targets, setTargets] = useState<PublishTargets | { error: string } | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
@@ -45,10 +46,7 @@ function PublishForm({ assetId, contentId }: { assetId: string; contentId: strin
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState<"" | "now" | "schedule">("");
-  const [bounds] = useState(() => {
-    const now = Date.now();
-    return { min: toLocalInput(now + MIN_LEAD_MS), max: toLocalInput(now + MAX_LEAD_MS) };
-  });
+  const [bounds, setBounds] = useState(() => pickerBounds());
 
   useEffect(() => {
     let live = true;
@@ -82,6 +80,7 @@ function PublishForm({ assetId, contentId }: { assetId: string; contentId: strin
       }
     }
     setPending(true);
+    onPending(true);
     setError("");
     try {
       const result = await publishAction({
@@ -100,6 +99,7 @@ function PublishForm({ assetId, contentId }: { assetId: string; contentId: strin
       setError("Não foi possível publicar agora. Tente novamente.");
     } finally {
       setPending(false);
+      onPending(false);
     }
   }
 
@@ -133,9 +133,10 @@ function PublishForm({ assetId, contentId }: { assetId: string; contentId: strin
                   type="checkbox"
                   className="size-5"
                   checked={selected.includes(account.id)}
-                  onChange={(event) =>
-                    setSelected((current) => (event.target.checked ? [...current, account.id] : current.filter((id) => id !== account.id)))
-                  }
+                  onChange={(event) => {
+                    setSelected((current) => (event.target.checked ? [...current, account.id] : current.filter((id) => id !== account.id)));
+                    setError("");
+                  }}
                 />
                 <span className="min-w-0 flex-1 break-words text-body-sm">
                   {info.label} · @{account.handle}
@@ -147,7 +148,7 @@ function PublishForm({ assetId, contentId }: { assetId: string; contentId: strin
         ) : (
           <p className="text-body-sm text-lab-text-dim">
             Você ainda não tem uma conta conectada que aceite este arquivo.{" "}
-            <Link href="/integracoes" className="underline underline-offset-4">
+            <Link href="/integracoes" className="inline-flex min-h-11 items-center underline underline-offset-4">
               Conectar uma rede
             </Link>
           </p>
@@ -161,7 +162,10 @@ function PublishForm({ assetId, contentId }: { assetId: string; contentId: strin
         <Textarea
           id="publish-text"
           value={text}
-          onChange={(event) => setText(event.target.value)}
+          onChange={(event) => {
+            setText(event.target.value);
+            setError("");
+          }}
           rows={4}
           className="font-sans text-body-sm"
           placeholder="Escreva o que acompanha o arquivo"
@@ -187,7 +191,10 @@ function PublishForm({ assetId, contentId }: { assetId: string; contentId: strin
       </div>
 
       <label className="flex min-h-11 items-start gap-3">
-        <input type="checkbox" role="switch" className="mt-1 size-5" checked={aiLabel} onChange={(event) => setAiLabel(event.target.checked)} />
+        <input type="checkbox" role="switch" className="mt-1 size-5" checked={aiLabel} onChange={(event) => {
+            setAiLabel(event.target.checked);
+            setError("");
+          }} />
         <span className="grid text-body-sm">
           Marcar como conteúdo gerado por IA
           <span className="text-caption text-lab-text-dim">As redes pedem esse aviso em conteúdo realista feito com IA.</span>
@@ -197,11 +204,20 @@ function PublishForm({ assetId, contentId }: { assetId: string; contentId: strin
       <fieldset className="grid gap-2">
         <legend className="mb-1 text-body-sm font-medium">Quando publicar</legend>
         <label className="flex min-h-11 items-center gap-3">
-          <input type="radio" name="publish-mode" className="size-5" checked={mode === "now"} onChange={() => setMode("now")} />
+          <input type="radio" name="publish-mode" className="size-5" checked={mode === "now"}
+            onChange={() => {
+              setMode("now");
+              setError("");
+            }} />
           <span className="text-body-sm">Publicar agora</span>
         </label>
         <label className="flex min-h-11 items-center gap-3">
-          <input type="radio" name="publish-mode" className="size-5" checked={mode === "schedule"} onChange={() => setMode("schedule")} />
+          <input type="radio" name="publish-mode" className="size-5" checked={mode === "schedule"}
+            onChange={() => {
+              setBounds(pickerBounds());
+              setMode("schedule");
+              setError("");
+            }} />
           <span className="text-body-sm">Agendar</span>
         </label>
         {mode === "schedule" ? (
@@ -212,7 +228,10 @@ function PublishForm({ assetId, contentId }: { assetId: string; contentId: strin
               value={when}
               min={bounds.min}
               max={bounds.max}
-              onChange={(event) => setWhen(event.target.value)}
+              onChange={(event) => {
+                setWhen(event.target.value);
+                setError("");
+              }}
               className="h-11 rounded-control border border-lab-border bg-lab-surface-2 px-3 text-body-sm text-lab-text"
             />
           </label>
@@ -239,6 +258,7 @@ function PublishForm({ assetId, contentId }: { assetId: string; contentId: strin
 export function PublishButton({ assetId, contentId }: { assetId: string; contentId?: string | null }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
   return (
     <>
       <Button
@@ -257,17 +277,20 @@ export function PublishButton({ assetId, contentId }: { assetId: string; content
         ref={dialog}
         className="studio-dialog publish-dialog"
         aria-labelledby={`publish-title-${assetId}`}
+        onCancel={(event) => {
+          if (busy) event.preventDefault();
+        }}
         onClose={() => setOpen(false)}
       >
         <div className="studio-dialog-header">
           <h2 id={`publish-title-${assetId}`} className="font-display text-lg">
             Publicar
           </h2>
-          <button type="button" aria-label="Fechar publicação" className="lab-hit-target shrink-0" onClick={() => dialog.current?.close()}>
+          <button type="button" aria-label="Fechar publicação" className="lab-hit-target shrink-0 disabled:opacity-50" disabled={busy} onClick={() => dialog.current?.close()}>
             <X className="mx-auto size-5" />
           </button>
         </div>
-        {open ? <PublishForm assetId={assetId} contentId={contentId ?? null} /> : null}
+        {open ? <PublishForm assetId={assetId} contentId={contentId ?? null} onPending={setBusy} /> : null}
       </dialog>
     </>
   );
