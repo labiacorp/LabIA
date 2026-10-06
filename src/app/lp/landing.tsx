@@ -10,6 +10,12 @@ const T = {
   line: "var(--lab-border)", lineStrong: "var(--lab-border-strong)", ink: "var(--lab-text)", ink2: "var(--lab-text-dim)",
   cost: "var(--lab-reagent)", onCost: "var(--lab-on-reagent)", warn: "var(--lab-warning)", info: "var(--lab-info)", danger: "var(--lab-danger)",
 };
+// The landing is dark-only: pin the dark tokens so the app's light theme (html[data-theme=light]) cannot recolor it.
+const DARK = {
+  "--lab-bg": "#0B0B0C", "--lab-surface-1": "#161618", "--lab-surface-2": "#202023", "--lab-border": "#2C2C30", "--lab-border-strong": "#3A3A3F",
+  "--lab-text": "#F4F3EF", "--lab-text-dim": "#A3A29C", "--lab-reagent": "#C8FF2E", "--lab-on-reagent": "#0B0B0C",
+  "--lab-warning": "#FFC247", "--lab-info": "#7CC4FF", "--lab-danger": "#FF5A4E",
+} as CSSProperties;
 const display = "var(--font-display), 'Big Shoulders Display', sans-serif";
 const mono = "var(--font-mono), ui-monospace, monospace";
 const trim = { textBox: "trim-both cap alphabetic" } as CSSProperties;
@@ -106,7 +112,7 @@ export function Landing() {
   );
 
   return (
-    <div id="topo" style={{ fontFamily: "var(--font-ui), system-ui, sans-serif", color: T.ink, background: T.bg, minHeight: "100vh", scrollBehavior: "smooth" }}>
+    <div id="topo" style={{ ...DARK, fontFamily: "var(--font-ui), system-ui, sans-serif", color: T.ink, background: T.bg, minHeight: "100vh", scrollBehavior: "smooth" }}>
       <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 20, height: 64, display: "flex", alignItems: "center", gap: 16, padding: "0 clamp(16px,3vw,40px)", background: "rgba(11,11,12,.72)", backdropFilter: "blur(14px)", borderBottom: "1px solid rgba(44,44,48,.6)" }}>
         <a href="#topo" aria-label="LabIA, início" style={{ textDecoration: "none", color: T.ink, opacity: cl((p - 0.15) / 0.15), display: "flex", alignItems: "center", minHeight: 44 }}><Wordmark size={26} /></a>
         {!mob && (
