@@ -1,5 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInDev } from "./helpers";
+import { runPrefix, signInDev, sql } from "./helpers";
+
+const prefix = runPrefix();
+test.afterAll(() => sql`DELETE FROM invite_requests WHERE email LIKE ${prefix + "%"}`);
 
 // A visitor (no session cookie) lands on the landing at "/"; a signed-in user keeps the studio there.
 test("a visitor on / sees the landing page", async ({ page }) => {
@@ -116,4 +119,21 @@ test("the site has icons, a manifest and a robots file that hides the app", asyn
   const robots = await (await request.get("/robots.txt")).text();
   expect(robots).toContain("Disallow: /painel");
   expect(robots).toContain("Allow: /termos");
+});
+
+test("asking for an invite validates the e-mail, stores it once and answers the same twice", async ({ page }) => {
+  await page.goto("/");
+  const field = page.getByLabel("Seu e-mail");
+  await field.fill("sem-arroba");
+  await page.getByRole("button", { name: "Pedir convite" }).click();
+  await expect(page.locator("#lp-email:invalid")).toHaveCount(1); // the browser stops it first
+  const email = `${prefix}-fila@labia.test`;
+  for (let i = 0; i < 2; i++) {
+    await page.goto("/");
+    await page.getByLabel("Seu e-mail").fill(email);
+    await page.getByRole("button", { name: "Pedir convite" }).click();
+    await expect(page.getByText("Pedido recebido")).toBeVisible();
+  }
+  const rows = await sql`SELECT count(*)::int AS n FROM invite_requests WHERE email = ${email}`;
+  expect(rows[0].n).toBe(1);
 });

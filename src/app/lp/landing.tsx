@@ -4,7 +4,8 @@ import { AudioLines, Check, ChevronLeft, CircleCheck, CircleDashed, Clapperboard
 import Link from "next/link";
 import { InAppBrowserBar } from "@/components/app/in-app-browser-bar";
 import { track } from "@/lib/track";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useActionState, useEffect, useRef, useState, type CSSProperties } from "react";
+import { requestInvite } from "./invite";
 
 // Port of design/reference "LabIA Landing" (Claude Design). Colors map to the --lab-* tokens.
 const T = {
@@ -64,6 +65,7 @@ export function Landing() {
   const stickyRef = useRef<HTMLDivElement>(null);
   const iRef = useRef<HTMLSpanElement>(null);
   const paused = useRef(false);
+  const [invite, inviteAction, invitePending] = useActionState(requestInvite, {});
 
   useEffect(() => {
     const onScroll = () => {
@@ -350,11 +352,18 @@ export function Landing() {
 
       <section id="convite" style={{ borderTop: `1px solid ${T.line}`, padding: "clamp(80px,12vw,160px) clamp(16px,4vw,40px)", display: "flex", flexDirection: "column", alignItems: "center", gap: 32, textAlign: "center" }}>
         <Wordmark size="clamp(96px,20vw,280px)" />
-        <p style={{ margin: 0, fontSize: "clamp(17px,2vw,20px)", lineHeight: 1.5, color: T.ink2, maxWidth: 520 }}>Acesso por convite enquanto a gente cresce com calma. Recebeu um código? Entre agora.</p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-          <Link href="/acesso" onClick={() => track("landing_cta", { place: "footer" })} style={{ ...pill({ height: 56, padding: "0 26px", background: T.ink, color: T.bg, fontWeight: 600, fontSize: 16 }), textDecoration: "none" }}>Entrar com código</Link>
-          <Link href="/login" style={{ ...pill({ height: 56, padding: "0 26px", border: `1.5px solid ${T.lineStrong}`, color: T.ink, fontWeight: 600, fontSize: 16 }), textDecoration: "none" }}>Já tenho conta</Link>
-        </div>
+        <p style={{ margin: 0, fontSize: "clamp(17px,2vw,20px)", lineHeight: 1.5, color: T.ink2, maxWidth: 520 }}>Acesso por convite enquanto a gente cresce com calma. Deixe seu e-mail e a gente manda o código.</p>
+        {invite.ok ? <div role="status" style={{ width: "100%", maxWidth: 520, padding: "16px 18px", borderRadius: 20, background: T.s2, boxShadow: `inset 0 0 0 1px ${T.lineStrong}`, textAlign: "left", fontSize: 15, lineHeight: 1.45 }}>Pedido recebido. Quando abrir uma vaga, o código chega no seu e-mail.</div> : (
+          <form action={inviteAction} onSubmit={() => track("landing_invite_request")} style={{ width: "100%", maxWidth: 520, display: "flex", flexDirection: "column", gap: 10, textAlign: "left" }}>
+            <label htmlFor="lp-email" style={{ fontSize: 14, fontWeight: 500 }}>Seu e-mail</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <input id="lp-email" name="email" type="email" required autoComplete="email" placeholder="voce@email.com" aria-invalid={!!invite.error} style={{ flex: "1 1 240px", minWidth: 0, height: 56, padding: "0 18px", borderRadius: 999, border: `1.5px solid ${invite.error ? T.danger : T.lineStrong}`, background: T.s2, color: T.ink, fontSize: 16, outline: "none" }} />
+              <button type="submit" disabled={invitePending} style={{ flex: "0 0 auto", height: 56, padding: "0 26px", border: 0, borderRadius: 999, background: T.ink, color: T.onCost, fontWeight: 600, fontSize: 16, opacity: invitePending ? 0.6 : 1 }}>Pedir convite</button>
+            </div>
+            {invite.error ? <span role="alert" style={{ fontSize: 14, color: T.danger }}>{invite.error}</span> : null}
+            <span style={{ fontSize: 14, color: T.ink2 }}>Já tem código? <Link href="/acesso" onClick={() => track("landing_cta", { place: "footer" })} style={{ color: T.ink }}>Entrar com código</Link> · <Link href="/login" style={{ color: T.ink }}>Já tenho conta</Link></span>
+          </form>
+        )}
       </section>
 
       <footer style={{ borderTop: `1px solid ${T.line}`, padding: "28px clamp(16px,4vw,40px)", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px 20px", fontSize: 14, color: T.ink2 }}>

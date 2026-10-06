@@ -231,6 +231,15 @@ model ApiUsage {
   @@map("api_usage")
 }
 
+// Landing "Pedir convite": people waiting for an access code. One row per e-mail.
+model InviteRequest {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("invite_requests")
+}
+
 model LedgerEntry {
   id        String       @id @default(cuid())
   userId    String       @map("user_id")
