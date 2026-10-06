@@ -8,13 +8,13 @@ import { cn } from "@/lib/utils";
 const chip = cva("inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2 font-mono tabular-nums", {
   variants: {
     state: {
-      estimated: "border-lab-reagent-line bg-lab-reagent-dim text-lab-reagent-bright",
-      actual: "border-lab-reagent-line bg-lab-reagent-dim text-lab-reagent-bright",
-      free: "border-lab-reagent-line bg-lab-reagent-dim text-lab-reagent-bright", // importação: R$0,00 conhecido
+      estimated: "border-[1.5px] border-lab-reagent bg-transparent text-lab-reagent-bright",
+      actual: "border-lab-reagent bg-lab-reagent font-semibold text-lab-on-reagent",
+      free: "border-lab-reagent bg-lab-reagent font-semibold text-lab-on-reagent", // importação: R$0,00 conhecido
       pending: "border-dashed border-lab-border-strong bg-transparent text-lab-text-dim", // A calcular
       unavailable: "border-lab-border bg-lab-surface-2 text-lab-text-muted", // falha ao ler
     },
-    size: { sm: "h-5 text-[11px]", md: "h-6 text-caption", lg: "h-8 px-3 text-body-sm" },
+    size: { sm: "h-6 text-[11px]", md: "h-[26px] px-2.5 text-caption", lg: "h-9 px-3.5 text-body-sm" },
   },
   defaultVariants: { state: "estimated", size: "md" },
 });

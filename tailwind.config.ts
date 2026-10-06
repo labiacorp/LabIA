@@ -65,7 +65,7 @@ const config: Config = {
       // espaçamento: usar a escala padrão (1=4 · 2=8 · 3=12 · 4=16 · 6=24 · 8=32 · 12=48 · 16=64); não criar valores fora dela
       maxWidth: { form: "var(--lab-w-form)", content: "var(--lab-w-content)", wide: "var(--lab-w-wide)" }, // NOVO
       height: { header: "56px", toolbar: "48px" }, // NOVO (h-14 / h-12 nomeados)
-      borderRadius: { lab: "12px", control: "12px", card: "20px", sheet: "28px" }, // MANTIDO
+      borderRadius: { lab: "20px", control: "12px", card: "20px", sheet: "28px" }, // MANTIDO
       boxShadow: {
         "lab-focus": "0 0 0 1px var(--lab-reagent), 0 0 24px var(--lab-reagent-dim)", // MANTIDO
         "lab-danger": "0 0 0 1px var(--lab-danger), 0 0 24px var(--lab-danger-dim)", // NOVO

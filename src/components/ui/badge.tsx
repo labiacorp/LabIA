@@ -3,11 +3,11 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-const badgeVariants = cva("inline-flex items-center gap-1.5 rounded-full border px-2 h-6 text-caption font-medium", {
+const badgeVariants = cva("inline-flex items-center gap-1.5 rounded-full border px-2 h-7 text-caption font-medium", {
   variants: {
     variant: {
       default: "border-lab-border bg-lab-surface-2 text-lab-text-dim",
-      model: "border-lab-border bg-lab-surface-1 font-mono text-[11px] uppercase tracking-[0.08em] text-lab-text-dim", // "reagentes": FLUX, KLING…
+      model: "border-lab-border bg-lab-surface-2 font-mono text-[11px] uppercase tracking-[0.08em] text-lab-text-dim", // "reagentes": FLUX, KLING…
       proposal: "border-dashed border-lab-border-strong text-lab-text-dim", // marca "proposta"
       // status (Projeto e run de Fluxo) — ponto colorido + texto neutro, nunca verde-reagente
       draft: "border-lab-border bg-transparent text-lab-text-dim [&>i]:bg-lab-text-muted",
