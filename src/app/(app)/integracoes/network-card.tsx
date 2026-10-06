@@ -85,8 +85,11 @@ export function NetworkCard({
   const name = NAMES[network.id];
   const href = network.backend ? `/api/integrations/${network.backend}/start` : "#";
   const connected = account?.status === "CONNECTED";
-  const soon = state === "soon";
-  const notConfigured = !soon && !ready;
+  // Customers see "Em breve" for a network whose backend is not configured; owners see "Configuração pendente".
+  // An existing account always keeps its real status and "Desvincular" (refunds); only connect links need readiness.
+  const [notice, setNotice] = useState("");
+  const soon = state === "soon" || (!ready && !account && !owner);
+  const notConfigured = !soon && !ready && !account;
 
   let status: React.ReactNode = null;
   if (soon) status = <span className={cn(pill, "border-lab-border bg-lab-surface-2 text-lab-text-dim")}>Em breve</span>;
@@ -128,7 +131,14 @@ export function NetworkCard({
     start(async () => {
       const result = await disconnectAction(account.id);
       if ("error" in result) setError(result.error);
-      else dialog.current?.close();
+      else {
+        setNotice(
+          result.canceled > 0
+            ? `Conta desvinculada. ${result.canceled} ${result.canceled === 1 ? "publicação agendada foi cancelada e estornada" : "publicações agendadas foram canceladas e estornadas"}.`
+            : "Conta desvinculada.",
+        );
+        dialog.current?.close();
+      }
     });
   }
 
@@ -168,22 +178,31 @@ export function NetworkCard({
                   ? "Erro na conexão. Reconecte para continuar."
                   : (network.note ?? `Publique e agende posts no ${network.label}.`)}
         </p>
+        {notice ? (
+          <p role="status" className="mt-1 text-caption text-lab-success">
+            {notice}
+          </p>
+        ) : null}
       </div>
       <div className="mt-auto grid gap-2">
         {soon || notConfigured ? null : connected ? (
           <>
-            <a href={href} className={linkClass(false)}>
-              <Link2 aria-hidden />
-              Reconectar conta do {network.label}
-            </a>
+            {ready ? (
+              <a href={href} className={linkClass(false)}>
+                <Link2 aria-hidden />
+                Reconectar conta do {network.label}
+              </a>
+            ) : null}
             {unlink}
           </>
         ) : account ? (
           <>
-            <a href={href} className={linkClass(true)}>
-              <Link2 aria-hidden />
-              Reconectar
-            </a>
+            {ready ? (
+              <a href={href} className={linkClass(true)}>
+                <Link2 aria-hidden />
+                Reconectar
+              </a>
+            ) : null}
             {unlink}
           </>
         ) : (
