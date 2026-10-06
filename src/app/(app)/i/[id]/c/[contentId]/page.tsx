@@ -25,6 +25,7 @@ import { BriefForm } from "./brief-form";
 import { ScriptForm } from "./script-form";
 import { ReviewForm } from "./review-form";
 import { DownloadAsset } from "@/app/(app)/biblioteca/library-view";
+import { PublishButton } from "@/components/app/publish-dialog";
 import { contentStatusLabels } from "@/lib/platform";
 import { SceneForm } from "./scene-form";
 import { VideoForm } from "./video-form";
@@ -315,6 +316,7 @@ export default async function ContentPage({
               }).map((asset, clipIndex) => <figure key={asset.id} className="grid w-full max-w-xs gap-2">
                 <video controls preload="metadata" src={asset.url} className="max-h-[28rem] w-full rounded-control border border-lab-border" />
                 <DownloadAsset id={asset.id} />
+                {step.kind === "ASSEMBLY" ? <PublishButton assetId={asset.id} contentId={content.id} /> : null}
                 <figcaption className="text-caption text-lab-text-dim">{step.kind === "ASSEMBLY" ? "Vídeo final" : `Clipe ${clipIndex + 1} · ${asset.durationSec?.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}s`}</figcaption>
               </figure>)}
             </li>
