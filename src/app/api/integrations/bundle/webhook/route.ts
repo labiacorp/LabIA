@@ -23,7 +23,8 @@ export async function POST(request: Request) {
     where: { providerPostId: data.id, account: { backend: "bundle" } },
     select: { id: true, status: true, account: { select: { network: true } } },
   });
-  // Unknown post, or one that already left the open states: acknowledge so bundle.social stops retrying.
+  // Unknown post (including a POSTED event that beats providerPostId being written; reconcileScheduled/status() recovers it),
+  // or one that already left the open states: acknowledge so bundle.social stops retrying.
   if (!post || (post.status !== "SCHEDULED" && post.status !== "PUBLISHING")) return new Response(null, { status: 200 });
 
   let outcome: PublishOutcome;

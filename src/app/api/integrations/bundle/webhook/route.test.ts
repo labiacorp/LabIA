@@ -29,6 +29,14 @@ describe("bundle webhook", () => {
     expect(findFirst).not.toHaveBeenCalled();
   });
 
+  it("rejects a tampered body and an unset secret", async () => {
+    const tampered = posted.replace("bp1", "bp2");
+    expect((await POST(req(tampered, sign(posted)))).status).toBe(401);
+    vi.stubEnv("BUNDLE_WEBHOOK_SECRET", "");
+    expect((await POST(req(posted, sign(posted)))).status).toBe(401);
+    expect(applyOutcome).not.toHaveBeenCalled();
+  });
+
   it("applies a published outcome to the matching post", async () => {
     expect((await POST(req(posted, sign(posted)))).status).toBe(200);
     expect(findFirst.mock.calls[0][0].where.providerPostId).toBe("bp1");

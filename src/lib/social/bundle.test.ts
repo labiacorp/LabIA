@@ -63,6 +63,7 @@ describe("BundlePublisher connect", () => {
     queue.push(json(200, { id: "team1" }), json(200, { url: "https://bundle.social/connect?token=1" }), json(200, { url: "https://bundle.social/connect?token=2" }));
     const first = await b.startConnect({ userId: "u1", redirectUri });
     await b.startConnect({ userId: "u1", redirectUri });
+    expect(bodyOf(calls[0]).name).toMatch(/^labia-[0-9a-f]{12}$/);
     expect(first).toEqual({ url: "https://bundle.social/connect?token=1", secret: null });
     expect(calls.map((c) => c.url)).toEqual([
       "https://api.bundle.social/api/v1/team/",
@@ -114,15 +115,37 @@ describe("BundlePublisher publish", () => {
     });
   });
 
+  it("sends the most private TikTok and YouTube settings for owner testing", async () => {
+    queue.push(json(200, { id: "up1" }), json(200, { id: "bp1", status: "SCHEDULED" }), json(200, { id: "up2" }), json(200, { id: "bp2", status: "SCHEDULED" }));
+    const video = { ...image, kind: "VIDEO" as const, contentType: "video/mp4", fileName: "a.mp4" };
+    const b = new BundlePublisher();
+    await b.publish(input({ account: { ...account, network: "TIKTOK" }, media: video, aiLabel: true }));
+    expect(bodyOf(calls[1]).data).toEqual({ TIKTOK: { text: "hello", uploadIds: ["up1"], type: "VIDEO", privacy: "SELF_ONLY", isAiGenerated: true } });
+    await b.publish(input({ account: { ...account, network: "YOUTUBE" }, media: video, aiLabel: true }));
+    expect(bodyOf(calls[3]).data.YOUTUBE).toMatchObject({ type: "VIDEO", privacy: "PRIVATE", containsSyntheticMedia: true });
+  });
+
+  it("fails fast without an API key and never calls the network", async () => {
+    vi.stubEnv("BUNDLE_API_KEY", "");
+    expect(await new BundlePublisher().publish(input())).toEqual({ state: "failed", reason: "platform_error" });
+    expect(calls).toHaveLength(0);
+  });
+
   it("returns published when bundle.social reports it immediately", async () => {
     queue.push(json(200, { id: "bp1", status: "POSTED", externalData: { INSTAGRAM: { permalink: "https://ig/p/1" } } }));
     expect(await new BundlePublisher().publish(input())).toEqual({ state: "published", providerPostId: "bp1", url: "https://ig/p/1" });
   });
 
-  it("maps errors: 401 auth, 429 rate limit, 400 platform, upload 400 media, network unknown", async () => {
+  it("maps errors: 401/403 platform_error (never auth_expired), 429 rate limit, 400 platform, upload 400 media, network unknown", async () => {
     const b = new BundlePublisher();
     queue.push(json(401));
-    expect(await b.publish(input())).toEqual({ state: "failed", reason: "auth_expired" });
+    expect(await b.publish(input())).toEqual({ state: "failed", reason: "platform_error" });
+    queue.push(json(403));
+    expect(await b.publish(input())).toEqual({ state: "failed", reason: "platform_error" });
+    queue.push(json(408));
+    expect(await b.publish(input())).toEqual({ state: "unknown" });
+    queue.push(json(409));
+    expect(await b.publish(input())).toEqual({ state: "unknown" });
     queue.push(json(429));
     expect(await b.publish(input())).toEqual({ state: "failed", reason: "rate_limited" });
     queue.push(json(400));

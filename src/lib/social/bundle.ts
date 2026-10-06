@@ -29,15 +29,16 @@
  *
  * UNCONFIRMED (isolated in the helpers named; correct here when the first real call is made):
  *  - signature encoding (hex vs base64, any "sha256=" prefix): verifyBundleSignature accepts all of them.
- *  - TikTok `privacy` and YouTube `privacy` required values: omitted (their defaults apply); see networkData().
+ *  - TikTok `privacy` (SELF_ONLY | PUBLIC_TO_EVERYONE | ...) and YouTube `privacy` (PRIVATE | PUBLIC | UNLISTED) are
+ *    optional with no documented default; UNCONFIRMED whether defaults apply, so owner testing sends the most private
+ *    value (SELF_ONLY / PRIVATE). Revisit before opening these networks to customers.
  *  - AI-disclosure fields exist only for INSTAGRAM, TIKTOK (isAiGenerated) and YOUTUBE (containsSyntheticMedia);
  *    none was found for LINKEDIN, THREADS and FACEBOOK, so aiLabel is ignored there.
  *  - the logoUrl: the app has no icon.png, so it is omitted.
  */
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import type { NetworkId } from "./networks";
-import { AuthExpiredError } from "./publisher";
 import type { AccountRef, ConnectedAccount, FailureReason, PublishInput, PublishOutcome, Publisher } from "./publisher";
 
 const API = "https://api.bundle.social/api/v1";
@@ -66,6 +67,7 @@ class HttpError extends Error {
 const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
 
 async function call(method: string, path: string, body?: unknown): Promise<Json> {
+  if (!process.env.BUNDLE_API_KEY) throw new Error("bundle.social is not configured");
   const res = await fetch(`${API}${path}`, {
     method,
     headers: { "x-api-key": process.env.BUNDLE_API_KEY ?? "", ...(body === undefined ? {} : { "Content-Type": "application/json" }) },
@@ -81,8 +83,8 @@ async function call(method: string, path: string, body?: unknown): Promise<Json>
 }
 
 function failureOf(error: unknown): FailureReason {
+  // 401/403 mean LabIA's own API key is rejected, not that the user's account expired: never "auth_expired".
   if (error instanceof HttpError) {
-    if (error.status === 401 || error.status === 403) return "auth_expired";
     if (error.status === 429) return "rate_limited";
   }
   return "platform_error";
@@ -95,7 +97,7 @@ async function tenantTeam(userId: string): Promise<string> {
   const find = () => prisma.socialTenant.findUnique({ where: { userId_backend: { userId, backend: "bundle" } } });
   const existing = await find();
   if (existing) return existing.externalId;
-  const team = await call("POST", "/team/", { name: `LabIA ${userId}`.slice(0, 80) });
+  const team = await call("POST", "/team/", { name: `labia-${createHash("sha256").update(userId).digest("hex").slice(0, 12)}` });
   const id = str(team.id);
   if (!id) throw new Error("bundle.social team response invalid");
   try {
@@ -115,9 +117,9 @@ function networkData(network: NetworkId, input: PublishInput, uploadIds: string[
     case "INSTAGRAM":
       return { ...base, type: video ? "REEL" : "POST", ...(input.aiLabel ? { isAiGenerated: true } : {}) };
     case "TIKTOK":
-      return { ...base, type: "VIDEO", ...(input.aiLabel ? { isAiGenerated: true } : {}) };
+      return { ...base, type: "VIDEO", privacy: "SELF_ONLY", ...(input.aiLabel ? { isAiGenerated: true } : {}) };
     case "YOUTUBE":
-      return { ...base, type: "VIDEO", description: input.text, ...(input.aiLabel ? { containsSyntheticMedia: true } : {}) };
+      return { ...base, type: "VIDEO", privacy: "PRIVATE", description: input.text, ...(input.aiLabel ? { containsSyntheticMedia: true } : {}) };
     case "FACEBOOK":
       return { ...base, type: video ? "REEL" : "POST" };
     default:
@@ -176,7 +178,7 @@ export class BundlePublisher implements Publisher {
 
   async publish(input: PublishInput): Promise<PublishOutcome> {
     const type = TYPE_OF[input.account.network];
-    if (!type) return { state: "failed", reason: "platform_error" };
+    if (!type || !process.env.BUNDLE_API_KEY) return { state: "failed", reason: "platform_error" }; // not configured: nothing sent
     const teamId = teamOf(input.account);
     const uploadIds: string[] = [];
     try {
@@ -203,7 +205,7 @@ export class BundlePublisher implements Publisher {
       });
     } catch (error) {
       // A rejected request created nothing; a network error or 5xx may have.
-      if (error instanceof HttpError && error.status < 500) return { state: "failed", reason: failureOf(error) };
+      if (error instanceof HttpError && error.status < 500 && error.status !== 408 && error.status !== 409) return { state: "failed", reason: failureOf(error) };
       return { state: "unknown" };
     }
     if (!str(post.id)) return { state: "unknown" };
@@ -222,12 +224,7 @@ export class BundlePublisher implements Publisher {
   async disconnect({ account }: { account: AccountRef }): Promise<void> {
     const type = TYPE_OF[account.network];
     if (!type) return;
-    try {
-      await call("DELETE", "/social-account/disconnect", { type, teamId: teamOf(account) });
-    } catch (error) {
-      if (error instanceof HttpError && (error.status === 401 || error.status === 403)) throw new AuthExpiredError("bundle.social key rejected");
-      throw error;
-    }
+    await call("DELETE", "/social-account/disconnect", { type, teamId: teamOf(account) }); // disconnectAccount treats a throw as best effort
   }
 }
 
