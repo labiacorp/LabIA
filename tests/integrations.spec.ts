@@ -45,7 +45,10 @@ test("connect X, publish now, schedule, cancel and disconnect", async ({ page },
 
   await page.goto("/integracoes");
   await expect(page.locator("article[data-network]")).toHaveCount(8);
-  await expect(page.locator("article[data-network=INSTAGRAM]")).toContainText("Em breve");
+  // Mock mode: every backend is ready, so all networks but Bluesky are connectable by a regular user.
+  for (const id of ["X", "INSTAGRAM", "TIKTOK", "LINKEDIN", "THREADS", "YOUTUBE", "FACEBOOK"])
+    await expect(page.locator(`article[data-network=${id}]`)).toContainText("Conectar");
+  await expect(page.locator("article[data-network=BLUESKY]")).toContainText("Em breve");
   await connectX(page);
 
   const openPublish = async () => {
