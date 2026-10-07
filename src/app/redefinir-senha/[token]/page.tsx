@@ -6,8 +6,8 @@ export const metadata = { title: "Nova senha · LabIA" };
 
 export default async function ResetPasswordPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  return <AuthShell title="Nova senha" description="Escolha a senha que você vai usar para entrar. Ao salvar, todas as sessões abertas são encerradas.">
+  return <AuthShell title="Nova senha">
     <ResetForm token={token} />
-    <Link href="/esqueci-senha" className="text-body-sm text-lab-text-dim underline">Pedir um novo link</Link>
+    <Link href="/esqueci-senha" className="flex min-h-11 items-center justify-center text-body-sm underline underline-offset-[3px]">Pedir novo link</Link>
   </AuthShell>;
 }

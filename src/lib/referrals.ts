@@ -1,6 +1,4 @@
 import { randomBytes } from "node:crypto";
-import { cookies } from "next/headers";
-import { gateMode, hasPass } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 
 import { REFERRAL_BONUS_BRL, REFERRAL_CAP_BRL } from "@/lib/referral-rules";
@@ -90,16 +88,6 @@ export async function invitesLeft(userId: string) {
   ]);
   const spent = Math.max(0, -Number(_sum.deltaBrl?.toString() ?? 0));
   return Math.max(0, INVITES_BASE + INVITES_PER_STEP * Math.floor(spent / INVITES_STEP_BRL) - used);
-}
-
-// Through the beta gate: the access code, or a referral link that still has invites.
-// ponytail: the count is read, not reserved, so people signing up in the same second can overshoot by one or two.
-export async function admitted() {
-  if (await hasPass()) return true;
-  const code = (await cookies()).get(REFERRAL_COOKIE)?.value;
-  if (gateMode() !== "on" || !validReferralCode(code)) return false;
-  const referrer = await prisma.user.findUnique({ where: { referralCode: code }, select: { id: true } });
-  return !!referrer && (await invitesLeft(referrer.id)) > 0;
 }
 
 // Paid top-up of a referred account: R$ 10 for them and R$ 10 for whoever invited them (up to R$ 100 in total).

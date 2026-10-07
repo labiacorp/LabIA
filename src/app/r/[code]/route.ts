@@ -17,7 +17,7 @@ export async function GET(
       select: { id: true },
     }));
   const response = NextResponse.redirect(
-    new URL(exists ? "/convite" : "/convite?invalid=1", request.url),
+    new URL("/criar-conta", request.url),
   );
   response.headers.set("Cache-Control", "private, no-store");
   // Preserve first-touch attribution during its 30-day lifetime.
