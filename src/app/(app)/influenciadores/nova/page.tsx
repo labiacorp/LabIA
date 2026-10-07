@@ -3,18 +3,25 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { CostChip } from "@/components/ui/cost-chip";
-import { PREVIEW, previewChoices, sheetFromFaceChoices } from "@/lib/character";
+import { PREVIEW, previewChoices, profileFromFaceItem, sheetFromFaceChoices, sheetFromFaceItem } from "@/lib/character";
 import { cardOf } from "@/lib/kit";
 import { getBalanceBrl } from "@/lib/ledger";
 import { chargeBrl, costCredits, costText, creditsText } from "@/lib/plan";
 import { prisma } from "@/lib/prisma";
 import { AdminPrompt } from "@/components/app/admin-prompt";
 import { isOwner } from "@/lib/owner";
+import { loadPromptTemplates, PROMPT_DEFAULTS } from "@/lib/prompts";
 import { requireUserId } from "@/lib/session";
 import { KitWatcher } from "../../i/[id]/personagem/kit-watcher";
 import { BriefForm, ChooseFace } from "./forms";
 
 export const dynamic = "force-dynamic";
+
+async function sheetPrompts(influencer: Parameters<typeof cardOf>[0]) {
+  const templates = await loadPromptTemplates();
+  const card = cardOf(influencer);
+  return [sheetFromFaceItem(card, "https://reference-face", templates), profileFromFaceItem(card, "https://reference-face", templates)].map((item) => String(item.params.prompt));
+}
 
 // Nova influencer, from the design: 1 de 2 (brief + previews), 2 de 2 (choose the face), then "está pronta".
 export default async function NewInfluencerPage({ searchParams }: { searchParams: Promise<{ id?: string; pronta?: string }> }) {
@@ -23,7 +30,9 @@ export default async function NewInfluencerPage({ searchParams }: { searchParams
   const [balance, admin] = await Promise.all([getBalanceBrl(userId), isOwner()]);
   const sample = { name: "", role: "Lifestyle", visualSignature: "rosto" };
   const faces = previewChoices(sample);
-  if (!id) return <div className="mx-auto max-w-[640px]"><BriefForm intent={randomUUID()} choices={faces} defaultModel={PREVIEW.model} balanceBrl={balance} /></div>;
+  // Admins read the prompt before paying for it: the face-preview template (with any override), filled live from the form.
+  const previewTemplate = admin ? ((await loadPromptTemplates())["face-preview"] ?? PROMPT_DEFAULTS["face-preview"].text) : undefined;
+  if (!id) return <div className="mx-auto max-w-[640px]"><BriefForm intent={randomUUID()} choices={faces} defaultModel={PREVIEW.model} balanceBrl={balance} previewTemplate={previewTemplate} /></div>;
 
   const influencer = await prisma.influencer.findFirst({ where: { id, userId }, include: { steps: { where: { kind: "CHARACTER" }, orderBy: { createdAt: "asc" }, include: { assets: true } } } });
   if (!influencer) notFound();
@@ -64,6 +73,7 @@ export default async function NewInfluencerPage({ searchParams }: { searchParams
       {running ? <CostChip state="estimated" value={reserved} prefix="reservado" /> : actual !== null ? <CostChip state="actual" value={actual} /> : null}
       {!running && actual !== null && costCredits(reserved) > costCredits(actual) ? <span className="text-[13px] text-lab-text-dim">previsto ~{costText(reserved)} · {creditsText(costCredits(reserved) - costCredits(actual))} voltaram</span> : null}
     </div> : null}
+    {admin ? <AdminPrompt label="Prompt · sheet and side portrait, sent when you approve a face" prompt={(await sheetPrompts(influencer)).join("\n\n---\n\n")} /> : null}
     {admin ? <AdminPrompt prompt={(previews.at(-1)?.input as { prompt?: unknown } | null)?.prompt} model={previews.at(-1)?.model} label="Prompt · face previews" /> : null}
     <ChooseFace influencerId={influencer.id} running={running} balanceBrl={balance} sheetChoices={sheetFromFaceChoices(cardOf(influencer))} previewChoices={faces} approveIntent={randomUUID()} againIntent={randomUUID()}
       faces={(previews.length ? previews : Array.from({ length: 4 }, (_, n) => ({ id: `empty-${n}`, status: "PENDING", assets: [] }))).map((step) => ({ id: step.assets[0]?.id ?? step.id, url: step.assets[0]?.url ?? null, status: step.status }))} />

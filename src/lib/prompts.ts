@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { TRENDS } from "@/lib/motion";
+import { fillPrompt } from "@/lib/prompt-fill";
 
 // Every prompt the app writes around what the user typed. An admin can replace any of them (admin > Prompts); the replacement
 // is read at generation time and wins over the default. `{name}` placeholders are filled from the generation (see `vars`).
@@ -76,7 +77,7 @@ export type PromptTemplates = Partial<Record<PromptKey, string>>;
 // Fills `{name}` from vars; a name with no value stays visible so a typo in an override shows in the generated prompt.
 export function renderPrompt(key: PromptKey, vars: Record<string, string> = {}, templates: PromptTemplates = {}) {
   const template = templates[key]?.trim() ? templates[key]! : PROMPT_DEFAULTS[key].text;
-  return template.replace(/\{(\w+)\}/g, (match, name: string) => vars[name] ?? match);
+  return fillPrompt(template, vars);
 }
 
 // Admin replacements, read on every generation start (a handful of rows).
