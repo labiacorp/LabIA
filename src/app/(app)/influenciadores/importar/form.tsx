@@ -36,6 +36,7 @@ export function ImportForm({ images: saved, uploadReady }: { images: { id: strin
     </label>
     <div className="flex flex-wrap items-center gap-3">
       <Button type="submit" size="lg" loading={pending} disabled={!chosen}>Import influencer · free</Button>
+      {!chosen ? <span className="text-[13px] text-lab-warning">Upload her photo first. The button turns on once an image is selected.</span> : null}
     </div>
     {state.error ? <p role="alert" className="text-[13px] text-lab-danger">{state.error}</p> : null}
   </form>;

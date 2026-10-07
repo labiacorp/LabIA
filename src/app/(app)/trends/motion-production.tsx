@@ -3,6 +3,7 @@ import { costText } from "@/lib/plan";
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { GenerationProgress } from "@/components/app/generation-progress";
 import { AdminPrompt } from "@/components/app/admin-prompt";
 import { findMotionModel, motionSchema, motionEstimate } from "@/lib/motion";
 import { isOwner } from "@/lib/owner";
@@ -102,7 +103,7 @@ export async function MotionProduction({
             {source?.durationSec?.toFixed(1)}s
           </p>
         </section>
-        <section className="grid content-start gap-4 rounded-lab border border-lab-border bg-lab-surface-1 p-5">
+        <section className="grid content-start gap-4 self-start rounded-lab border border-lab-border bg-lab-surface-1 p-5">
           <h2 className="font-display text-xl">Sua recriação</h2>
           {output ? (
             <>
@@ -126,10 +127,10 @@ export async function MotionProduction({
             </>
           ) : step?.status === "RUNNING" ? (
             <>
-              <p role="status">
-                Recriação em andamento. Você pode sair e voltar; o pedido está
-                salvo.
-              </p>
+              <GenerationProgress
+                since={(step.startedAt ?? step.createdAt).toISOString()}
+                title="Recreating the movement"
+              />
               <KitWatcher influencerId={content.influencerId} active />
             </>
           ) : step?.status === "FAILED" ? (
