@@ -70,7 +70,7 @@ export default async function DashboardPage() {
     {state === "low" ? <Toast tone="warning" title="Créditos baixos">{creditsText(credits)} não cobrem um vídeo (~{creditsText(reelCredits)}).</Toast> : null}
     {influencers.length === 0 ? <h1 className="font-display text-[44px] font-black uppercase leading-[.9] lg:text-[64px]">Início</h1>
       : <div className="flex flex-col gap-1.5"><span className={eyebrow}>{today}</span><h1 className="font-display text-[44px] font-black uppercase leading-[.9] lg:text-[64px]">{greeting}, {first}</h1></div>}
-    {influencers.length === 0 ? <EmptyState icon={Sparkles} title="Bora começar" description="Crie sua primeira influencer em uns 10 minutos." action={<Link href="/?criar=1" className={buttonVariants({ size: "lg" })}><Plus className="size-[18px]" />Criar influencer</Link>} /> : <>
+    {influencers.length === 0 ? <EmptyState icon={Sparkles} title="Bora começar" description="Crie sua primeira influencer em uns 10 minutos." action={<Link href="/influenciadores/nova" className={buttonVariants({ size: "lg" })}><Plus className="size-[18px]" />Criar influencer</Link>} /> : <>
       <div className="grid gap-4 md:grid-cols-2">
         <div className={card} style={{ boxShadow: `inset 0 0 0 1.5px ${ring}` }}>
           <span className={eyebrow}>Créditos</span>

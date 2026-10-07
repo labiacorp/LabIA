@@ -121,8 +121,9 @@ export async function startPlan(input: {
       // failure, or "Refazer" on a finished take nobody approved yet while every later step is still untouched.
       // A second tab or a different intent cannot overwrite a live job or an approved one.
       if (target && !(await rerunnable(tx, target))) return [];
+      // Several items of one plan (the four face previews) share role and kind, so the index keeps keys apart.
       const keys = priced.items.map(
-        (item) => `${input.intentId}:${item.role ?? kind}`,
+        (item, index) => `${input.intentId}:${item.role ?? kind}${index ? `:${index}` : ""}`,
       );
       if ((await tx.step.count({ where: { operationKey: { in: keys } } })) > 0)
         return []; // same intent again: nothing to do
