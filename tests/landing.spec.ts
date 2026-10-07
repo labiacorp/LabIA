@@ -8,7 +8,7 @@ test("a visitor on / sees the landing page", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Criar conta" }).first()).toBeVisible();
   await expect(page.getByText("Quatro etapas. Cada uma com custo.")).toBeVisible();
   await page.getByRole("link", { name: "Entrar", exact: true }).first().click();
-  await expect(page).toHaveURL(/\/(login|acesso)/);
+  await expect(page).toHaveURL(/\/(login|criar-conta)/);
 });
 
 const LANDING = /Conteúdo para influencers de IA/;
@@ -125,5 +125,5 @@ test("with access open, every call to action leads to creating an account", asyn
   await page.goto("/");
   await expect(page.getByText("convite")).toHaveCount(0);
   await page.getByRole("link", { name: "Criar conta" }).last().click();
-  await expect(page).toHaveURL(/\/login/);
+  await expect(page).toHaveURL(/\/criar-conta/);
 });
