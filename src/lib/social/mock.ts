@@ -20,7 +20,7 @@ export class MockPublisher implements Publisher {
     return [{ network: "X", providerAccountId: `mock-${userId}`, handle: "labia_teste", tokens: freshTokens() }];
   }
 
-  async refresh(_refreshToken: string): Promise<TokenSet> {
+  async refresh(): Promise<TokenSet> {
     return { accessToken: `mock-access-${randomUUID()}`, refreshToken: `mock-refresh-${randomUUID()}`, expiresAt: new Date(Date.now() + TWO_HOURS_MS) };
   }
 
@@ -36,7 +36,7 @@ export class MockPublisher implements Publisher {
     return { state: "published", providerPostId, url: `https://example.com/mock/${providerPostId}` };
   }
 
-  async cancel(_input: { account: AccountRef; providerPostId: string }): Promise<void> {}
+  async cancel(): Promise<void> {}
 
-  async disconnect(_input: { account: AccountRef }): Promise<void> {}
+  async disconnect(): Promise<void> {}
 }

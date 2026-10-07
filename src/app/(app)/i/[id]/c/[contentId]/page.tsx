@@ -17,6 +17,7 @@ import { chargeBrl, costCredits, costText, creditsText } from "@/lib/plan";
 import { KitWatcher } from "../../personagem/kit-watcher";
 import { ArchiveControl } from "../../../../conteudos/archive-control";
 import { DownloadAsset } from "@/app/(app)/biblioteca/library-view";
+import { PublishButton } from "@/components/app/publish-dialog";
 import { assembleVideo, generateScene, generateVideo } from "./actions";
 import { ScriptForm } from "./script-form";
 import { SceneForm } from "./scene-form";
@@ -162,7 +163,7 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
         </div> : null}
         <div className="flex flex-wrap gap-2">
           <ApproveButton influencerId={id} contentId={contentId} stepId={step.id} label={step.kind === "ASSEMBLY" ? "Aprovar vídeo" : `Aprovar ${stage.name.toLowerCase()}`} />
-          {step.kind === "ASSEMBLY" && finalCut ? <DownloadAsset id={finalCut.id} /> : null}
+          {step.kind === "ASSEMBLY" && finalCut ? <><DownloadAsset id={finalCut.id} /><PublishButton assetId={finalCut.id} contentId={content.id} /></> : null}
         </div>
         {paid && step.submissionState === "completed" ? <details className="group">
           <summary className="flex h-12 cursor-pointer list-none items-center justify-center gap-2 rounded-full border-[1.5px] border-lab-border-strong text-body-sm font-semibold">Refazer {estimate(step) ? <span className="flex h-[34px] items-center rounded-full border-[1.5px] border-lab-reagent px-2.5 font-mono text-[13px] text-lab-reagent-bright">~{costText(estimate(step)!)}</span> : null}</summary>
@@ -186,7 +187,7 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
 
   return <div className="grid items-start gap-8 lg:grid-cols-[300px_minmax(0,1fr)]">
     <KitWatcher influencerId={id} active={running} />
-    <div className="sticky top-24 hidden flex-col gap-3 lg:flex">{preview("")}{finalCut ? <DownloadAsset id={finalCut.id} /> : null}</div>
+    <div className="sticky top-24 hidden flex-col gap-3 lg:flex">{preview("")}{finalCut ? <><DownloadAsset id={finalCut.id} /><PublishButton assetId={finalCut.id} contentId={content.id} /></> : null}</div>
     <div className="flex min-w-0 flex-col gap-4">
       <div className="flex items-center gap-2">
         <Link href="/conteudos" aria-label="Voltar para conteúdos" className="flex size-11 items-center justify-center rounded-full bg-lab-surface-2 focus-visible:outline-none focus-visible:shadow-lab-focus"><ArrowLeft className="size-[19px]" aria-hidden /></Link>

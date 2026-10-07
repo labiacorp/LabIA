@@ -189,6 +189,8 @@ describe("XPublisher publish", () => {
     expect(await x.publish(input())).toEqual({ state: "failed", reason: "text_rejected" });
     queue.push(json(400));
     expect(await x.publish(input())).toEqual({ state: "failed", reason: "text_rejected" });
+    queue.push(json(408));
+    expect(await x.publish(input())).toEqual({ state: "unknown" });
     queue.push(json(503));
     expect(await x.publish(input())).toEqual({ state: "unknown" });
     queue.push(new Error("network secret-body"));

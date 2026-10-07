@@ -1,10 +1,17 @@
 // Server-only: uses node:crypto. Never import from a client component.
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { mockEnabled } from "@/lib/provider";
 
 const VERSION = "v1";
+const TAG_LENGTH = 16;
+
+// Mock/dev only, never used in production: lets FAL_MOCK=1 (CI e2e) run without SOCIAL_TOKEN_KEY.
+// mockEnabled() is false in production, so there the real key stays required.
+const MOCK_DEV_KEY = Buffer.alloc(32, 0x4c);
 
 function key(): Buffer {
   const k = Buffer.from(process.env.SOCIAL_TOKEN_KEY ?? "", "base64");
+  if (k.length !== 32 && mockEnabled() && !process.env.SOCIAL_TOKEN_KEY?.trim()) return MOCK_DEV_KEY;
   if (k.length !== 32) throw new Error("SOCIAL_TOKEN_KEY must be 32 bytes, base64-encoded");
   return k;
 }
@@ -22,9 +29,11 @@ export function openToken(sealed: string, aad: string): string {
   try {
     const [version, iv, tag, body, ...rest] = sealed.split(":");
     if (version !== VERSION || !iv || !tag || body === undefined || rest.length) throw new Error();
-    const decipher = createDecipheriv("aes-256-gcm", key(), Buffer.from(iv, "base64url"));
+    const tagBytes = Buffer.from(tag, "base64url");
+    if (tagBytes.length !== TAG_LENGTH) throw new Error();
+    const decipher = createDecipheriv("aes-256-gcm", key(), Buffer.from(iv, "base64url"), { authTagLength: TAG_LENGTH });
     decipher.setAAD(Buffer.from(aad));
-    decipher.setAuthTag(Buffer.from(tag, "base64url"));
+    decipher.setAuthTag(tagBytes);
     return Buffer.concat([decipher.update(Buffer.from(body, "base64url")), decipher.final()]).toString("utf8");
   } catch {
     throw new Error("Token unavailable");

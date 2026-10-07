@@ -12,6 +12,7 @@ import { issueEmailToken } from "@/lib/email-tokens";
 import { sendEmailChangeConfirm } from "@/lib/account-emails";
 import { removeReference } from "@/lib/reference-storage";
 import { hit, TOO_MANY_ATTEMPTS } from "@/lib/rate-limit";
+import { disconnectAccount } from "@/lib/social/posts";
 
 export type SecurityState = { error: string; message?: string; needsReauth?: boolean };
 
@@ -63,7 +64,7 @@ export async function requestEmailChange(_previous: SecurityState, form: FormDat
   return { error: "", message: `Enviamos um link para ${email.data}. Seu e-mail atual continua valendo até você confirmar.` };
 }
 
-// Refused while money is unresolved: a generation running, or a submission whose cost is unknown.
+// Refused while money is unresolved: a generation running, a submission whose cost is unknown, or a post being sent.
 // The guard sits inside the delete itself, so a generation started a moment earlier still blocks it.
 // Ledger rows go with the account (top-ups are manual and there are no card payments yet).
 export async function deleteAccount(_previous: SecurityState, form: FormData): Promise<SecurityState> {
@@ -73,11 +74,20 @@ export async function deleteAccount(_previous: SecurityState, form: FormData): P
   if (refused) return refused;
   const files = await prisma.asset.findMany({ where: { userId, storageKey: { not: null } }, select: { storageKey: true } });
   const open = { some: { OR: [{ status: "RUNNING" as const }, { submissionState: { in: ["submitting", "submission_unknown", "cost_unknown"] } }] } };
+  const stepsBlocked = { OR: [{ steps: open }, { contents: { some: { steps: open } } }] };
+  const publishing = { status: "PUBLISHING" as const };
+  const PUBLISHING_MESSAGE = "Aguarde a publicação em andamento terminar.";
+  const GENERATION_MESSAGE = "Há uma geração em andamento ou com custo a confirmar. Espere ela terminar ou fale com a equipe.";
+  // Pre-checks first, so a refused deletion leaves the connected accounts and scheduled posts alone.
+  if (await prisma.socialPost.count({ where: { userId, ...publishing } })) return { error: PUBLISHING_MESSAGE };
+  if (await prisma.influencer.count({ where: { userId, ...stepsBlocked } })) return { error: GENERATION_MESSAGE };
+  // Best effort: cancels scheduled posts with refunds and revokes the X tokens before the cascade.
+  const accounts = await prisma.socialAccount.findMany({ where: { userId, status: { not: "DISCONNECTED" } }, select: { id: true } });
+  await Promise.allSettled(accounts.map((account) => disconnectAccount(userId, account.id)));
   const deleted = await prisma.user.deleteMany({
-    where: { id: userId, influencers: { none: { OR: [{ steps: open }, { contents: { some: { steps: open } } }] } } },
+    where: { id: userId, influencers: { none: stepsBlocked }, socialPosts: { none: publishing } },
   });
-  if (deleted.count === 0)
-    return { error: "Há uma geração em andamento ou com custo a confirmar. Espere ela terminar ou fale com a equipe." };
+  if (deleted.count === 0) return { error: (await prisma.socialPost.count({ where: { userId, ...publishing } })) ? PUBLISHING_MESSAGE : GENERATION_MESSAGE };
   await Promise.allSettled(files.map((file) => removeReference(file.storageKey!)));
   await signOut({ redirect: false });
   redirect("/login?aviso=conta-excluida");

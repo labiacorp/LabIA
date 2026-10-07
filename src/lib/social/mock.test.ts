@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { BundlePublisher } from "./bundle";
 import { MockPublisher } from "./mock";
 import { XPublisher } from "./x";
-import { backendReady, connectBackend, getPublisher, type AccountRef, type PublishInput } from "./publisher";
+import { backendReady, connectBackend, getPublisher, type AccountRef, type PublishInput, type Publisher } from "./publisher";
 
 const account: AccountRef = { id: "a1", network: "X", providerAccountId: "mock-u", handle: "labia_teste", accessToken: "mock-access" };
 const input = (over: Partial<PublishInput> = {}): PublishInput => ({
@@ -17,7 +18,7 @@ const input = (over: Partial<PublishInput> = {}): PublishInput => ({
 afterEach(() => vi.unstubAllEnvs());
 
 describe("MockPublisher", () => {
-  const mock = new MockPublisher();
+  const mock: Publisher = new MockPublisher();
 
   it("startConnect returns a url carrying a state equal to the secret", async () => {
     const { url, secret } = await mock.startConnect({ userId: "u", redirectUri: "http://x/cb" });
@@ -62,11 +63,11 @@ describe("MockPublisher", () => {
   });
 
   it("refresh returns a new pair; cancel and disconnect resolve", async () => {
-    const t = await mock.refresh("old");
+    const t = await mock.refresh!("old");
     expect(t.accessToken).toBeTruthy();
     expect(t.refreshToken).toBeTruthy();
-    await expect(mock.cancel({ account, providerPostId: "p" })).resolves.toBeUndefined();
-    await expect(mock.disconnect({ account })).resolves.toBeUndefined();
+    await expect(mock.cancel!({ account, providerPostId: "p" })).resolves.toBeUndefined();
+    await expect(mock.disconnect!({ account })).resolves.toBeUndefined();
   });
 });
 
@@ -80,16 +81,18 @@ describe("getPublisher / connectBackend / backendReady", () => {
     expect(backendReady("bundle")).toBe(true);
   });
 
-  it("returns the X adapter and throws for bundle when not mocked", () => {
+  it("returns the X and bundle adapters when not mocked", () => {
     vi.stubEnv("FAL_MOCK", "");
     expect(getPublisher("x")).toBeInstanceOf(XPublisher);
-    expect(() => getPublisher("bundle")).toThrow("Backend unavailable");
+    expect(getPublisher("bundle")).toBeInstanceOf(BundlePublisher);
     expect(connectBackend("bundle")).toBe("bundle");
   });
 
   it("backendReady checks the required env vars", () => {
     vi.stubEnv("FAL_MOCK", "");
     vi.stubEnv("X_CLIENT_ID", "");
+    vi.stubEnv("X_CLIENT_SECRET", "");
+    vi.stubEnv("SOCIAL_TOKEN_KEY", "");
     vi.stubEnv("BUNDLE_API_KEY", "");
     expect(backendReady("x")).toBe(false);
     expect(backendReady("bundle")).toBe(false);
@@ -99,5 +102,7 @@ describe("getPublisher / connectBackend / backendReady", () => {
     vi.stubEnv("X_CLIENT_SECRET", "b");
     vi.stubEnv("SOCIAL_TOKEN_KEY", "c");
     expect(backendReady("x")).toBe(true);
+    vi.stubEnv("SOCIAL_TOKEN_KEY", "");
+    expect(backendReady("x")).toBe(false);
   });
 });

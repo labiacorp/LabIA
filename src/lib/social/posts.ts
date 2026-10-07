@@ -1,6 +1,7 @@
 import { Prisma } from "@/generated/prisma/client";
 import type { SocialPostStatus } from "@/generated/prisma/enums";
 import { hasUnlimitedBalance } from "@/lib/ledger";
+import { balanceText, costText } from "@/lib/plan";
 import { prisma } from "@/lib/prisma";
 import { accountRef } from "./accounts";
 import { SocialError } from "./errors";
@@ -54,7 +55,7 @@ export async function createPosts(input: CreateInput): Promise<{ postIds: string
   // A retry of the same intent returns what exists, before any validation or quote.
   const priorKeys = [...new Set(input.accountIds)].map((id) => `${input.intentId}:${id}`);
   if (priorKeys.length) {
-    const prior = await prisma.socialPost.findMany({ where: { operationKey: { in: priorKeys } }, select: { id: true } });
+    const prior = await prisma.socialPost.findMany({ where: { userId: input.userId, operationKey: { in: priorKeys } }, select: { id: true } });
     if (prior.length) return { postIds: prior.map((p) => p.id) };
   }
   if (!text.trim()) throw new SocialError("Escreva o texto da publicação.");
@@ -73,6 +74,11 @@ export async function createPosts(input: CreateInput): Promise<{ postIds: string
   if (input.assetId && !asset) throw new SocialError("Mídia não encontrada.");
   if (input.contentId && !(await prisma.content.findFirst({ where: { id: input.contentId, influencer: { userId: input.userId } } })))
     throw new SocialError("Conteúdo não encontrado.");
+  if (accounts.some((a) => a.backend === "bundle")) {
+    // Bundle networks are owner-only for now (same rule as requireOwner, without notFound).
+    const user = await prisma.user.findUnique({ where: { id: input.userId }, select: { role: true } });
+    if (user?.role !== "OWNER") throw new SocialError("Esta rede ainda não está disponível para a sua conta.");
+  }
   for (const account of accounts) {
     const info = networkInfo(account.network);
     if (account.status !== "CONNECTED") throw new SocialError(`Reconecte a conta @${account.handle} antes de publicar.`);
@@ -100,7 +106,7 @@ export async function createPosts(input: CreateInput): Promise<{ postIds: string
       const { _sum } = await tx.ledgerEntry.aggregate({ where: { userId: input.userId }, _sum: { deltaBrl: true } });
       const balance = num(_sum.deltaBrl);
       if (!hasUnlimitedBalance(me?.email) && balance + 1e-9 < priced.totalBrl)
-        throw new SocialError(`Saldo insuficiente: você tem R$ ${balance.toFixed(2)} e precisa de R$ ${priced.totalBrl.toFixed(2)}.`);
+        throw new SocialError(`Créditos insuficientes: você tem ${balanceText(balance)} e precisa de ${costText(priced.totalBrl)}.`);
       const ids: string[] = [];
       for (const account of accounts) {
         const cost = costOf.get(account.id)!;
@@ -131,11 +137,12 @@ export async function createPosts(input: CreateInput): Promise<{ postIds: string
   }
 
   // Due posts go out now; bundle posts with a future time are handed to the backend's own scheduler.
-  await dispatchDuePosts({ userId: input.userId });
+  await dispatchDuePosts({ userId: input.userId, limit: 3, budgetMs: 100_000 });
   return { postIds };
 }
 
-export async function dispatchDuePosts(opts: { userId?: string; now?: Date; limit?: number } = {}) {
+export async function dispatchDuePosts(opts: { userId?: string; now?: Date; limit?: number; budgetMs?: number } = {}) {
+  const startedAt = Date.now();
   const now = opts.now ?? new Date();
   const result = { published: 0, scheduled: 0, failed: 0, unknown: 0 };
   const owner = opts.userId ? { userId: opts.userId } : {};
@@ -153,18 +160,21 @@ export async function dispatchDuePosts(opts: { userId?: string; now?: Date; limi
       providerPostId: null,
       OR: [{ scheduledAt: { lte: now } }, { account: { backend: "bundle" } }],
     },
-    include: { account: { select: { backend: true, status: true } } },
+    include: { account: { select: { backend: true, status: true, userId: true } } },
     orderBy: { scheduledAt: "asc" },
     take: opts.limit ?? 25,
   });
 
+  let handled = 0;
   for (const post of due) {
+    if (handled > 0 && opts.budgetMs !== undefined && Date.now() - startedAt > opts.budgetMs) break; // leave the rest for the next run
     // Compare-and-set claim: only the winner talks to the backend.
     const claim = await prisma.socialPost.updateMany({
       where: { id: post.id, status: "SCHEDULED", providerPostId: null },
       data: { status: "PUBLISHING", claimedAt: new Date() },
     });
     if (claim.count !== 1) continue;
+    handled++;
 
     let outcome: PublishOutcome;
     let account: AccountRef | undefined;
@@ -173,6 +183,7 @@ export async function dispatchDuePosts(opts: { userId?: string; now?: Date; limi
     let reason: FailureReason | null = null;
     try {
       if (post.account.status !== "CONNECTED") throw new AuthExpiredError("Account not connected");
+      if (post.account.userId !== post.userId) throw new Error("Account belongs to another user"); // defense in depth: never send, never expire the account
       publisher = getPublisher(post.account.backend as Backend);
       account = await accountRef(post.accountId);
     } catch (error) {
@@ -247,9 +258,20 @@ export async function cancelPost(userId: string, postId: string): Promise<void> 
     // Scheduled at the backend: it must drop the post before we refund.
     try {
       const publisher = getPublisher(post.account.backend as Backend);
+      if (post.account.backend === "bundle" && post.scheduledAt.getTime() <= Date.now()) {
+        // Its time has come: the backend may already have published it. Ask before dropping anything.
+        const outcome = await publisher.status({ account: await accountRef(post.accountId), providerPostId: post.providerPostId });
+        if (outcome.state !== "scheduled") {
+          await applyOutcome(post.id, outcome);
+          throw new SocialError(
+            outcome.state === "published" ? "Esta publicação já foi enviada e não pode mais ser cancelada." : "Não foi possível cancelar esta publicação.",
+          );
+        }
+      }
       if (!publisher.cancel) throw new Error("No cancel");
       await publisher.cancel({ account: await accountRef(post.accountId), providerPostId: post.providerPostId });
-    } catch {
+    } catch (error) {
+      if (error instanceof SocialError) throw error;
       throw new SocialError("Não foi possível cancelar esta publicação.");
     }
   }

@@ -112,6 +112,16 @@ describe("OAuth callback route", () => {
   });
 });
 
+describe("keyless mock mode", () => {
+  it("start then callback complete with SOCIAL_TOKEN_KEY unset", async () => {
+    vi.stubEnv("SOCIAL_TOKEN_KEY", "");
+    const { cookie, state: s } = await begin();
+    const res = await callback(req(`/api/integrations/x/callback?code=mock&state=${s}`, cookie), ctx("x"));
+    expect(location(res)).toBe("/integracoes?conectado=x");
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("start route cookie and influencer", () => {
   const sealedOf = (res: Response) => JSON.parse(openToken(decodeURIComponent(cookieOf(res)), "oauth:x"));
 
@@ -148,6 +158,15 @@ describe("start route cookie and influencer", () => {
       expect(location(cb)).toBe("/integracoes?erro=x");
     }
     expect(save).not.toHaveBeenCalled();
+  });
+
+  it("in development prefers the AUTH_URL origin over the request origin", async () => {
+    vi.stubEnv("AUTH_URL", "http://127.0.0.1:3000");
+    const res = await start(new NextRequest("http://localhost:3000/api/integrations/x/start"), ctx("x"));
+    expect(res.headers.get("location")!.startsWith("http://127.0.0.1:3000/api/integrations/x/callback?")).toBe(true);
+    vi.stubEnv("AUTH_URL", "not a url");
+    const fallback = await start(new NextRequest("http://localhost:3000/api/integrations/x/start"), ctx("x"));
+    expect(fallback.headers.get("location")!.startsWith("http://localhost:3000/api/integrations/x/callback?")).toBe(true);
   });
 
   it("keeps an owned influencer id and drops one owned by another user", async () => {

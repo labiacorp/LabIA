@@ -6,7 +6,7 @@ import { openToken, sealToken } from "./crypto";
 import { AuthExpiredError, getPublisher } from "./publisher";
 import type { AccountRef, Backend, ConnectedAccount } from "./publisher";
 
-const REFRESH_WINDOW_MS = 2 * 60_000;
+const REFRESH_WINDOW_MS = 10 * 60_000;
 const TAKEN = "Esta conta já está conectada a outro usuário da LabIA.";
 
 export async function saveConnectedAccounts(
@@ -19,9 +19,11 @@ export async function saveConnectedAccounts(
   for (const account of accounts) {
     const where = { backend_providerAccountId: { backend, providerAccountId: account.providerAccountId } };
     const existing = await prisma.socialAccount.findUnique({ where });
-    if (existing && existing.userId !== userId) throw new SocialError(TAKEN);
+    // A disconnected row of another user may be re-claimed; a live one never.
+    if (existing && existing.userId !== userId && existing.status !== "DISCONNECTED") throw new SocialError(TAKEN);
     const id = existing?.id ?? randomUUID();
-    const { tokens } = account;
+    // The mock backend has no real tokens: nothing reads them, so none are sealed or stored (no key needed).
+    const tokens = backend === "mock" ? undefined : account.tokens;
     const data = {
       network: account.network,
       handle: account.handle,
@@ -32,11 +34,15 @@ export async function saveConnectedAccounts(
       refreshToken: tokens?.refreshToken ? sealToken(tokens.refreshToken, id) : null,
       tokenExpiresAt: tokens?.expiresAt ?? null,
       scopes: tokens?.scopes ?? null,
-      ...(influencerId !== undefined ? { influencerId } : {}),
+      ...(influencerId !== undefined ? { influencerId } : existing && existing.userId !== userId ? { influencerId: null } : {}),
     };
     if (existing) {
       // The userId in the filter keeps a concurrent takeover from writing into another owner's row.
-      const { count } = await prisma.socialAccount.updateMany({ where: { id, userId }, data });
+      const reclaim = existing.userId !== userId;
+      const { count } = await prisma.socialAccount.updateMany({
+        where: reclaim ? { id, userId: existing.userId, status: "DISCONNECTED" } : { id, userId },
+        data: reclaim ? { ...data, userId } : data,
+      });
       if (count !== 1) throw new SocialError(TAKEN);
     } else {
       try {

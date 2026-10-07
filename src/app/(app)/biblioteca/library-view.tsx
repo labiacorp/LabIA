@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/field";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CostChip } from "@/components/ui/cost-chip";
+import { PublishButton } from "@/components/app/publish-dialog";
 import {
   libraryHref,
   DEFAULT_LIBRARY_FILTERS,
@@ -391,6 +392,9 @@ export function LibraryView({
               </dl>
               <div className="flex flex-wrap gap-3">
                 <DownloadAsset id={selected.id} />
+                {selected.kind === "IMAGE" || selected.kind === "VIDEO" ? (
+                  <PublishButton assetId={selected.id} contentId={selected.content?.id} />
+                ) : null}
                 {selected.url.startsWith("https://") ||
                 selected.url.startsWith("/mock/") ? (
                   <a
