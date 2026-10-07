@@ -4,6 +4,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 import { prisma } from "../prisma";
 import { saveConnectedAccounts } from "./accounts";
 import { sealToken } from "./crypto";
+import { NETWORKS } from "./networks";
 import { MockPublisher } from "./mock";
 import { AuthExpiredError } from "./publisher";
 import { applyOutcome, cancelPost, createPosts, disconnectAccount, dispatchDuePosts, FAILURE_COPY, SocialError } from "./posts";
@@ -274,22 +275,45 @@ describe.skipIf(!process.env.DATABASE_URL)("social posts core", () => {
     await expect(createPosts(input(b, { intentId: intent, accountIds: [a.accountId] }))).rejects.toThrow(SocialError);
   });
 
-  async function bundleAccount(userId: string) {
+  async function bundleAccount(userId: string, network: "INSTAGRAM" | "BLUESKY" = "INSTAGRAM") {
     return prisma.socialAccount.create({
-      data: { userId, backend: "bundle", providerAccountId: randomUUID(), network: "X", handle: "bq", status: "CONNECTED" },
+      data: { userId, backend: "bundle", providerAccountId: randomUUID(), network, handle: "bq", status: "CONNECTED" },
     });
   }
 
-  it("bundle accounts are owner-only in the core", async () => {
+  it("a non-owner can publish through a bundle account (mock)", async () => {
     const who = await seed();
     const account = await bundleAccount(who.userId);
-    const args = input(who, { accountIds: [account.id], assetId: null, expectedBrl: 0.081 });
-    await expect(createPosts(args)).rejects.toThrow("Esta rede ainda não está disponível para a sua conta.");
-    expect(await posts(who.userId)).toHaveLength(0);
-    expect(await ledgerSum({ userId: who.userId })).toBeCloseTo(10, 4);
+    const { postIds } = await createPosts(input(who, { accountIds: [account.id], assetId: null, expectedBrl: 0 }));
+    expect((await prisma.socialPost.findUniqueOrThrow({ where: { id: postIds[0] } })).status).toBe("PUBLISHED");
+  });
+
+  it("a network whose audience is owners is refused for non-owners", async () => {
+    const who = await seed();
+    const account = await bundleAccount(who.userId);
+    const info = NETWORKS.find((n) => n.id === "INSTAGRAM")!;
+    info.audience = "owners";
+    try {
+      const args = input(who, { accountIds: [account.id], assetId: null, expectedBrl: 0 });
+      await expect(createPosts(args)).rejects.toThrow("Esta rede ainda não está disponível para a sua conta.");
+      expect(await posts(who.userId)).toHaveLength(0);
+      expect(await ledgerSum({ userId: who.userId })).toBeCloseTo(10, 4);
+      await prisma.user.update({ where: { id: who.userId }, data: { role: "OWNER" } });
+      const { postIds } = await createPosts({ ...args, intentId: randomUUID() });
+      expect(postIds).toHaveLength(1);
+    } finally {
+      info.audience = "all";
+    }
+  });
+
+  it("a soon network is refused even for owners", async () => {
+    const who = await seed();
     await prisma.user.update({ where: { id: who.userId }, data: { role: "OWNER" } });
-    const { postIds } = await createPosts({ ...args, intentId: randomUUID() });
-    expect(postIds).toHaveLength(1);
+    const account = await bundleAccount(who.userId, "BLUESKY");
+    await expect(createPosts(input(who, { accountIds: [account.id], assetId: null, expectedBrl: 0 }))).rejects.toThrow(
+      "Esta rede ainda não está disponível para a sua conta.",
+    );
+    expect(await posts(who.userId)).toHaveLength(0);
   });
 
   it("a disconnected account can be re-claimed by another user; a live one cannot", async () => {

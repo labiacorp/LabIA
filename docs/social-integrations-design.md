@@ -9,7 +9,7 @@ Research behind every number: `docs/research/social-apis-x-linkedin-threads.md`,
 Customers connect their social accounts in LabIA and publish or schedule the content they produced, with the cost shown before and recorded after, like every generation. This replaces "auto-posting" in the "Not now" list of `PROJECT_STATUS.md`.
 
 Success for this branch:
-- An "Integrações" area lists every network with a polished card. X works for everyone; the bundle.social networks work for owners only (internal test); the rest show "Em breve".
+- An "Integrações" area lists every network with a polished card. X works for everyone; the bundle.social networks are open to every signed-in user; the rest show "Em breve".
 - A user connects X with OAuth, publishes a finished image or video now or at a chosen time, sees the R$ cost before confirming, and finds the post (link, status, real cost) afterwards.
 - Nothing is ever published twice, charged twice, or resent after an ambiguous result.
 - Everything runs in mock mode (`FAL_MOCK=1`) without credentials, and the tests never post.
@@ -17,11 +17,11 @@ Success for this branch:
 ## Decisions (and why)
 
 1. **X through its official API, directly.** No review, deterministic per-post price (US$ 0.015, or US$ 0.20 when the text contains a URL; pay-per-use since 2026-02-06), which fits pay-per-use exactly.
-2. **Other networks through an aggregator, starting with bundle.social, owners only.** Aggregators use the official APIs under apps that already passed Meta review, TikTok audit, LinkedIn partner approval and YouTube audit (4 to 8+ weeks each for us, and we lack a domain, a CNPJ in the terms and a final privacy policy). bundle.social bills per post (Free: 20 posts and 3 teams per month, enough to test; Pro US$ 100 for 10,000 posts). It stays owner-only until the founders judge the flow and choose the vendor.
+2. **Other networks through an aggregator, starting with bundle.social, open to all users (founders' decision, 2026-10-07).** Aggregators use the official APIs under apps that already passed Meta review, TikTok audit, LinkedIn partner approval and YouTube audit (4 to 8+ weeks each for us, and we lack a domain, a CNPJ in the terms and a final privacy policy). bundle.social bills per post (Free: 20 posts and 3 teams per month, enough to test; Pro US$ 100 for 10,000 posts). LabIA uses a single bundle.social organization, so the free tier (20 posts per month) is shared by all users: a limit to watch, upgrade to Pro when real usage starts. The catalog audience `owners` still exists to gate a network later.
 3. **One internal interface, one adapter per backend.** Moving a network from the aggregator to an own app later means a new adapter, not a new feature. Caveat: changing the backend of a network forces its users to reconnect (tokens belong to the app that issued them).
 4. **No new worker.** X has no native scheduling, so a dispatcher route publishes due posts; bundle.social schedules natively and reports by webhook.
 5. **AI label on by default.** X `made_with_ai`, and the equivalent field wherever the backend exposes it. AI influencer content without a label risks removal or strikes.
-6. **v1 charges only the exact X pass-through.** bundle.social posts cost R$ 0,00 during the internal test; the aggregator fee is LabIA overhead. Margin and final per-post pricing are a founders' decision for later.
+6. **v1 charges only the exact X pass-through.** bundle.social posts cost R$ 0,00 for now; the aggregator fee is LabIA overhead. Margin and final per-post pricing are a founders' decision for later.
 
 Out of scope: analytics, editing a published post, threads or replies, multi-image posts, carousels, LinkedIn personal profiles (LinkedIn forbids profiles for anyone other than yourself, so not for AI personas), Bluesky, own Meta/TikTok/Google/LinkedIn apps, messaging channels and MCP ("Conectar sua IA").
 
@@ -123,7 +123,7 @@ model SocialPost {
 2. `GET /api/integrations/x/callback`: checks the cookie and `state` (mismatch or missing cookie: back to `/integracoes?erro=x`), exchanges the code at `https://api.x.com/2/oauth2/token` (confidential client, Basic auth), reads `GET /2/users/me`, upserts the account with sealed tokens. An X account already owned by another LabIA user is refused with a clear message. Redirects to `/integracoes?conectado=x`.
 3. Callback URL comes from `LABIA_PUBLIC_URL` (production) or the request origin in development; never from an arbitrary Host header in production.
 
-### Connect bundle.social networks (owners only)
+### Connect bundle.social networks (every signed-in user)
 1. A server action makes sure the user has a bundle.social team (`SocialTenant`), creates a portal link (`logoUrl`, `language`, `redirectUrl` back to `/integracoes?conectado=bundle`, short expiry) and redirects.
 2. On return, the page action lists the team's accounts and upserts one `SocialAccount` per network.
 
@@ -161,7 +161,7 @@ model SocialPost {
 
 - Navigation: "Integrações" in the main menu (desktop sidebar and mobile sheet).
 - `/integracoes`, following `design/reference/` and the tokens:
-  - "Redes sociais": one card per network in a responsive grid (one column at 390px). Card states: "Conectado como @handle" with "Reconectar" and "Desvincular" (confirmation dialog that says how many scheduled posts will be canceled and refunded); "Conectar"; "Reconecte sua conta" (EXPIRED); "Erro na conexão" (ERROR); "Em breve" (disabled, no button); owners see "Teste interno" on bundle networks.
+  - "Redes sociais": one card per network in a responsive grid (one column at 390px). Card states: "Conectado como @handle" with "Reconectar" and "Desvincular" (confirmation dialog that says how many scheduled posts will be canceled and refunded); "Conectar"; "Reconecte sua conta" (EXPIRED); "Erro na conexão" (ERROR); "Em breve" (disabled, no button); owners see "Teste interno" only on a network whose audience is "owners" (none today).
   - "Publicações": the latest posts with network icon, account, text excerpt, media thumbnail, status badge (Agendado, Publicando, Publicado, Falhou, Cancelado, Em verificação), date and time, cost chip (`estimated` while scheduled, `actual` after), "Ver post" link, "Cancelar" on scheduled posts. Empty state that points to the library.
   - Truthful status: the page only claims "Conectado" for accounts with a stored, non-expired connection.
 - Publish dialog: native `<dialog>` like the existing ones, 44px targets, full-height sheet at 390px.

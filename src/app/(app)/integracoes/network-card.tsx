@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import type { NetworkId } from "@/lib/social/networks";
 import { disconnectAction } from "./actions";
 
-export type CardNetwork = { id: NetworkId; label: string; backend: "x" | "bundle" | null; note?: string };
+export type CardNetwork = { id: NetworkId; label: string; backend: "x" | "bundle" | null; audience?: "all" | "owners" | "soon"; note?: string };
 export type CardAccount = { id: string; handle: string; status: "CONNECTED" | "EXPIRED" | "ERROR"; scheduled: number };
 
 const NAMES: Record<NetworkId, string> = {
@@ -161,7 +161,7 @@ export function NetworkCard({
       <div className="min-w-0">
         <h3 className="flex flex-wrap items-center gap-2 font-display text-lg font-semibold">
           {name}
-          {!soon && owner && network.backend === "bundle" ? (
+          {!soon && owner && network.audience === "owners" ? (
             <span className="rounded-full border border-dashed border-lab-border-strong px-2 text-caption font-normal text-lab-text-dim">
               Teste interno
             </span>

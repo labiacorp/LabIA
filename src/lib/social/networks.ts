@@ -13,20 +13,20 @@ export type NetworkInfo = {
 
 export const NETWORKS: NetworkInfo[] = [
   { id: "X", label: "X", backend: "x", audience: "all", maxText: 280, media: ["IMAGE", "VIDEO"] },
-  { id: "INSTAGRAM", label: "Instagram", backend: "bundle", audience: "owners", maxText: 2200, media: ["IMAGE", "VIDEO"] },
-  { id: "TIKTOK", label: "TikTok", backend: "bundle", audience: "owners", maxText: 2200, media: ["VIDEO"] },
+  { id: "INSTAGRAM", label: "Instagram", backend: "bundle", audience: "all", maxText: 2200, media: ["IMAGE", "VIDEO"] },
+  { id: "TIKTOK", label: "TikTok", backend: "bundle", audience: "all", maxText: 2200, media: ["VIDEO"] },
   {
     id: "LINKEDIN",
     label: "LinkedIn",
     backend: "bundle",
-    audience: "owners",
+    audience: "all",
     maxText: 3000,
     media: ["IMAGE", "VIDEO"],
     note: "Somente páginas de empresa",
   },
-  { id: "THREADS", label: "Threads", backend: "bundle", audience: "owners", maxText: 500, media: ["IMAGE", "VIDEO"] },
-  { id: "YOUTUBE", label: "YouTube", backend: "bundle", audience: "owners", maxText: 5000, media: ["VIDEO"] },
-  { id: "FACEBOOK", label: "Facebook", backend: "bundle", audience: "owners", maxText: 5000, media: ["IMAGE", "VIDEO"] },
+  { id: "THREADS", label: "Threads", backend: "bundle", audience: "all", maxText: 500, media: ["IMAGE", "VIDEO"] },
+  { id: "YOUTUBE", label: "YouTube", backend: "bundle", audience: "all", maxText: 5000, media: ["VIDEO"] },
+  { id: "FACEBOOK", label: "Facebook", backend: "bundle", audience: "all", maxText: 5000, media: ["IMAGE", "VIDEO"] },
   { id: "BLUESKY", label: "Bluesky", backend: null, audience: "soon", maxText: 300, media: ["IMAGE", "VIDEO"] },
 ];
 

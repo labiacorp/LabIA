@@ -97,7 +97,7 @@ describe("getPublishTargets", () => {
     expect(await getPublishTargets("asset-1")).toHaveProperty("error");
   });
 
-  it("filters accounts by media kind and hides owner-only networks from non-owners", async () => {
+  it("filters accounts by media kind and includes aggregator networks for every user", async () => {
     mocks.assetFind.mockResolvedValue({ kind: "IMAGE" });
     mocks.accounts.mockResolvedValue([
       { id: "x", network: "X", handle: "labia", token: "secret" },
@@ -105,14 +105,13 @@ describe("getPublishTargets", () => {
       { id: "ig", network: "INSTAGRAM", handle: "ig" },
     ]);
     const regular = await getPublishTargets("asset-1");
-    expect(regular).toMatchObject({ assetKind: "IMAGE", accounts: [{ id: "x", network: "X", handle: "labia" }] });
+    expect(regular).toMatchObject({ assetKind: "IMAGE", accounts: [{ id: "x", network: "X", handle: "labia" }, { id: "ig" }] });
     expect(JSON.stringify(regular)).not.toContain("secret");
     expect(mocks.accounts.mock.calls[0][0].where).toMatchObject({ userId: "user-1", status: "CONNECTED" });
 
     mocks.ownerSession.mockReturnValue(true);
     mocks.userFind.mockResolvedValue({ role: "OWNER" });
     const owner = await getPublishTargets("asset-1");
-    expect(owner).toMatchObject({ accounts: [{ id: "x" }, { id: "ig" }] });
     expect((owner as { accounts: unknown[] }).accounts).toHaveLength(2);
   });
 

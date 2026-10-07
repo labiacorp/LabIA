@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { accountRef } from "./accounts";
 import { SocialError } from "./errors";
 import { assetMedia } from "./media";
-import { NETWORKS, textLength } from "./networks";
+import { NETWORKS, networkVisible, textLength } from "./networks";
 import type { NetworkId } from "./networks";
 import { quotePost } from "./pricing";
 import { AuthExpiredError, getPublisher } from "./publisher";
@@ -74,10 +74,12 @@ export async function createPosts(input: CreateInput): Promise<{ postIds: string
   if (input.assetId && !asset) throw new SocialError("Mídia não encontrada.");
   if (input.contentId && !(await prisma.content.findFirst({ where: { id: input.contentId, influencer: { userId: input.userId } } })))
     throw new SocialError("Conteúdo não encontrado.");
-  if (accounts.some((a) => a.backend === "bundle")) {
-    // Bundle networks are owner-only for now (same rule as requireOwner, without notFound).
+  // The catalog decides who may use a network ("owners" audience, "soon").
+  if (accounts.some((a) => networkInfo(a.network).audience !== "all")) {
     const user = await prisma.user.findUnique({ where: { id: input.userId }, select: { role: true } });
-    if (user?.role !== "OWNER") throw new SocialError("Esta rede ainda não está disponível para a sua conta.");
+    const isOwner = user?.role === "OWNER";
+    if (accounts.some((a) => networkVisible(networkInfo(a.network), isOwner) !== "active"))
+      throw new SocialError("Esta rede ainda não está disponível para a sua conta.");
   }
   for (const account of accounts) {
     const info = networkInfo(account.network);
