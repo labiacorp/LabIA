@@ -5,11 +5,11 @@ Source: founders' call 2026-10-07 (Gemini notes) plus the Playwright run that cr
 ## How agents use this file
 
 1. Start of session: `git switch dev && git pull origin dev`, then read this file.
-2. Your lane: git author `Phill` = Diego (lane D). `Felipe Zilli` / `zilli26` = Felipe (lane F). Take the first unchecked task in your lane, top to bottom. Never take a task from the other lane; if yours is empty, take from "Shared, last".
-3. Stay inside your lane's files. If a task needs a file the other lane owns, make the smallest change possible and say so in the commit message.
-4. When done: tick the box, append the commit hash, update `PROJECT_STATUS.md`, all in the task's commit. Do not push only to tick a box (push in batches, CLAUDE.md "Branches and sync").
+2. **Felipe does everything** (Diego's weekly quota is spent, 2026-10-07). Both lanes below are Felipe's. Work lane F first (generation and money paths), then lane D, then S1. Diego is out of the queue until further notice; he only reviews.
+3. Take the first unchecked task, top to bottom. The lanes keep their owned files so a second person can join later without conflicts.
+4. When done: tick the box, append the commit hash, update `PROJECT_STATUS.md`, all in the task's commit. Push `dev` in batches (CLAUDE.md "Branches and sync").
 5. Blocked or a decision needed: write `BLOCKED: <question>` under the task, commit it, move to the next task.
-6. Copy language: from now on, new or changed UI copy is in English (decision 2026-10-07). Do not translate untouched screens; that is task S1.
+6. Copy language: new or changed UI copy is in English (decision 2026-10-07). Do not translate untouched screens; that is task S1.
 
 ## Already done (no action)
 
@@ -18,7 +18,7 @@ Source: founders' call 2026-10-07 (Gemini notes) plus the Playwright run that cr
 - Credit value: 1 credit = R$ 0,05 (`src/lib/plan.ts`).
 - Script/idea limit 10.000 chars (`src/lib/limits.ts`); Integrations moved into Profile, export row removed; networks other than X show "Em breve"; approving a face now also makes the side portrait, and the ready page shows front, side and sheet.
 
-## Lane D: Diego (shell, account, integrations screens, UI polish)
+## Lane D: shell, account, integrations screens, UI polish (Felipe, after lane F)
 
 Owns: `src/app/(app)/layout.tsx` and nav/header components, `src/app/(app)/conta/`, `src/app/(app)/integracoes/`, `src/app/(app)/conexoes/`, `src/components/ui/`, `src/app/globals.css`, `tailwind.config.ts`, `src/app/api/mcp/`.
 
@@ -27,7 +27,7 @@ Owns: `src/app/(app)/layout.tsx` and nav/header components, `src/app/(app)/conta
 - [ ] **D5. Visual pass.** Shrink the giant warnings on the content/step screens to inline notes; fix contrast; the credit counter on the video step (step 03) is white text on green, unreadable: fix it in `CostChip`/tokens, not per screen. Run `PRODUCT_REVIEW_LENS.md`.
 - [ ] **D6. MCP.** After D1-D5. Extend `/api/mcp` (currently read tools + free drafts). Scope to be written as a short plan in this file before coding.
 
-## Lane F: Felipe (generation, models, credits, publishing logic)
+## Lane F: generation, models, credits, publishing logic (Felipe, first)
 
 Owns: `src/lib/` (generation, models, plan, social/publishing), `src/app/(app)/i/[id]/c/[contentId]/` (step forms), `src/app/(app)/conteudos/`, `src/app/(app)/trends/`, `src/app/(app)/modelos/`.
 
