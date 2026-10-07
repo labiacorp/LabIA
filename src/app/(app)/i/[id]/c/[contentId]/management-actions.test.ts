@@ -75,10 +75,10 @@ describe("production management", () => {
           "character",
           "content",
           previous,
-          form("script", "x".repeat(2001)),
+          form("script", "x".repeat(10_001)),
         )
       ).error,
-    ).toContain("2.000");
+    ).toContain("10.000");
     expect(mocks.step).not.toHaveBeenCalled();
   });
   it("requires a completed owned final video and no running step before approval", async () => {

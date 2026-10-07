@@ -9,7 +9,7 @@ vi.mock("@/lib/fx", () => ({ refreshRate: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 vi.mock("@/lib/generation", () => ({ startPlan: mocks.start, UserError: class UserError extends Error {} }));
-vi.mock("@/lib/character", () => ({ previewItems: () => [], sheetFromFaceItem: () => ({ role: "SHEET" }) }));
+vi.mock("@/lib/character", () => ({ previewItems: () => [], sheetFromFaceItem: () => ({ role: "SHEET" }), profileFromFaceItem: () => ({ role: "PROFILE" }) }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     influencer: { findFirst: mocks.findInfluencer, update: mocks.updateInfluencer },

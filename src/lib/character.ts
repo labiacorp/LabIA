@@ -63,6 +63,13 @@ export function sheetFromFaceItem(card: CharacterCard, faceUrl: string): KitItem
   params.imagePricing = prepareImage("fal-ai/nano-banana-2/edit", params, usdBrlRate()).snapshot;
   return { role: "SHEET", model: "fal-ai/nano-banana-2/edit", params };
 }
+// Side portrait made straight from the approved face (the face itself is the front one), so the kit is ready at creation.
+export function profileFromFaceItem(card: CharacterCard, faceUrl: string): KitItem {
+  const prompt = `Using the person in the reference photo (${identity(card)}), create ${PORTRAIT_SPEC.PROFILE.text}. Keep exactly the same face, hair and clothing. No text, no watermark.`;
+  const params: Record<string, unknown> = { prompt, image_urls: [faceUrl], aspect_ratio: PORTRAIT_SPEC.PROFILE.aspect, resolution: "1K" };
+  params.imagePricing = prepareImage(PORTRAIT_MODEL, params, usdBrlRate()).snapshot;
+  return { role: "PROFILE", model: PORTRAIT_MODEL, params };
+}
 type KitItemPlan = { role: AssetRole | null; model: string; params: Record<string, unknown> };
 
 // Every text-to-image model and quality that can take this sheet prompt, priced by the server (invalid pairs are left out).

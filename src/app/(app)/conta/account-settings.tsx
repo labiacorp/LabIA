@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRef, type ReactNode, type RefObject } from "react";
-import { ChevronRight, Wallet, ShieldCheck, Download, Gift, X, LogOut, Camera } from "lucide-react";
+import { ChevronRight, Wallet, ShieldCheck, Share2, Gift, X, LogOut, Camera } from "lucide-react";
 import { AccountAvatar } from "@/components/app/account-avatar";
 import { Modal } from "@/components/ui/modal";
 import { AccountForm } from "./account-form";
@@ -35,7 +35,7 @@ export function AccountSettings({ name, email, avatarVersion, referralCode, refe
       <div className="account-settings-group">
         <Link href="/saldo" className="account-settings-row"><span className="account-row-icon"><Wallet className="size-5" /></span><span className="account-row-label">Plano e créditos</span><ChevronRight className="account-chevron" /></Link>
         <Link href="/conta/seguranca" className="account-settings-row"><span className="account-row-icon"><ShieldCheck className="size-5" /></span><span className="account-row-label">Acesso e segurança</span><ChevronRight className="account-chevron" /></Link>
-        <a href="/api/account/export" className="account-settings-row"><span className="account-row-icon"><Download className="size-5" /></span><span className="account-row-label">Exportar meus dados</span><span className="account-row-value">JSON</span><ChevronRight className="account-chevron" /></a>
+        <Link href="/integracoes" className="account-settings-row"><span className="account-row-icon"><Share2 className="size-5" /></span><span className="account-row-label">Integrations</span><ChevronRight className="account-chevron" /></Link>
       </div>
       <p className="account-group-caption">Seus arquivos de imagem e vídeo ficam na biblioteca.</p>
     </section>

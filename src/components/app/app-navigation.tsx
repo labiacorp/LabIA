@@ -15,7 +15,6 @@ const main: NavItem[] = [
   { href: "/influenciadores", label: "Influencers", icon: UserRound },
   { href: "/conteudos", label: "Conteúdos", icon: Film },
   { href: "/biblioteca", label: "Biblioteca", icon: Library },
-  { href: "/integracoes", label: "Integrações", icon: Share2 },
   { href: "/modelos", label: "Modelos", icon: Cpu },
   { href: "/trends", label: "Tendências", icon: TrendingUp },
 ];
@@ -25,6 +24,7 @@ const footer: NavItem[] = [
 ];
 const profile: NavItem[] = [
   { href: "/conta", label: "Perfil", icon: UserRound },
+  { href: "/integracoes", label: "Integrações", icon: Share2 },
   { href: "/conta/seguranca", label: "Trocar senha", icon: KeyRound },
   { href: "/conta/seguranca", label: "Trocar e-mail", icon: Mail },
   { href: "/saldo", label: "Saldo e extrato", icon: Receipt, money: true },

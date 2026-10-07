@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { createContentDraft } from "@/lib/content-draft";
+import { TEXT_MAX } from "@/lib/limits";
 import { requireUserId } from "@/lib/session";
 export type CreateState = { error: string; created?: string };
 // Novo conteúdo (design): influencer + idea. The title is the idea's first clause; the format is 9:16 unless a
@@ -13,8 +14,8 @@ export async function createProduction(_previous: CreateState, form: FormData): 
     .object({
       influencerId: z.string().min(1),
       title: z.string().trim().max(120).optional(),
-      idea: z.string().trim().min(1).max(2000),
-      script: z.string().trim().max(2000).default(""),
+      idea: z.string().trim().min(1).max(TEXT_MAX),
+      script: z.string().trim().max(TEXT_MAX).default(""),
       aspectRatio: z.enum(["9:16", "16:9", "1:1"]).default("9:16"),
     })
     .safeParse(Object.fromEntries(form));

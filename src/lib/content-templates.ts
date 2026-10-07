@@ -1,3 +1,4 @@
+import { TEXT_MAX } from "@/lib/limits";
 export type DraftStarter = {
   id: string;
   name: string;
@@ -56,5 +57,5 @@ export const CONTENT_STARTERS: DraftStarter[] = [
 ];
 export function scriptText(input: unknown): string {
   if (!input || typeof input !== "object" || !("script" in input)) return "";
-  return typeof input.script === "string" ? input.script.slice(0, 2000) : "";
+  return typeof input.script === "string" ? input.script.slice(0, TEXT_MAX) : "";
 }

@@ -6,6 +6,7 @@ import { Check, CircleAlert, Smartphone, Timer } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { CostChip } from "@/components/ui/cost-chip";
 import { costCredits, creditsText } from "@/lib/plan";
+import { TEXT_MAX } from "@/lib/limits";
 import { createProduction } from "../management";
 
 type Row = { step: string; model: string; brl: number };
@@ -42,7 +43,7 @@ export function CreationForm({ influencers, selected, initial, rows, totalBrl }:
     </fieldset>
     <label className="flex flex-col gap-2">
       <span className="text-body-sm font-medium">Ideia do vídeo</span>
-      <textarea name="idea" required maxLength={2000} rows={4} defaultValue={initial?.idea ?? ""} placeholder="Ex.: 3 hábitos de quem acorda às 5h, tom leve, gancho nos 2 primeiros segundos."
+      <textarea name="idea" required maxLength={TEXT_MAX} rows={4} defaultValue={initial?.idea ?? ""} placeholder="Ex.: 3 hábitos de quem acorda às 5h, tom leve, gancho nos 2 primeiros segundos."
         aria-invalid={!!state.error} className={`min-h-28 rounded-control border-[1.5px] bg-lab-surface-2 px-4 py-3.5 text-body leading-[1.5] placeholder:text-lab-text-dim focus-visible:border-lab-text focus-visible:outline-none ${state.error ? "border-lab-danger" : "border-lab-border-strong"}`} />
       {state.error ? <span role="alert" className="flex items-center gap-1.5 text-[13px] text-lab-danger"><CircleAlert className="size-3.5" aria-hidden />{state.error}</span> : null}
     </label>

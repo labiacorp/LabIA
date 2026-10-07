@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { previewItems, sheetFromFaceItem } from "@/lib/character";
+import { previewItems, profileFromFaceItem, sheetFromFaceItem } from "@/lib/character";
 import { startPlan, UserError } from "@/lib/generation";
 import { refreshRate } from "@/lib/fx";
 import { cardOf } from "@/lib/kit";
@@ -72,7 +72,7 @@ export async function approveFace(influencerId: string, _previous: InfluencerSta
   const asset = await prisma.asset.findFirst({ where: { id: assetId, userId, influencerId, kind: "IMAGE", role: null, step: { kind: "CHARACTER", role: null, status: "DONE" } } });
   if (!influencer || !asset) return { error: "Este rosto não está disponível." };
   try {
-    await startPlan({ userId, influencerId, intentId: money.data.intent, plan: [sheetFromFaceItem(cardOf(influencer), asset.url)], expectedBrl: money.data.expectedBrl });
+    await startPlan({ userId, influencerId, intentId: money.data.intent, plan: [sheetFromFaceItem(cardOf(influencer), asset.url), profileFromFaceItem(cardOf(influencer), asset.url)], expectedBrl: money.data.expectedBrl });
   } catch (error) {
     if (error instanceof UserError) return { error: error.message };
     console.error("[approveFace]", error);

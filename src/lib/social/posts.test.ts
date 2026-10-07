@@ -284,8 +284,14 @@ describe.skipIf(!process.env.DATABASE_URL)("social posts core", () => {
   it("a non-owner can publish through a bundle account (mock)", async () => {
     const who = await seed();
     const account = await bundleAccount(who.userId);
-    const { postIds } = await createPosts(input(who, { accountIds: [account.id], assetId: null, expectedBrl: 0 }));
-    expect((await prisma.socialPost.findUniqueOrThrow({ where: { id: postIds[0] } })).status).toBe("PUBLISHED");
+    const info = NETWORKS.find((n) => n.id === "INSTAGRAM")!;
+    info.audience = "all";
+    try {
+      const { postIds } = await createPosts(input(who, { accountIds: [account.id], assetId: null, expectedBrl: 0 }));
+      expect((await prisma.socialPost.findUniqueOrThrow({ where: { id: postIds[0] } })).status).toBe("PUBLISHED");
+    } finally {
+      info.audience = "soon";
+    }
   });
 
   it("a network whose audience is owners is refused for non-owners", async () => {
@@ -302,7 +308,7 @@ describe.skipIf(!process.env.DATABASE_URL)("social posts core", () => {
       const { postIds } = await createPosts({ ...args, intentId: randomUUID() });
       expect(postIds).toHaveLength(1);
     } finally {
-      info.audience = "all";
+      info.audience = "soon";
     }
   });
 

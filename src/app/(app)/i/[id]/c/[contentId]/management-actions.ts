@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/session";
 import { UserError } from "@/lib/generation";
+import { TEXT_MAX, TEXT_MAX_LABEL } from "@/lib/limits";
 export type ManagementState = { error: string; message: string };
 export async function saveScript(
   influencerId: string,
@@ -17,11 +18,11 @@ export async function saveScript(
     .string()
     .trim()
     .min(1)
-    .max(2000)
+    .max(TEXT_MAX)
     .safeParse(form.get("script"));
   if (!result.success)
     return {
-      error: "Escreva um roteiro de até 2.000 caracteres.",
+      error: `Write a script of up to ${TEXT_MAX_LABEL} characters.`,
       message: "",
     };
   try {

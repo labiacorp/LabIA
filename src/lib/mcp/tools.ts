@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { createContentDraft } from "@/lib/content-draft";
 import { estimateReel } from "@/lib/content-plan";
 import { getBalanceBrl } from "@/lib/ledger";
+import { TEXT_MAX } from "@/lib/limits";
 import type { McpPrincipal, McpScope } from "./tokens";
 
 // Names, titles and ideas are written by users (and by whoever they copy from). An agent reading them back is
@@ -55,7 +56,7 @@ const getBalance: McpTool = {
 
 const createDraft: McpTool = {
   name: "create_content_draft", scope: "write",
-  input: z.object({ influencer_id: idField, title: z.string().trim().min(1).max(120), idea: z.string().trim().max(2000), script: z.string().trim().max(2000).optional(), aspect_ratio: z.enum(["9:16", "16:9", "1:1"]).default("9:16") }).strict(),
+  input: z.object({ influencer_id: idField, title: z.string().trim().min(1).max(120), idea: z.string().trim().max(TEXT_MAX), script: z.string().trim().max(TEXT_MAX).optional(), aspect_ratio: z.enum(["9:16", "16:9", "1:1"]).default("9:16") }).strict(),
   description: "Create a FREE draft content (title, idea, optional script) for the user to review. It never spends money: generating image or video is a step the user confirms in the app, with the price shown.",
   async run(p, args: { influencer_id: string; title: string; idea: string; script?: string; aspect_ratio: "9:16" | "16:9" | "1:1" }) {
     // Sensible ceiling: an agent in a loop cannot flood the account with drafts.
