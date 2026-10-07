@@ -21,8 +21,8 @@ const buttonVariants = cva(
       },
       size: {
         sm: "h-9 px-4 text-caption",
-        md: "h-11 px-5 text-body-sm", // alvo ≥ 44px
-        lg: "h-14 px-6 text-body",
+        md: "h-10 px-4 text-body-sm",
+        lg: "h-12 px-5 text-body",
         icon: "size-11 p-0",
         "icon-lg": "size-12 p-0",
       },

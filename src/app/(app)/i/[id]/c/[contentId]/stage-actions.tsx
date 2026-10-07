@@ -22,7 +22,7 @@ export function AssembleButton({ action, intent, blockedReason }: { action: (pre
   return <form action={formAction} className="flex flex-col gap-2">
     <input type="hidden" name="intent" value={intent} />
     <input type="hidden" name="expectedBrl" value={0} />
-    <Button className="h-14 w-full text-body" loading={pending} disabled={!!blockedReason}>Montar vídeo · grátis</Button>
+    <Button className="h-12 w-full text-body" loading={pending} disabled={!!blockedReason}>Montar vídeo · grátis</Button>
     {blockedReason ? <p className="text-caption text-lab-text-dim">{blockedReason}</p> : null}
     {state.error ? <Alert variant="error" title={state.error} /> : null}
   </form>;

@@ -29,7 +29,7 @@ export function EditInfluencer({ influencer }: { influencer: { id: string; name:
         </div></fieldset>
         <label className="flex flex-col gap-2"><span className="text-body-sm font-medium">Como ela é</span><textarea name="description" defaultValue={influencer.description} required minLength={20} maxLength={400} rows={4} className={`py-3.5 leading-[1.5] ${field}`} /></label>
         <p className="text-[13px] text-lab-text-dim">Vale para as próximas gerações. O que já foi gerado não muda. Nada é cobrado.</p>
-        <Button className="h-14 text-body" loading={pending}>Salvar</Button>
+        <Button className="h-12 text-body" loading={pending}>Salvar</Button>
         <button type="button" onClick={() => dialog.current?.close()} className="h-12 rounded-full border-[1.5px] border-lab-border-strong text-[15px] font-semibold">Cancelar</button>
         {state.error ? <Alert variant="error" title={state.error} /> : null}
       </form>

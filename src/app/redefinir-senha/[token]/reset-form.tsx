@@ -22,6 +22,6 @@ export function ResetForm({ token }: { token: string }) {
       {mismatch ? <span className="text-[13px] text-lab-danger">As senhas não são iguais.</span> : null}
     </label>
     {state.error ? <p role="alert" className="flex items-center gap-1.5 text-[13px] text-lab-danger"><CircleAlert className="size-3.5" aria-hidden />{state.error}</p> : null}
-    <Button className="h-14 w-full text-body" loading={pending} disabled={password.length < PASSWORD_MIN || again !== password}>Salvar nova senha</Button>
+    <Button className="h-12 w-full text-body" loading={pending} disabled={password.length < PASSWORD_MIN || again !== password}>Salvar nova senha</Button>
   </form>;
 }

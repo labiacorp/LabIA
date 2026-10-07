@@ -55,12 +55,12 @@ const config: Config = {
         eyebrow: ["11px", { lineHeight: "16px", letterSpacing: "0.08em", fontWeight: "500" }], // mono, uppercase
         caption: ["12px", { lineHeight: "16px" }],
         "body-sm": ["14px", { lineHeight: "20px" }],
-        body: ["16px", { lineHeight: "24px" }],
+        body: ["15px", { lineHeight: "22px" }],
         h3: ["18px", { lineHeight: "24px", fontWeight: "500" }],
-        h2: ["30px", { lineHeight: "30px", fontWeight: "900" }],
-        h1: ["clamp(40px,7vw,56px)", { lineHeight: "0.9", fontWeight: "900" }],
+        h2: ["26px", { lineHeight: "28px", fontWeight: "900" }],
+        h1: ["clamp(30px,5vw,42px)", { lineHeight: "0.95", fontWeight: "900" }],
         "h1-lg": ["40px", { lineHeight: "48px", fontWeight: "700", letterSpacing: "-0.02em" }],
-        display: ["64px", { lineHeight: "64px", fontWeight: "700", letterSpacing: "-0.03em" }],
+        display: ["52px", { lineHeight: "52px", fontWeight: "700", letterSpacing: "-0.03em" }],
         "cost-lg": ["28px", { lineHeight: "32px", fontWeight: "600" }], // mono
       },
       // espaçamento: usar a escala padrão (1=4 · 2=8 · 3=12 · 4=16 · 6=24 · 8=32 · 12=48 · 16=64); não criar valores fora dela

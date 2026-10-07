@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 export function GoogleSignIn({ action, enabled }: { action: () => void; enabled: boolean }) {
   return (
     <form action={action}>
-      <Button variant="secondary" disabled={!enabled} className="h-14 w-full text-body">
+      <Button variant="secondary" disabled={!enabled} className="h-12 w-full text-body">
         <span aria-hidden className="flex size-5 items-center justify-center rounded-full bg-lab-text text-xs font-bold text-lab-bg">G</span>
         Continuar com Google
       </Button>

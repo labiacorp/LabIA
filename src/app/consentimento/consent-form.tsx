@@ -22,7 +22,7 @@ export function ConsentForm() {
       </label>)}
     </div>
     <p className="text-[13px] text-lab-text-dim">Leia os <Link href="/termos" target="_blank" className="text-lab-text underline">Termos de uso</Link> e a <Link href="/privacidade" target="_blank" className="text-lab-text underline">Política de privacidade</Link>.</p>
-    <Button className="h-14 w-full text-body" loading={pending}>Concordar e continuar</Button>
+    <Button className="h-12 w-full text-body" loading={pending}>Concordar e continuar</Button>
     {state.error ? <p role="alert" className="text-body-sm text-lab-danger">{state.error}</p> : null}
   </form>;
 }

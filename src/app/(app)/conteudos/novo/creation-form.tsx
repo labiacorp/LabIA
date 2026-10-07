@@ -21,12 +21,12 @@ export function CreationForm({ influencers, selected, initial, rows, totalBrl }:
   const [state, action, pending] = useActionState(createProduction, { error: "" });
   if (state.created) return <div className="flex flex-col gap-4">
     <span className="flex size-[52px] items-center justify-center rounded-control bg-lab-text text-lab-bg"><Check className="size-[26px]" aria-hidden /></span>
-    <h1 className="font-display text-[44px] font-black uppercase leading-[.9] lg:text-[64px]">Conteúdo criado</h1>
+    <h1 className="font-display text-[30px] font-black uppercase leading-[.9] lg:text-[40px]">Conteúdo criado</h1>
     <p className="text-[15px] leading-[1.5] text-lab-text-dim">Nada foi cobrado. A primeira etapa, o roteiro, é grátis.</p>
-    <Link href={state.created} className={buttonVariants({ className: "h-14 max-w-[400px] text-body" })}>Escrever roteiro</Link>
+    <Link href={state.created} className={buttonVariants({ className: "h-12 max-w-[400px] text-body" })}>Escrever roteiro</Link>
   </div>;
   return <form action={action} className="flex flex-col gap-6">
-    <h1 className="font-display text-[44px] font-black uppercase leading-[.9] lg:text-[64px]">Novo conteúdo</h1>
+    <h1 className="font-display text-[30px] font-black uppercase leading-[.9] lg:text-[40px]">Novo conteúdo</h1>
     {initial?.title ? <input type="hidden" name="title" value={initial.title} /> : null}
     {initial?.script ? <input type="hidden" name="script" value={initial.script} /> : null}
     {initial?.aspectRatio ? <input type="hidden" name="aspectRatio" value={initial.aspectRatio} /> : null}
@@ -57,6 +57,6 @@ export function CreationForm({ influencers, selected, initial, rows, totalBrl }:
       <div className="flex items-baseline justify-between pt-3"><span className="font-semibold">Total previsto</span><span className="font-display text-[40px] font-black leading-[.9] text-lab-reagent-bright">~{creditsText(costCredits(totalBrl))}</span></div>
       <span className="pt-2 text-[13px] text-lab-text-dim">Criar é grátis. Você confirma os créditos de cada etapa na hora de gerar.</span>
     </div>
-    <Button type="submit" className="h-14 text-body" loading={pending}>Criar conteúdo · grátis</Button>
+    <Button type="submit" className="h-12 text-body" loading={pending}>Criar conteúdo · grátis</Button>
   </form>;
 }

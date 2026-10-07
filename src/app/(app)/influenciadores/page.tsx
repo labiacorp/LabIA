@@ -25,7 +25,7 @@ export default async function InfluencersPage() {
   const create = (cls: string) => <Link href="/influenciadores/nova" className={cls}><Plus className="size-[18px]" />Nova</Link>;
   return <div className="mx-auto flex max-w-content flex-col gap-6">
     <div className="flex flex-wrap items-end justify-between gap-3">
-      <h1 className="font-display text-[44px] font-black uppercase leading-[.9] lg:text-[64px]">Influencers</h1>
+      <h1 className="font-display text-[30px] font-black uppercase leading-[.9] lg:text-[40px]">Influencers</h1>
       {items.length ? create(buttonVariants({ className: "h-12 px-[18px] text-[15px]" })) : null}
     </div>
     {items.length === 0 ? <EmptyState icon={UserRound} title="Nenhuma influencer" description="Crie a primeira. Você aprova o rosto antes de gerar qualquer vídeo." action={<Link href="/influenciadores/nova" className={buttonVariants({ size: "lg" })}><Plus className="size-[18px]" />Criar influencer</Link>} /> : <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">

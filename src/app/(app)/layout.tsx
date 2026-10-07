@@ -51,7 +51,7 @@ export default async function AppLayout({
         // One "Novo conteúdo" button: with no influencer yet it starts at creating one.
         newContentHref={influencers ? "/conteudos/novo" : "/influenciadores/nova"}
       >
-        <main id="app-content" className="mx-auto w-full max-w-wide px-4 pb-16 pt-6 md:px-8 md:pt-8">
+        <main id="app-content" className="mx-auto w-full max-w-wide px-4 pb-12 pt-4 md:px-6 md:pt-6">
           {children}
         </main>
       </AppNavigation>
