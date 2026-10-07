@@ -4,6 +4,8 @@ import { useActionState, useState } from "react";
 import { Check, CircleAlert } from "lucide-react";
 import { CostConfirm } from "@/components/app/cost-confirm";
 import { ModelSelect, type ModelOption } from "@/components/app/model-select";
+import { AdminPrompt } from "@/components/app/admin-prompt";
+import { fillPrompt } from "@/lib/prompt-fill";
 import { Alert } from "@/components/ui/alert";
 import { approveFace, createInfluencer, regeneratePreviews, type InfluencerState } from "./actions";
 import { NICHES } from "./niches";
@@ -11,7 +13,8 @@ import { NICHES } from "./niches";
 const field = "rounded-control border-[1.5px] bg-lab-surface-2 px-4 text-body text-lab-text placeholder:text-lab-text-dim focus-visible:border-lab-text focus-visible:outline-none";
 
 // Nova influencer · 1 de 2 ("Quem é ela?"), from the design. The previews are the only charge on this screen.
-export function BriefForm({ intent, choices, defaultModel, balanceBrl }: { intent: string; choices: ModelOption[]; defaultModel: string; balanceBrl: number }) {
+export function BriefForm({ intent, choices, defaultModel, balanceBrl, previewTemplate }: { intent: string; choices: ModelOption[]; defaultModel: string; balanceBrl: number; previewTemplate?: string }) {
+  const [niche, setNiche] = useState<string>(NICHES[0]);
   const [model, setModel] = useState(choices.some((item) => item.model === defaultModel) ? defaultModel : (choices[0]?.model ?? ""));
   const previewBrl = choices.find((item) => item.model === model)?.brl ?? 0;
   const [state, action, pending] = useActionState(createInfluencer, {} as InfluencerState);
@@ -23,8 +26,8 @@ export function BriefForm({ intent, choices, defaultModel, balanceBrl }: { inten
     <div className="flex flex-col gap-2"><span className="font-mono text-caption uppercase tracking-[.1em] text-lab-text-dim">Nova influencer · 1 de 2</span><h1 className="font-display text-[30px] font-black uppercase leading-[.9] lg:text-[40px]">Quem é ela?</h1></div>
     <label className="flex flex-col gap-2"><span className="text-body-sm font-medium">Nome</span><input name="name" required maxLength={60} placeholder="Ex.: Malu Andrade" className={`h-[52px] ${field} border-lab-border-strong`} /></label>
     <fieldset className="flex flex-col gap-2"><legend className="mb-2 text-body-sm font-medium">Nicho</legend><div className="flex flex-wrap gap-2">
-      {NICHES.map((niche, index) => <label key={niche} className="flex h-11 cursor-pointer items-center rounded-full bg-lab-surface-2 px-4 text-body-sm font-medium has-[:checked]:bg-lab-text has-[:checked]:text-lab-bg has-[:focus-visible]:shadow-lab-focus">
-        <input type="radio" name="niche" value={niche} defaultChecked={index === 0} className="sr-only" />{niche}</label>)}
+      {NICHES.map((item, index) => <label key={item} className="flex h-11 cursor-pointer items-center rounded-full bg-lab-surface-2 px-4 text-body-sm font-medium has-[:checked]:bg-lab-text has-[:checked]:text-lab-bg has-[:focus-visible]:shadow-lab-focus">
+        <input type="radio" name="niche" value={item} defaultChecked={index === 0} onChange={() => setNiche(item)} className="sr-only" />{item}</label>)}
     </div></fieldset>
     <label className="flex flex-col gap-2"><span className="text-body-sm font-medium">Como ela é</span>
       <textarea name="description" required minLength={20} maxLength={400} rows={4} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="26 anos, cabelo cacheado castanho, sardas leves, sorriso largo, estilo casual com tons terrosos." className={`min-h-28 py-3.5 leading-[1.5] ${field} ${short ? "border-lab-danger" : "border-lab-border-strong"}`} />
@@ -33,6 +36,7 @@ export function BriefForm({ intent, choices, defaultModel, balanceBrl }: { inten
     <div className="flex flex-col gap-3 rounded-card bg-lab-surface-1 p-4 shadow-[inset_0_0_0_1px_var(--lab-border)]">
       <span className="text-[15px] font-semibold">Prévia do rosto</span>
       <span className="text-[13px] leading-[1.5] text-lab-text-dim">4 opções de rosto. Você escolhe uma ou gera de novo. Ao aprovar, a ficha de referência dela é gerada com a confirmação do custo.</span>
+      {previewTemplate ? <AdminPrompt label="Prompt for the 4 faces" prompt={fillPrompt(previewTemplate, { role: niche, visualSignature: description.trim() || "{visualSignature}" })} /> : null}
       <ModelSelect label="Image model" options={choices} value={model} onChange={setModel} hint="The price covers all 4 options." />
       <CostConfirm costBrl={previewBrl} balanceBrl={balanceBrl} label="Gerar prévia" eyebrow="Confirmar prévia do rosto · 4 opções" detail="previstos para 4 opções de rosto" pending={pending} />
     </div>

@@ -31,6 +31,7 @@ App UI follows the Claude Design "Corte" handoff (2026-10-05): dark only (light 
 
 - Every prompt the app wraps around what the user typed lives in `src/lib/prompts.ts` as a template with `{placeholders}` (face previews, character sheet, sheet and side portrait from the approved face, portraits, content image, video continuation, and the starting text of each trend). `renderPrompt` fills them; `loadPromptTemplates` reads the admin overrides (table `prompt_overrides`, migration `20261007210000_prompt_overrides`) at the start of each generation and an override wins over the default.
 - `/admin/prompts` (owners only, `savePrompt`/`resetPrompt` start with `requireOwner()` and write `admin_actions`) edits or resets each template; it applies from the next generation.
+- While creating an influencer, owners also read the prompts before paying: the 4-face prompt updates live as the form is filled, and the sheet and side-portrait prompts show on the choose-face step.
 - Owners (`isOwner()` in `src/lib/owner.ts`) see the exact prompt sent for each step (`AdminPrompt`): content steps, motion recreation, the character sheet and face previews, and the library detail. `loadLibrary(..., admin)` strips the prompt on the server for everyone else, who only keep the video direction they typed.
 
 ## Motion recreation and imported references
