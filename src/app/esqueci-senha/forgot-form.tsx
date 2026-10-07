@@ -12,6 +12,6 @@ export function ForgotForm() {
     <p className="text-[15px] leading-[1.5] text-lab-text-dim">Mandamos um link para criar uma senha nova.</p>
     <label className="flex flex-col gap-2"><span className="text-body-sm font-medium">E-mail da conta</span><Input name="email" type="email" required autoComplete="email" placeholder="voce@exemplo.com" aria-invalid={!!state.error} /></label>
     {state.error ? <p role="alert" className="flex items-center gap-1.5 text-[13px] text-lab-danger"><CircleAlert className="size-3.5" aria-hidden />{state.error}</p> : null}
-    <Button className="h-14 w-full text-body" loading={pending}>Enviar link</Button>
+    <Button className="h-12 w-full text-body" loading={pending}>Enviar link</Button>
   </form>;
 }

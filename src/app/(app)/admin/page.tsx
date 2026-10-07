@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PageHeading } from "@/components/app/page-heading";
+import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { prisma } from "@/lib/prisma";
@@ -8,10 +9,11 @@ import { currency, dateLabel } from "@/lib/platform";
 import { ReconcileForm, TopUpForm } from "./admin-forms";
 
 const PAGE = 50;
-const actionLabels: Record<string, string> = { TOPUP: "Recarga", RECONCILE: "Reconciliação", ROLE_GRANT: "Acesso de owner concedido", ROLE_REVOKE: "Acesso de owner removido" };
+const actionLabels: Record<string, string> = { TOPUP: "Recarga", RECONCILE: "Reconciliação", ROLE_GRANT: "Acesso de owner concedido", ROLE_REVOKE: "Acesso de owner removido", PROMPT_SET: "Prompt alterado", PROMPT_RESET: "Prompt restaurado" };
 function actionDetail(action: string, raw: unknown) {
   const data = (raw ?? {}) as Record<string, unknown>;
   if (action === "TOPUP") return `${currency(Number(data.amount))} · ${String(data.note ?? "")}`;
+  if (action === "PROMPT_SET" || action === "PROMPT_RESET") return String(data.key ?? "");
   if (action === "RECONCILE") return `custo ${currency(Number(data.actualBrl))} · ajuste ${currency(Number(data.adjustmentBrl))}`;
   return data.via ? `via ${String(data.via)}` : "";
 }
@@ -30,7 +32,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const balances = new Map((await prisma.ledgerEntry.groupBy({ by: ["userId"], where: { userId: { in: users.map((u) => u.id) } }, _sum: { deltaBrl: true } })).map((row) => [row.userId, Number(row._sum.deltaBrl ?? 0)]));
   const emails = new Map((await prisma.user.findMany({ where: { id: { in: recent.flatMap((r) => r.targetUserId ?? []) } }, select: { id: true, email: true } })).map((u) => [u.id, u.email]));
   return <div className="mx-auto max-w-content">
-    <PageHeading title="Admin" description="Contas, recargas manuais e gerações com custo a confirmar. Cada ação fica registrada abaixo." />
+    <PageHeading title="Admin" description="Contas, recargas manuais e gerações com custo a confirmar. Cada ação fica registrada abaixo." action={<Link href="/admin/prompts" className={buttonVariants({ variant: "secondary" })}>Prompts</Link>} />
     <section className="mb-10" aria-labelledby="admin-accounts">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 id="admin-accounts" className="font-display text-xl">Contas</h2><span className="text-caption text-lab-text-muted">{users.length < total ? `${users.length} de ${total}` : `${total}`} {total === 1 ? "conta" : "contas"}</span></div>
       <form className="mb-4" role="search"><label className="sr-only" htmlFor="admin-search">Buscar conta</label><Input id="admin-search" name="q" defaultValue={q} placeholder="Buscar por e-mail ou nome" /></form>

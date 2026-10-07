@@ -41,7 +41,7 @@ export default async function InfluencerPage({ params }: { params: Promise<{ id:
       <span className="relative aspect-[4/5] w-full max-w-[200px] overflow-hidden rounded-card bg-[repeating-linear-gradient(135deg,var(--lab-surface-2)_0_12px,var(--lab-surface-3)_12px_24px)] lg:max-w-[280px]">{face ? <Image src={face.url} alt={`Rosto da ${influencer.name}`} fill unoptimized className="object-cover" /> : null}</span>
       <div className="flex flex-col gap-3.5">
         <span className="text-body-sm text-lab-text-dim">{influencer.niche} · criada em {created}</span>
-        <h1 className="break-words font-display text-[44px] font-black uppercase leading-[.9] lg:text-[64px]">{influencer.name}</h1>
+        <h1 className="break-words font-display text-[30px] font-black uppercase leading-[.9] lg:text-[40px]">{influencer.name}</h1>
         <div className="grid grid-cols-3 border-y border-lab-border">
           <div className="flex flex-col gap-0.5 py-3"><span className="font-mono text-[11px] text-lab-text-dim">conteúdos</span><span className="font-mono text-xl">{contents.length}</span></div>
           <div className="flex flex-col gap-0.5 border-l border-lab-border py-3 pl-3"><span className="font-mono text-[11px] text-lab-text-dim">gasto ✓</span><span className="font-mono text-xl">{costText(spent)}</span></div>

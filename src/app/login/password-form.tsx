@@ -27,7 +27,7 @@ export function PasswordLogin({ recover }: { recover: boolean }) {
         <PasswordInput name="password" value={password} onChange={(event) => setPassword(event.target.value)} required maxLength={PASSWORD_MAX} autoComplete="current-password" placeholder="Sua senha" aria-invalid={!!state.error} />
         {state.error ? <span role="alert" className="flex items-center gap-1.5 text-[13px] text-lab-danger"><CircleAlert className="size-3.5 shrink-0" aria-hidden />{state.error}{state.unverified ? <> <Link href={`/verificar-email?email=${encodeURIComponent(state.unverified)}`} className="underline">Confirmar agora</Link></> : null}</span> : null}
       </label>
-      <Button className="h-14 w-full text-body" loading={pending}>{pending ? "Entrando" : "Entrar"}</Button>
+      <Button className="h-12 w-full text-body" loading={pending}>{pending ? "Entrando" : "Entrar"}</Button>
     </form>
   );
 }
@@ -47,7 +47,7 @@ export function PasswordSignup() {
         <PasswordStrength password={password} />
       </label>
       {state.error ? <p role="alert" className="flex items-center gap-1.5 text-[13px] text-lab-danger"><CircleAlert className="size-3.5 shrink-0" aria-hidden />{state.error}</p> : null}
-      <Button className="h-14 w-full text-body" loading={pending}>Criar conta</Button>
+      <Button className="h-12 w-full text-body" loading={pending}>Criar conta</Button>
     </form>
   );
 }

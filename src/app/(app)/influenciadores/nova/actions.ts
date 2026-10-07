@@ -8,6 +8,7 @@ import { startPlan, UserError } from "@/lib/generation";
 import { refreshRate } from "@/lib/fx";
 import { cardOf } from "@/lib/kit";
 import { prisma } from "@/lib/prisma";
+import { loadPromptTemplates } from "@/lib/prompts";
 import { requireUserId } from "@/lib/session";
 import { NICHES } from "./niches";
 
@@ -19,6 +20,13 @@ const brief = z.object({
   description: z.string().trim().min(20, "Descreva com pelo menos 20 caracteres: idade, cabelo, estilo.").max(400),
 });
 const paid = z.object({ intent: z.uuid(), expectedBrl: z.coerce.number().finite() });
+// Model chosen on the form (empty = the default); the price is recomputed from it on the server and compared with what the browser showed.
+const chosenModel = (form: FormData) => String(form.get("model") ?? "").trim() || undefined;
+async function facePlan(influencer: Parameters<typeof cardOf>[0], faceUrl: string, form: FormData) {
+  const templates = await loadPromptTemplates();
+  try { return [sheetFromFaceItem(cardOf(influencer), faceUrl, templates, chosenModel(form)), profileFromFaceItem(cardOf(influencer), faceUrl, templates)]; }
+  catch (error) { throw new UserError(error instanceof Error ? error.message : "Modelo de imagem inválido."); }
+}
 const firstError = (error: z.ZodError) => error.issues[0]?.message ?? "Revise os campos.";
 
 // Step 1: the brief and the four face previews under one cost confirm. Without credits nothing is kept.
@@ -32,7 +40,7 @@ export async function createInfluencer(_previous: InfluencerState, form: FormDat
   if (!NICHES.includes(input.data.niche)) return { error: "Escolha um nicho." };
   const influencer = await prisma.influencer.create({ data: { userId, name: input.data.name, niche: input.data.niche, tone: "natural", visualSignature: input.data.description } });
   try {
-    await startPlan({ userId, influencerId: influencer.id, intentId: money.data.intent, plan: previewItems(cardOf(influencer)), expectedBrl: money.data.expectedBrl });
+    await startPlan({ userId, influencerId: influencer.id, intentId: money.data.intent, plan: previewItems(cardOf(influencer), await loadPromptTemplates(), chosenModel(form)), expectedBrl: money.data.expectedBrl });
   } catch (error) {
     await prisma.influencer.delete({ where: { id: influencer.id } });
     if (error instanceof UserError) return { error: error.message };
@@ -51,7 +59,7 @@ export async function regeneratePreviews(influencerId: string, _previous: Influe
   const influencer = await prisma.influencer.findFirst({ where: { id: influencerId, userId, faceAssetId: null } });
   if (!influencer) return { error: "Influencer não encontrada." };
   try {
-    await startPlan({ userId, influencerId, intentId: money.data.intent, plan: previewItems(cardOf(influencer)), expectedBrl: money.data.expectedBrl });
+    await startPlan({ userId, influencerId, intentId: money.data.intent, plan: previewItems(cardOf(influencer), await loadPromptTemplates(), chosenModel(form)), expectedBrl: money.data.expectedBrl });
   } catch (error) {
     if (error instanceof UserError) return { error: error.message };
     console.error("[regeneratePreviews]", error);
@@ -72,7 +80,7 @@ export async function approveFace(influencerId: string, _previous: InfluencerSta
   const asset = await prisma.asset.findFirst({ where: { id: assetId, userId, influencerId, kind: "IMAGE", role: null, step: { kind: "CHARACTER", role: null, status: "DONE" } } });
   if (!influencer || !asset) return { error: "Este rosto não está disponível." };
   try {
-    await startPlan({ userId, influencerId, intentId: money.data.intent, plan: [sheetFromFaceItem(cardOf(influencer), asset.url), profileFromFaceItem(cardOf(influencer), asset.url)], expectedBrl: money.data.expectedBrl });
+    await startPlan({ userId, influencerId, intentId: money.data.intent, plan: await facePlan(influencer, asset.url, form), expectedBrl: money.data.expectedBrl });
   } catch (error) {
     if (error instanceof UserError) return { error: error.message };
     console.error("[approveFace]", error);

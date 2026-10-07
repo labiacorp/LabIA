@@ -9,7 +9,7 @@ export function CodeForm({ email }: { email: string }) {
   return <form action={action} className="flex flex-col gap-5">
     <label className="flex flex-col gap-2"><span className="text-body-sm font-medium">E-mail</span><Input name="email" type="email" required autoComplete="email" defaultValue={email} /></label>
     <label className="flex flex-col gap-2"><span className="text-body-sm font-medium">Código</span><Input name="code" required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,7}" maxLength={7} placeholder="000000" className="font-mono tracking-[0.3em]" /></label>
-    <Button className="h-14 w-full text-body" loading={pending}>Confirmar</Button>
+    <Button className="h-12 w-full text-body" loading={pending}>Confirmar</Button>
     {state.error ? <p role="alert" className="text-body-sm text-lab-danger">{state.error}</p> : null}
   </form>;
 }

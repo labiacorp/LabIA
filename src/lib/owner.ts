@@ -23,3 +23,12 @@ export async function requireOwner(): Promise<string> {
   if (user?.role !== "OWNER") notFound();
   return userId;
 }
+
+// Soft check for UI that only owners may see (generation prompts): false for everyone else, never a 404.
+export async function isOwner(): Promise<boolean> {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId || !ownerSession(session)) return false;
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+  return user?.role === "OWNER";
+}

@@ -48,7 +48,7 @@ export default async function NewContentPage({ searchParams }: { searchParams: P
       rows={rows}
       totalBrl={reel.totalBrl}
     /> : <>
-      <h1 className="font-display text-[44px] font-black uppercase leading-[.9] lg:text-[64px]">Novo conteúdo</h1>
+      <h1 className="font-display text-[30px] font-black uppercase leading-[.9] lg:text-[40px]">Novo conteúdo</h1>
       <EmptyState icon={UserRound} title="Nenhuma influencer" description="Crie a primeira. Você aprova o rosto antes de gerar qualquer vídeo." action={<Link href="/influenciadores/nova" className={buttonVariants({ size: "lg" })}><Plus className="size-[18px]" />Criar influencer</Link>} />
     </>}
   </div>;

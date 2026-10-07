@@ -4,6 +4,7 @@ import {
   libraryWhere,
   type LibraryFilters,
 } from "@/lib/library";
+import { findMotionModel } from "@/lib/motion";
 import { prisma } from "@/lib/prisma";
 import {
   findFalImageModel,
@@ -13,6 +14,8 @@ import { MERGE_MODEL, METADATA_MODEL } from "@/lib/providers/ffmpeg";
 
 function modelLabel(id: string | null) {
   if (id === "higgsfield/genjutsu/motion-transfer/v1.0") return "Genjutsu Motion Transfer · Higgsfield";
+  const motion = id ? findMotionModel(id) : undefined;
+  if (motion) return `${motion.name} · ${motion.provider === "fal" ? "fal.ai" : "Higgsfield"}`;
   if (id === MERGE_MODEL) return "Montagem de vídeo · fal.ai";
   if (id === METADATA_MODEL) return "Quadro de continuidade · fal.ai";
   const model = id ? (findFalImageModel(id) ?? findFalVideoModel(id)) : null;
@@ -28,16 +31,18 @@ function cost(value: { toString(): string } | null | undefined) {
     : null;
 }
 
-function promptOf(input: unknown) {
+// Admins read the exact text sent to the model; everyone else only gets what the user typed (the video direction).
+// This runs on the server: a prompt that is not returned here never reaches the browser.
+function promptOf(input: unknown, admin: boolean) {
   const data = input as {
     prompt?: unknown;
     chain?: { prompt?: unknown };
   } | null;
-  const prompt = data?.chain?.prompt ?? data?.prompt;
+  const prompt = admin ? (data?.prompt ?? data?.chain?.prompt) : data?.chain?.prompt;
   return typeof prompt === "string" ? prompt : "";
 }
 
-export async function loadLibrary(userId: string, filters: LibraryFilters) {
+export async function loadLibrary(userId: string, filters: LibraryFilters, admin = false) {
   const where = libraryWhere(userId, filters);
   const [influencers, total] = await Promise.all([
     prisma.influencer.findMany({
@@ -99,7 +104,7 @@ export async function loadLibrary(userId: string, filters: LibraryFilters) {
       modelLabel: asset.storageKey
         ? "Arquivo importado por você"
         : modelLabel(asset.step?.model ?? null),
-      prompt: promptOf(asset.step?.input),
+      prompt: promptOf(asset.step?.input, admin),
       actualCost: asset.storageKey ? 0 : cost(asset.step?.actualCostBrl),
       estimatedCost: cost(asset.step?.estimatedCostBrl),
     })),

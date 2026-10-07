@@ -14,6 +14,8 @@ import { requireUserId } from "@/lib/session";
 import { getVideoOptions } from "@/lib/video-options";
 import type { VideoChain } from "@/lib/video-chain";
 import { chargeBrl, costCredits, costText, creditsText } from "@/lib/plan";
+import { AdminPrompt } from "@/components/app/admin-prompt";
+import { isOwner } from "@/lib/owner";
 import { KitWatcher } from "../../personagem/kit-watcher";
 import { ArchiveControl } from "../../../../conteudos/archive-control";
 import { DownloadAsset } from "@/app/(app)/biblioteca/library-view";
@@ -51,7 +53,7 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
   if (content.archivedAt)
     return <div className="mx-auto grid max-w-2xl gap-5">
       <Link href="/conteudos" className="text-body-sm text-lab-text-dim">← Conteúdos</Link>
-      <h1 className="break-words font-display text-[44px] font-black uppercase leading-[.9]">{content.title}</h1>
+      <h1 className="break-words font-display text-[30px] font-black uppercase leading-[.9]">{content.title}</h1>
       <p className="text-lab-text-dim">Conteúdo arquivado. Suas mídias e o histórico foram preservados. Restaure para continuar.</p>
       <ArchiveControl id={contentId} archived />
     </div>;
@@ -64,9 +66,10 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
   const unknownCost = steps.some((step) => unsettled(step.submissionState) || (["DONE", "APPROVED"].includes(step.status) && step.actualCostBrl === null));
   const spent = steps.reduce((sum, step) => sum + chargeBrl(Number(step.actualCostBrl ?? 0)), 0);
   const planned = steps.reduce((sum, step) => sum + Number(step.actualCostBrl ?? step.estimatedCostBrl ?? reel.perStep[step.kind] ?? 0), 0);
-  const [balance, front] = await Promise.all([
+  const [balance, front, admin] = await Promise.all([
     getBalanceBrl(userId),
     prisma.asset.findFirst({ where: { userId, id: content.influencer.faceAssetId ?? "", influencerId: id, role: "FRONT", step: { status: { in: ["DONE", "APPROVED"] } } }, select: { id: true } }),
+    isOwner(),
   ]);
   const configured = providerConfigured();
   const complete = (step: (typeof steps)[number]) => step.status === "APPROVED" || (step.kind === "SCRIPT" && step.status === "DONE");
@@ -140,6 +143,8 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
         <span className={`ml-auto flex items-center gap-1.5 text-caption ${tone}`}><span className="size-1.5 rounded-full bg-current" />{status}</span>
       </div>
 
+      {admin && step.status !== "PENDING" && step.status !== "QUOTED" ? <AdminPrompt prompt={(step.input as { prompt?: unknown } | null)?.prompt} model={step.model} /> : null}
+
       {step.kind === "SCRIPT" ? <ScriptForm influencerId={id} contentId={contentId} script={script} /> : null}
 
       {paid && (step.status === "PENDING" || step.status === "QUOTED") ? form(step) : null}
@@ -194,7 +199,7 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
         <span className="text-body-sm text-lab-text-dim">{content.influencer.name} · {content.aspectRatio}</span>
         <DeleteContentButton influencerId={id} contentId={contentId} stages={steps.length} spent={unknownCost ? "créditos" : costText(spent)} running={running} />
       </div>
-      <h1 className="break-words font-display text-[44px] font-black uppercase leading-[.9] lg:text-[64px]">{content.title}</h1>
+      <h1 className="break-words font-display text-[30px] font-black uppercase leading-[.9] lg:text-[40px]">{content.title}</h1>
       {!active && finalCut ? <div className="lg:hidden">{preview("")}</div> : null}
       <div className="grid grid-cols-2 border-y border-lab-border">
         <div className="flex flex-col gap-0.5 py-3"><span className="font-mono text-[11px] text-lab-text-dim">gasto ✓</span><span className="font-mono text-[22px]">{unknownCost ? "indisponível" : costText(spent)}</span></div>

@@ -51,7 +51,7 @@ export default async function ContentsPage({ searchParams }: { searchParams: Pro
 
   return <div className="mx-auto flex max-w-content flex-col gap-5">
     <div className="flex flex-wrap items-end justify-between gap-3">
-      <h1 className="font-display text-[44px] font-black uppercase leading-[.9] lg:text-[64px]">Conteúdos</h1>
+      <h1 className="font-display text-[30px] font-black uppercase leading-[.9] lg:text-[40px]">Conteúdos</h1>
       <Link href="/conteudos/novo" className={buttonVariants({ className: "h-12 px-[18px] text-[15px]" })}><Plus className="size-[18px]" />Novo</Link>
     </div>
     {counts[0] === 0 ? <EmptyState icon={Film} title="Rolo vazio" description={`Grave o primeiro conteúdo. Um vídeo de 15s usa cerca de ${creditsText(costCredits(reel.totalBrl))}.`} action={<Link href="/conteudos/novo" className={buttonVariants({ size: "lg" })}><Plus className="size-[18px]" />Novo conteúdo</Link>} /> : <>

@@ -3,14 +3,15 @@ import { prepareImage, SCENE_DEFINITIONS } from "./providers/image-models";
 import { REEL } from "@/lib/content-plan";
 import { quote, startPlan, UserError, type PlanItem } from "@/lib/generation";
 import { prisma } from "@/lib/prisma";
+import { loadPromptTemplates, renderPrompt, type PromptTemplates } from "@/lib/prompts";
 
 export type ImageSelection = { model: string; resolution: string };
-export function sceneItem(prompt: string, frontUrl: string, aspectRatio: string, selection: ImageSelection = { model: REEL.image.model, resolution: "1K" }): PlanItem {
+export function sceneItem(prompt: string, frontUrl: string, aspectRatio: string, selection: ImageSelection = { model: REEL.image.model, resolution: "1K" }, templates: PromptTemplates = {}): PlanItem {
   const item: PlanItem = {
     role: null,
     model: selection.model,
     params: {
-      prompt: `Create a photorealistic scene with the person in the reference portrait. Keep the same face and identity. No text or watermark. Scene: ${prompt}`,
+      prompt: renderPrompt("scene", { scene: prompt }, templates),
       image_urls: [frontUrl],
       aspect_ratio: aspectRatio,
       resolution: selection.resolution,
@@ -54,6 +55,6 @@ export async function startContentImage(input: { userId: string; influencerId: s
   });
   if (!front) throw new UserError("Gere o retrato de frente na aba Personagem antes de criar a cena.");
   let item: PlanItem;
-  try { item = sceneItem(prompt, front.url, content.aspectRatio, input.selection); } catch (error) { throw new UserError(error instanceof Error ? error.message : "Configuração de imagem inválida."); }
+  try { item = sceneItem(prompt, front.url, content.aspectRatio, input.selection, await loadPromptTemplates()); } catch (error) { throw new UserError(error instanceof Error ? error.message : "Configuração de imagem inválida."); }
   return startPlan({ ...input, plan: [item] });
 }

@@ -30,7 +30,6 @@ const profile: NavItem[] = [
   { href: "/saldo", label: "Saldo e extrato", icon: Receipt, money: true },
   { href: "/termos", label: "Termos e privacidade", icon: FileText },
 ];
-const crumbs: [RegExp, string][] = [[/^\/i\/[^/]+\/c\//, "Conteúdos"], [/^\/i\//, "Influencers"], [/^\/influencers/, "Influencers"], [/^\/conteudos\/novo/, "Conteúdos / Novo"], [/^\/integracoes/, "Integrações"], [/^\/conta\/seguranca/, "Conta e segurança"], [/^\/conta/, "Perfil"]];
 const focus = "focus-visible:outline-none focus-visible:shadow-lab-focus";
 const wordmark = (size: string) => <span className={`lab-wordmark ${size} leading-none`}>Lab<span>I</span>A</span>;
 
@@ -45,8 +44,6 @@ export function AppNavigation({ name, email, balance, lowAt, newContentHref, ava
   // Chip colour follows the design: lime, warning when a 15s video no longer fits, danger at zero.
   const tone = credits === null ? "text-lab-text-muted border-lab-border-strong" : credits === 0 ? "text-lab-danger border-lab-danger" : credits < lowAt ? "text-lab-warning border-lab-warning" : "text-lab-reagent-bright border-lab-reagent";
   const active = (href: string) => pathname === href || (href !== "/painel" && pathname.startsWith(href));
-  const visible = [...main, ...footer].filter((i) => !i.admin || owner);
-  const crumb = crumbs.find(([pattern]) => pattern.test(pathname))?.[1] ?? visible.find((i) => active(i.href))?.label ?? "Início";
   const close = () => sheet.current?.close();
 
   const row = (item: NavItem, big = false) => (
@@ -57,35 +54,35 @@ export function AppNavigation({ name, email, balance, lowAt, newContentHref, ava
       {item.money ? <span className="font-mono text-[13px] text-lab-reagent-bright">{amount}</span> : null}
     </Link>
   );
-  const create = (cls: string) => <Link href={newContentHref} onClick={close} className={`${cls} flex items-center justify-center gap-2 rounded-full bg-lab-text font-semibold text-lab-bg hover:bg-white ${focus}`}><Plus className="size-[18px]" aria-hidden />Novo conteúdo</Link>;
+  const create = (cls: string) => <Link href={newContentHref} onClick={close} className={`${cls} flex items-center justify-center gap-2 rounded-full bg-lab-text font-semibold text-lab-bg hover:bg-white ${focus}`}><Plus className="size-4" aria-hidden />Novo conteúdo</Link>;
   const who = <><span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-lab-surface-3"><AccountAvatar name={displayName} version={avatarVersion} /></span><span className="flex min-w-0 flex-1 flex-col"><span className="truncate text-[15px] font-semibold">{displayName}</span><span className="truncate text-[13px] text-lab-text-dim">{email}</span></span></>;
   const signOut = (cls: string) => <form action={logout}><button type="submit" className={`flex w-full items-center rounded-control px-3 text-left hover:bg-lab-surface-2 ${focus} ${cls}`}><LogOut className="size-[18px] shrink-0 text-lab-text-dim" aria-hidden />Sair</button></form>;
 
+  const link = (item: NavItem) => (
+    <Link key={item.href} href={item.href} aria-current={active(item.href) ? "page" : undefined}
+      className={`flex h-9 items-center rounded-full px-3 text-body-sm transition-colors ${focus} ${active(item.href) ? "bg-lab-surface-2 font-semibold text-lab-text" : "text-lab-text-dim hover:bg-lab-surface-1 hover:text-lab-text"}`}>
+      {item.label}
+    </Link>
+  );
+
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col border-r border-lab-border bg-lab-bg px-3 py-4 lg:flex">
-        <Link href="/painel" aria-label="A LabIA, início" className={`flex h-12 items-center px-3 ${focus}`}>{wordmark("text-[28px]")}</Link>
-        {create("mb-3 mt-4 h-12 text-[15px]")}
-        <nav aria-label="Navegação principal" className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
-          {main.map((item) => row(item))}
-          <span className="mx-3 my-2 h-px bg-lab-border" />
-          {footer.filter((i) => !i.admin || owner).map((item) => row(item))}
+      <header className="sticky top-0 z-header flex h-header items-center gap-2 border-b border-lab-border bg-lab-bg/90 px-4 backdrop-blur lg:gap-1 lg:px-6">
+        <Link href="/painel" aria-label="A LabIA, início" className={`mr-1 lg:mr-4 ${focus}`}>{wordmark("text-[24px]")}</Link>
+        <nav aria-label="Navegação principal" className="hidden items-center gap-0.5 lg:flex">
+          {main.map(link)}
+          {owner ? link(footer.find((i) => i.admin)!) : null}
         </nav>
-      </aside>
-      <div className="lg:pl-[248px]">
-        <header className="sticky top-0 z-header flex h-16 items-center gap-2.5 border-b border-lab-border bg-lab-bg/90 px-4 backdrop-blur lg:px-8">
-          <Link href="/painel" aria-label="A LabIA, início" className={`lg:hidden ${focus}`}>{wordmark("text-[26px]")}</Link>
-          <span className="hidden text-body-sm text-lab-text-dim lg:block">{crumb}</span>
-          <span className="ml-auto" />
-          <Link href="/saldo" aria-label={`Créditos: ${amount}`} className={`flex h-11 items-center gap-2 rounded-full border-[1.5px] bg-transparent pl-3.5 font-mono text-[15px] ${credits === 0 ? "pr-1.5" : "pr-3.5"} ${tone} ${focus}`}>
-            <span className="text-[11px] text-lab-text-dim">créditos</span>{amount}
-            {credits === 0 ? <span className="flex h-8 items-center rounded-full bg-lab-reagent px-2.5 font-sans text-[13px] font-semibold text-lab-on-reagent">Ver plano</span> : null}
-          </Link>
-          <button type="button" popoverTarget="profile-menu" aria-label="Abrir menu do perfil" className={`hidden size-11 items-center justify-center overflow-hidden rounded-full bg-lab-surface-3 text-[13px] font-semibold lg:flex ${focus}`}><AccountAvatar name={displayName} version={avatarVersion} /></button>
-          <button type="button" onClick={() => sheet.current?.showModal()} aria-label="Abrir menu" className={`flex size-11 items-center justify-center rounded-full bg-lab-surface-2 lg:hidden ${focus}`}><Menu className="size-5" aria-hidden /></button>
-        </header>
-        {children}
-      </div>
+        <span className="ml-auto" />
+        {create("hidden h-9 gap-1.5 px-3.5 text-body-sm lg:flex")}
+        <Link href="/saldo" aria-label={`Créditos: ${amount}`} className={`flex h-9 items-center gap-1.5 rounded-full border-[1.5px] bg-transparent pl-3 font-mono text-body-sm ${credits === 0 ? "pr-1" : "pr-3"} ${tone} ${focus}`}>
+          <span className="text-[11px] text-lab-text-dim">créditos</span>{amount}
+          {credits === 0 ? <span className="flex h-7 items-center rounded-full bg-lab-reagent px-2.5 font-sans text-caption font-semibold text-lab-on-reagent">Ver plano</span> : null}
+        </Link>
+        <button type="button" popoverTarget="profile-menu" aria-label="Abrir menu do perfil" className={`hidden size-9 items-center justify-center overflow-hidden rounded-full bg-lab-surface-3 text-caption font-semibold lg:flex ${focus}`}><AccountAvatar name={displayName} version={avatarVersion} /></button>
+        <button type="button" onClick={() => sheet.current?.showModal()} aria-label="Abrir menu" className={`flex size-10 items-center justify-center rounded-full bg-lab-surface-2 lg:hidden ${focus}`}><Menu className="size-[18px]" aria-hidden /></button>
+      </header>
+      {children}
 
       <div id="profile-menu" popover="auto" className="app-profile-menu" onClick={(e) => { if ((e.target as HTMLElement).closest("a")) (e.currentTarget as HTMLElement).hidePopover(); }}>
         <div className="flex items-center gap-3 p-3">{who}</div>

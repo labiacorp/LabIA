@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeading } from "@/components/app/page-heading";
 import { buttonVariants } from "@/components/ui/button";
+import { loadPromptTemplates, renderPrompt } from "@/lib/prompts";
 import { requireUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import {
@@ -33,7 +34,10 @@ export default async function TrendsPage({
     if (!parsed.success) notFound();
     initial = parsed.data;
   }
-  const selected = TRENDS.find(
+  // The starting text of each trend can be replaced by an admin (admin > Prompts).
+  const templates = await loadPromptTemplates();
+  const trends = TRENDS.map((trend) => ({ ...trend, prompt: renderPrompt(`trend-${trend.id}`, {}, templates) }));
+  const selected = trends.find(
     (t) => t.id === (initial?.trend ?? params.trend),
   );
   if (params.trend && !selected) notFound();

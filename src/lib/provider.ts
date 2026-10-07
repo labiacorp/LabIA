@@ -1,6 +1,7 @@
 import { usdBrlRate } from "@/lib/fx";
 import { HiggsfieldProvider } from "@/lib/providers/higgsfield";
-import { MOTION_MODEL } from "@/lib/motion";
+import { findMotionModel, MOTION_MODEL } from "@/lib/motion";
+import { FalMotionProvider } from "@/lib/providers/fal-motion";
 import { FalProvider } from "@/lib/providers/fal";
 import { MockProvider } from "@/lib/providers/mock";
 import type {
@@ -33,6 +34,7 @@ export const providerConfigured = (model?: string) =>
 
 export function getProvider(model?: string): PollableProvider {
   if (model === MOTION_MODEL) return new HiggsfieldProvider(mockEnabled());
+  if (model && findMotionModel(model)) return new FalMotionProvider(mockEnabled());
   if (mockEnabled()) return new MockProvider();
   return new FalProvider({
     usdBrlRate: usdBrlRate(),

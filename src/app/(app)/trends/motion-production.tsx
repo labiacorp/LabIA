@@ -3,7 +3,9 @@ import { costText } from "@/lib/plan";
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { motionSchema, motionEstimate, MOTION_MODEL } from "@/lib/motion";
+import { AdminPrompt } from "@/components/app/admin-prompt";
+import { findMotionModel, motionSchema, motionEstimate } from "@/lib/motion";
+import { isOwner } from "@/lib/owner";
 import { providerConfigured, mockEnabled } from "@/lib/provider";
 import { KitForm } from "../i/[id]/personagem/kit-form";
 import { KitWatcher } from "../i/[id]/personagem/kit-watcher";
@@ -29,9 +31,11 @@ export async function MotionProduction({
   });
   const source = assets.find((a) => a.id === brief.sourceId);
   const step = content.steps[0];
+  const model = findMotionModel(brief.model);
+  const admin = await isOwner();
   const output = step?.assets.find((a) => a.kind === "VIDEO");
   const estimate = source?.durationSec
-    ? motionEstimate(source.durationSec, brief.resolution).brl
+    ? motionEstimate(source.durationSec, brief.resolution, brief.model).brl
     : 0;
   return (
     <div className="mx-auto grid max-w-content gap-6">
@@ -92,8 +96,9 @@ export async function MotionProduction({
           <p className="whitespace-pre-wrap text-body-sm leading-6 text-lab-text-dim">
             {brief.prompt}
           </p>
+          {admin && step?.status !== "PENDING" ? <AdminPrompt prompt={(step?.input as { prompt?: unknown } | null)?.prompt} model={step?.model} /> : null}
           <p className="text-caption text-lab-text-muted">
-            Genjutsu Motion Transfer · {brief.resolution} ·{" "}
+            {model?.name ?? brief.model}{brief.resolution === "default" ? "" : ` · ${brief.resolution}`} ·{" "}
             {source?.durationSec?.toFixed(1)}s
           </p>
         </section>
@@ -152,8 +157,8 @@ export async function MotionProduction({
                     : "Confirmar e gerar vídeo"
                 }
                 blockedReason={
-                  !providerConfigured(MOTION_MODEL)
-                    ? "A integração Genjutsu e o endereço público precisam ser configurados para gerar."
+                  !providerConfigured(brief.model)
+                    ? model?.provider === "fal" ? "A chave da fal.ai precisa ser configurada para gerar." : "A integração Genjutsu e o endereço público precisam ser configurados para gerar."
                     : !source
                       ? "Importe novamente o vídeo de referência."
                       : undefined

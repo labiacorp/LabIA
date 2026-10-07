@@ -427,3 +427,13 @@ model SocialPost {
   @@index([accountId])
   @@map("social_posts")
 }
+
+// An admin's replacement for one default prompt template (see src/lib/prompts.ts). One row per template key.
+model PromptOverride {
+  key       String   @id
+  text      String
+  updatedBy String?  @map("updated_by")
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  @@map("prompt_overrides")
+}

@@ -3,12 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { CostChip } from "@/components/ui/cost-chip";
-import { previewItems, profileFromFaceItem, sheetFromFaceItem } from "@/lib/character";
-import { quote } from "@/lib/generation";
+import { PREVIEW, previewChoices, sheetFromFaceChoices } from "@/lib/character";
 import { cardOf } from "@/lib/kit";
 import { getBalanceBrl } from "@/lib/ledger";
 import { chargeBrl, costCredits, costText, creditsText } from "@/lib/plan";
 import { prisma } from "@/lib/prisma";
+import { AdminPrompt } from "@/components/app/admin-prompt";
+import { isOwner } from "@/lib/owner";
 import { requireUserId } from "@/lib/session";
 import { KitWatcher } from "../../i/[id]/personagem/kit-watcher";
 import { BriefForm, ChooseFace } from "./forms";
@@ -19,10 +20,10 @@ export const dynamic = "force-dynamic";
 export default async function NewInfluencerPage({ searchParams }: { searchParams: Promise<{ id?: string; pronta?: string }> }) {
   const userId = await requireUserId();
   const { id } = await searchParams;
-  const balance = await getBalanceBrl(userId);
+  const [balance, admin] = await Promise.all([getBalanceBrl(userId), isOwner()]);
   const sample = { name: "", role: "Lifestyle", visualSignature: "rosto" };
-  const previewBrl = quote(previewItems(sample)).totalBrl;
-  if (!id) return <div className="mx-auto max-w-[640px]"><BriefForm intent={randomUUID()} previewBrl={previewBrl} balanceBrl={balance} /></div>;
+  const faces = previewChoices(sample);
+  if (!id) return <div className="mx-auto max-w-[640px]"><BriefForm intent={randomUUID()} choices={faces} defaultModel={PREVIEW.model} balanceBrl={balance} /></div>;
 
   const influencer = await prisma.influencer.findFirst({ where: { id, userId }, include: { steps: { where: { kind: "CHARACTER" }, orderBy: { createdAt: "asc" }, include: { assets: true } } } });
   if (!influencer) notFound();
@@ -42,11 +43,12 @@ export default async function NewInfluencerPage({ searchParams }: { searchParams
       </div>
       {sheet ? <img src={sheet.url} alt="Character sheet" className="w-full rounded-control" /> : null}
       {/* eslint-enable @next/next/no-img-element */}
-      <h1 className="font-display text-[44px] font-black uppercase leading-[.9] lg:text-[64px]">A {influencer.name.split(" ")[0]} está pronta</h1>
+      {admin ? influencer.steps.filter((step) => step.role === "SHEET" || step.role === "PROFILE").map((step) => <AdminPrompt key={step.id} prompt={(step.input as { prompt?: unknown } | null)?.prompt} model={step.model} label={`Prompt · ${step.role === "SHEET" ? "sheet" : "side portrait"}`} />) : null}
+      <h1 className="font-display text-[30px] font-black uppercase leading-[.9] lg:text-[40px]">A {influencer.name.split(" ")[0]} está pronta</h1>
       <p className="text-[15px] leading-[1.5] text-lab-text-dim">{influencer.steps.some((step) => step.status === "RUNNING") ? `Até agora, criar a influencer custou ${costText(charged)}; a ficha de referência dela termina em instantes.` : `Criar a influencer custou ${costText(charged)}.`} O próximo passo é o primeiro conteúdo dela.</p>
       <div className="flex flex-wrap gap-2">
-        <Link href={`/conteudos/novo?influencer=${influencer.id}`} className={buttonVariants({ className: "h-14 px-6 text-body" })}>Criar primeiro conteúdo</Link>
-        <Link href={`/i/${influencer.id}`} className={buttonVariants({ variant: "secondary", className: "h-14 px-5 text-[15px]" })}>Ver perfil</Link>
+        <Link href={`/conteudos/novo?influencer=${influencer.id}`} className={buttonVariants({ className: "h-12 px-5 text-body-sm" })}>Criar primeiro conteúdo</Link>
+        <Link href={`/i/${influencer.id}`} className={buttonVariants({ variant: "secondary", className: "h-12 px-5 text-[15px]" })}>Ver perfil</Link>
       </div>
     </div>;
   }
@@ -55,15 +57,15 @@ export default async function NewInfluencerPage({ searchParams }: { searchParams
   const running = previews.some((step) => step.status === "RUNNING");
   const reserved = previews.reduce((sum, step) => sum + Number(step.estimatedCostBrl ?? 0), 0);
   const actual = previews.every((step) => step.actualCostBrl !== null) ? previews.reduce((sum, step) => sum + chargeBrl(Number(step.actualCostBrl)), 0) : null;
-  const sheetBrl = quote([sheetFromFaceItem(cardOf(influencer), "https://estimate"), profileFromFaceItem(cardOf(influencer), "https://estimate")]).totalBrl;
   return <div className="mx-auto flex max-w-[640px] flex-col gap-6">
     <KitWatcher influencerId={influencer.id} active={running} />
-    <div className="flex flex-col gap-2"><span className="font-mono text-caption uppercase tracking-[.1em] text-lab-text-dim">Nova influencer · 2 de 2</span><h1 className="font-display text-[44px] font-black uppercase leading-[.9] lg:text-[64px]">Escolha o rosto</h1></div>
+    <div className="flex flex-col gap-2"><span className="font-mono text-caption uppercase tracking-[.1em] text-lab-text-dim">Nova influencer · 2 de 2</span><h1 className="font-display text-[30px] font-black uppercase leading-[.9] lg:text-[40px]">Escolha o rosto</h1></div>
     {previews.length ? <div className="flex flex-wrap items-center gap-2.5">
       {running ? <CostChip state="estimated" value={reserved} prefix="reservado" /> : actual !== null ? <CostChip state="actual" value={actual} /> : null}
       {!running && actual !== null && costCredits(reserved) > costCredits(actual) ? <span className="text-[13px] text-lab-text-dim">previsto ~{costText(reserved)} · {creditsText(costCredits(reserved) - costCredits(actual))} voltaram</span> : null}
     </div> : null}
-    <ChooseFace influencerId={influencer.id} running={running} balanceBrl={balance} sheetBrl={sheetBrl} previewBrl={previewBrl} approveIntent={randomUUID()} againIntent={randomUUID()}
+    {admin ? <AdminPrompt prompt={(previews.at(-1)?.input as { prompt?: unknown } | null)?.prompt} model={previews.at(-1)?.model} label="Prompt · face previews" /> : null}
+    <ChooseFace influencerId={influencer.id} running={running} balanceBrl={balance} sheetChoices={sheetFromFaceChoices(cardOf(influencer))} previewChoices={faces} approveIntent={randomUUID()} againIntent={randomUUID()}
       faces={(previews.length ? previews : Array.from({ length: 4 }, (_, n) => ({ id: `empty-${n}`, status: "PENDING", assets: [] }))).map((step) => ({ id: step.assets[0]?.id ?? step.id, url: step.assets[0]?.url ?? null, status: step.status }))} />
   </div>;
 }
