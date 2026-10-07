@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest";
 import { NETWORKS, networkVisible, textLength } from "./networks";
 
 describe("social networks", () => {
-  it("keeps every network except X soon until the aggregator connects reliably", () => {
+  it("opens aggregator networks to everyone and keeps Bluesky soon", () => {
     const ig = NETWORKS.find((n) => n.id === "INSTAGRAM")!;
-    expect(networkVisible(ig, true)).toBe("soon");
-    expect(networkVisible(ig, false)).toBe("soon");
+    expect(networkVisible(ig, true)).toBe("active");
+    expect(networkVisible(ig, false)).toBe("active");
     expect(networkVisible({ ...ig, audience: "owners" }, true)).toBe("active");
     expect(networkVisible({ ...ig, audience: "owners" }, false)).toBe("soon");
     expect(networkVisible(NETWORKS.find((n) => n.id === "BLUESKY")!, true)).toBe("soon");

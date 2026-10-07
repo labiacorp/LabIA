@@ -16,7 +16,7 @@ Source: founders' call 2026-10-07 (Gemini notes) plus the Playwright run that cr
 - Git flow main/dev/task branches documented in CLAUDE.md and AGENTS.md (c656dda, 433fc93, c163d86).
 - GitHub branches cleaned: only `dev` and `main` on origin.
 - Credit value: 1 credit = R$ 0,05 (`src/lib/plan.ts`).
-- Script/idea limit 10.000 chars (`src/lib/limits.ts`); Integrations moved into Profile, export row removed; networks other than X show "Em breve"; approving a face now also makes the side portrait, and the ready page shows front, side and sheet.
+- Script/idea limit 10.000 chars (`src/lib/limits.ts`); Integrations moved into Profile, export row removed; bundle networks active again (Felipe, 2026-10-07), Bluesky "Em breve"; approving a face now also makes the side portrait, and the ready page shows front, side and sheet.
 
 ## Lane D: shell, account, integrations screens, UI polish (Felipe, after lane F)
 
@@ -42,7 +42,7 @@ Owns: `src/lib/` (generation, models, plan, social/publishing), `src/app/(app)/i
 - [ ] **F4. 16:9 format.** Add 16:9 next to the default 9:16 for image and video steps; price and model support per format.
 - [ ] **F5. Model picker shows name and price.** Every model option shows the model name and its credits per 5 s (video) or per image. Resolutions use standard names (480p, 768p, 1080p), never "0.5K". The user picks model and resolution explicitly on image and video steps.
 - [ ] **F6. One approval, exact credits.** Remove double confirmations in creation and script generation; show the exact credit number before and after, no ambiguous ranges.
-- [ ] **F7. X publishing.** Verify the X account connection end to end, then scheduling with suggested times (no pre-validation of content). Other networks stay "Coming soon" (D4).
+- [ ] **F7. X publishing.** Verify the X account connection end to end, then scheduling with suggested times (no pre-validation of content). Bundle networks are active (Felipe's decision, 2026-10-07); Bluesky stays "Coming soon".
 - [ ] **F8. TikTok trends import (research only).** Write `docs/research/tiktok-trends.md`: APIs, storage cost, import method, cron vs agent. No code.
 
 ## Shared, last
