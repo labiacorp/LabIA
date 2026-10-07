@@ -1,5 +1,13 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Design loading state: title and subtitle bars, a grid of media cards with a title line and a chip each.
 export default function AppLoading() {
-  return <div role="status" aria-label="Carregando seu laboratório" className="mx-auto max-w-content space-y-5 py-6"><span className="sr-only">Carregando seu laboratório…</span><Skeleton className="h-9 w-56" /><Skeleton className="h-4 w-64" /><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{[0, 1, 2].map((key) => <Skeleton className="h-52" key={key} />)}</div></div>;
+  return <div role="status" aria-busy="true" className="mx-auto flex max-w-content flex-col gap-5">
+    <Skeleton className="h-11 w-2/5" />
+    <Skeleton className="h-4 w-[65%]" />
+    <div className="mt-2 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
+      {[0, 1, 2, 3, 4, 5].map((key) => <div key={key} className="flex flex-col gap-2.5"><Skeleton className="aspect-[4/5] rounded-control" /><span className="h-3.5 w-[70%] rounded bg-lab-surface-2" /><span className="h-[26px] w-[84px] rounded-full bg-lab-surface-2" /></div>)}
+    </div>
+    <span className="text-[13px] text-lab-text-dim">Carregando…</span>
+  </div>;
 }

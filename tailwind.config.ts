@@ -12,6 +12,7 @@ const config: Config = {
           bg: "var(--lab-bg)",
           "surface-1": "var(--lab-surface-1)",
           "surface-2": "var(--lab-surface-2)",
+          "surface-3": "var(--lab-surface-3)",
           border: "var(--lab-border)",
           "border-strong": "var(--lab-border-strong)",
           text: "var(--lab-text)",
