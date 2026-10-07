@@ -3,6 +3,7 @@ import { REEL } from "@/lib/content-plan";
 import { quote, startPlan, submit, UserError, type PlanItem } from "@/lib/generation";
 import { getProvider } from "@/lib/provider";
 import { prisma } from "@/lib/prisma";
+import { loadPromptTemplates, renderPrompt } from "@/lib/prompts";
 import { MERGE_MODEL, METADATA_MODEL } from "@/lib/providers/ffmpeg";
 import type { GenerationResult, GenParams } from "@/lib/providers/model-provider";
 import { prepareVideo, settleVideo, type VideoPricingSnapshot } from "@/lib/providers/video-models";
@@ -76,7 +77,7 @@ export async function advanceVideo(step: Step, result: GenerationResult): Promis
     }
     next = {
       ...(chain.recipe?.params ?? {}),
-      prompt: `Continue the action smoothly from this last frame. Keep the same face, outfit, lighting and scene.\n\nScene context: ${chain.prompt}`,
+      prompt: renderPrompt("video-continue", { scene: chain.prompt }, await loadPromptTemplates()),
       image_url: media.end_frame_url, duration: "5", ...(chain.recipe ? { videoPricing: chain.recipe.pricing } : {}), chain: { phase: "video", prompt: chain.prompt, clips, ...(chain.recipe ? { recipe: chain.recipe } : {}) } satisfies VideoChain,
     };
     model = chain.recipe?.model ?? REEL.video.model;

@@ -14,7 +14,7 @@ Next.js 16 (App Router, Server Actions) + TypeScript + Tailwind 4 (legacy `tailw
 
 ## Screens (`src/app`)
 
-App UI follows the Claude Design "Corte" handoff (2026-10-05): dark only (light theme and ThemeToggle deleted), `--lab-*` tokens in `globals.css`, Big Shoulders / Geist / Geist Mono, pill buttons (`Button` variant `cost` is the only green CTA, for paid steps), shell = sidebar + header with balance chip (`app-navigation.tsx`). `design/reference/handoff` is the OLD design and stale. e2e needs `ALLOWED_EMAILS=` empty and no other `next dev` on this folder.
+App UI follows the Claude Design "Corte" handoff (2026-10-05): dark only (light theme and ThemeToggle deleted), `--lab-*` tokens in `globals.css`, Big Shoulders / Geist / Geist Mono, pill buttons (`Button` variant `cost` is the only green CTA, for paid steps), shell = one top bar with the main links, "Novo conteúdo", the balance chip and the profile menu (a full-screen sheet on mobile; `app-navigation.tsx`), no sidebar (2026-10-07; type, button and page padding sizes were cut about 15% in `tailwind.config.ts`, `components/ui/button.tsx` and the page headings). `design/reference/handoff` is the OLD design and stale. e2e needs `ALLOWED_EMAILS=` empty and no other `next dev` on this folder.
 
 `/` shows the landing (`src/app/lp`, Claude Design 2026-10-05) to visitors without a session cookie (rewrite in `next.config.ts`); signed-in users are redirected to `/painel` (`src/proxy.ts`). Its calls to action ("Entrar", "Criar conta") go to `/login`.
 `/` shows the landing (`src/app/lp`, Claude Design 2026-10-05) to visitors without a session cookie (rewrite in `next.config.ts`); signed-in users get the studio. Its calls to action ("Entrar", "Criar conta") go to `/login`.
@@ -27,7 +27,16 @@ App UI follows the Claude Design "Corte" handoff (2026-10-05): dark only (light 
 - Character profile selects and previews a completed owned FRONT portrait. Scene UI and execution use this explicit selection, including when newer portraits exist.
 - Referrals (`src/lib/referrals.ts`, values in `referral-rules.ts`): `/conta#indicacoes` shows the link, free invites, accounts created and R$ earned. `/r/[code]` sets a 30-day first-touch cookie; only new accounts are attributed. A link with invites left passes the beta gate (3 invites, +3 per R$ 50 spent; only matters when `LABIA_ACCESS_CODE` is on). On a referred account's first paid Stripe top-up both sides get R$ 10 (`REFERRAL` ledger entries, unique per account; inviter capped at R$ 100). Not handled: refunds do not reverse the bonus, no card-fingerprint check. See `docs/research/referrals.md`.
 
+## Prompts, admin view and overrides (2026-10-07)
+
+- Every prompt the app wraps around what the user typed lives in `src/lib/prompts.ts` as a template with `{placeholders}` (face previews, character sheet, sheet and side portrait from the approved face, portraits, content image, video continuation, and the starting text of each trend). `renderPrompt` fills them; `loadPromptTemplates` reads the admin overrides (table `prompt_overrides`, migration `20261007210000_prompt_overrides`) at the start of each generation and an override wins over the default.
+- `/admin/prompts` (owners only, `savePrompt`/`resetPrompt` start with `requireOwner()` and write `admin_actions`) edits or resets each template; it applies from the next generation.
+- Owners (`isOwner()` in `src/lib/owner.ts`) see the exact prompt sent for each step (`AdminPrompt`): content steps, motion recreation, the character sheet and face previews, and the library detail. `loadLibrary(..., admin)` strips the prompt on the server for everyone else, who only keep the video direction they typed.
+
 ## Motion recreation and imported references
+
+The model is picked on the form (`MOTION_MODELS` in `src/lib/motion.ts`): Genjutsu Motion Transfer (Higgsfield, up to 3 references, 480p/720p/1080p) and Kling 2.6 / Kling 3 Pro Motion Control (fal.ai, one reference, per-second rate 0.112 / 0.168 USD checked 2026-10-07, run by `FalMotionProvider`). Briefs saved before the picker default to Genjutsu. The fal endpoints have only been run in mock mode.
+
 
 `/trends` prepares parking/group, dance and custom motion briefs with an owned imported video and up to three ordered images. Import supports normalized JPEG/PNG/WebP and structurally validated MP4 H.264 (4–30s), maximum 4 MiB. Production uses private Vercel Blob; explicit development mock mode uses ignored local storage. Private previews enforce ownership, support ranges and expose short-lived provider links only at generation.
 
@@ -36,6 +45,7 @@ Genjutsu Motion Transfer uses the shared reservation/operation-key coordinator a
 ## How generation works (`src/lib/generation.ts`)
 
 Character kit = step 1 sheet (nano-banana-2, 2K, 3:2) then step 2 portraits front/profile/detail (nano-banana-2/edit, 1K, using the approved sheet as reference). Rules:
+- creating an influencer lets the user pick the image model for the 4 face previews (text-to-image catalog) and for the sheet made from the approved face (reference-capable catalog), each option priced on the server (`previewChoices`/`sheetFromFaceChoices` in `src/lib/character.ts`);
 - the sheet (step 1) has a model/quality selector over six text-to-image endpoints (`IMAGE_DEFINITIONS` with `textOnly`, `src/lib/providers/image-models.ts`, priced and validated on the server): Nano Banana 2 (default), GPT Image 2.5 Flare, Grok Imagine 2.0, Muse Image, Seedream 5.0 Lite, Nano Banana Pro. Ids and per-image rates were audited against fal.ai on 2026-10-05. GPT Image 2.5 is billed by token, so its price is shown and settled as an estimate (`estimated`); no 3:2 request has been run on the new models yet. The prompt is editable before generating (sent as `prompt`; blank means the standard one built from the card, the model's `maxPrompt` still applies; price does not depend on it); the generated sheet shows its model and the exact prompt it received. Portraits and scenes still use the `/edit` endpoints (FLUX Kontext, Qwen Max and Seedream 4.5 remain there only);
 - the character tab shows the real cost of each finished kit step and the kit total (`stepCost`/`kitSpent` in `src/lib/character.ts`); an unverified cost reads "indisponível", never R$ 0;
 - the price is quoted by the provider layer (`src/lib/providers/`), shown in R$, and sent back with the approval; a changed price charges nothing;

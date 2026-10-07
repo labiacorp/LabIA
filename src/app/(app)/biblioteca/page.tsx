@@ -1,6 +1,7 @@
 import { UploadReference } from "./upload-reference";
 import { referenceStorageReady, localReferenceStorage } from "@/lib/reference-storage";
 import { PageHeading } from "@/components/app/page-heading";
+import { isOwner } from "@/lib/owner";
 import { loadLibrary } from "@/lib/library-data";
 import { parseLibraryFilters, type LibraryParams } from "@/lib/library";
 import { requireUserId } from "@/lib/session";
@@ -13,7 +14,7 @@ export default async function LibraryPage({
 }) {
   const userId = await requireUserId();
   const filters = parseLibraryFilters(await searchParams);
-  const data = await loadLibrary(userId, filters);
+  const data = await loadLibrary(userId, filters, await isOwner());
   return (
     <div className="mx-auto max-w-content">
       <PageHeading

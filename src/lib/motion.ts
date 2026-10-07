@@ -1,6 +1,15 @@
 import { usdBrlRate } from "@/lib/fx";
 import { z } from "zod";
 export const MOTION_MODEL = "higgsfield/genjutsu/motion-transfer/v1.0";
+// Motion-transfer endpoints the user can pick on /trends. `rates` are USD per second of output by resolution
+// ("default" = the endpoint has no resolution choice). Kling prices checked on fal.ai on 2026-10-07; they take a single reference image.
+export type MotionModel = { id: string; name: string; provider: "higgsfield" | "fal"; maxReferences: number; rates: Record<string, number>; note: string };
+export const MOTION_MODELS: MotionModel[] = [
+  { id: MOTION_MODEL, name: "Genjutsu Motion Transfer", provider: "higgsfield", maxReferences: 3, rates: { "480p": 0.318, "720p": 0.681, "1080p": 1.632 }, note: "Up to 3 characters. Final cost is confirmed after the run." },
+  { id: "fal-ai/kling-video/v2.6/pro/motion-control", name: "Kling 2.6 Pro Motion Control", provider: "fal", maxReferences: 1, rates: { default: 0.112 }, note: "One character. Follows the video's framing, up to 30 s." },
+  { id: "fal-ai/kling-video/v3/pro/motion-control", name: "Kling 3 Pro Motion Control", provider: "fal", maxReferences: 1, rates: { default: 0.168 }, note: "One character. Follows the video's framing, up to 30 s." },
+];
+export const findMotionModel = (id: string) => MOTION_MODELS.find((model) => model.id === id);
 export const motionSchema = z.object({
   version: z.literal(1),
   trend: z.enum(["parking", "dance", "custom"]),
@@ -11,7 +20,14 @@ export const motionSchema = z.object({
     .max(3)
     .refine((ids) => new Set(ids).size === ids.length),
   prompt: z.string().trim().max(2000),
-  resolution: z.enum(["480p", "720p", "1080p"]),
+  resolution: z.enum(["480p", "720p", "1080p", "default"]),
+  // Briefs saved before the picker existed have no model: they were all Genjutsu.
+  model: z.string().default(MOTION_MODEL),
+}).superRefine((brief, context) => {
+  const model = findMotionModel(brief.model);
+  if (!model) return context.addIssue({ code: "custom", message: "Unknown motion model", path: ["model"] });
+  if (!Object.hasOwn(model.rates, brief.resolution)) context.addIssue({ code: "custom", message: "Resolution not supported by this model", path: ["resolution"] });
+  if (brief.referenceIds.length > model.maxReferences) context.addIssue({ code: "custom", message: "Too many references for this model", path: ["referenceIds"] });
 });
 export type MotionBrief = z.infer<typeof motionSchema>;
 export const TRENDS = [
@@ -54,12 +70,14 @@ export const TRENDS = [
 export function motionEstimate(
   duration: number,
   resolution: MotionBrief["resolution"],
+  modelId: string = MOTION_MODEL,
 ) {
   if (!Number.isFinite(duration) || duration < 4 || duration > 30)
     throw Error("Invalid duration");
+  const rate = findMotionModel(modelId)?.rates[resolution];
+  if (rate === undefined) throw Error("Unsupported motion model or resolution");
   const seconds = Math.ceil(duration);
-  const usd =
-    seconds * { "480p": 0.318, "720p": 0.681, "1080p": 1.632 }[resolution];
-  const rate = usdBrlRate();
-  return { usd, brl: Math.round(usd * rate * 10000) / 10000, seconds, rate };
+  const usd = seconds * rate;
+  const fx = usdBrlRate();
+  return { usd, brl: Math.round(usd * fx * 10000) / 10000, seconds, rate: fx };
 }

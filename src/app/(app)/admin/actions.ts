@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/owner";
 import { reconcileReservation, UserError } from "@/lib/generation";
 import { chargeBrl } from "@/lib/plan";
+import { PROMPT_KEYS, PROMPT_MAX, type PromptKey } from "@/lib/prompts";
 
 export type AdminState = { ok: boolean; message: string };
 
@@ -64,4 +65,31 @@ export async function reconcileStep(_previous: AdminState, form: FormData): Prom
   }
   revalidatePath("/admin");
   return { ok: true, message: "Etapa reconciliada." };
+}
+
+const promptSchema = z.object({ key: z.enum(PROMPT_KEYS as [PromptKey, ...PromptKey[]]), text: z.string().trim().min(1).max(PROMPT_MAX) });
+
+// An override wins over the default from the next generation on; the default text itself never changes.
+export async function savePrompt(_previous: AdminState, form: FormData): Promise<AdminState> {
+  const actorId = await requireOwner();
+  const input = promptSchema.safeParse(Object.fromEntries(form));
+  if (!input.success) return { ok: false, message: `Write the prompt (up to ${PROMPT_MAX.toLocaleString("en-US")} characters).` };
+  await prisma.$transaction([
+    prisma.promptOverride.upsert({ where: { key: input.data.key }, create: { key: input.data.key, text: input.data.text, updatedBy: actorId }, update: { text: input.data.text, updatedBy: actorId } }),
+    prisma.adminAction.create({ data: { actorId, action: "PROMPT_SET", data: { key: input.data.key } } }),
+  ]);
+  revalidatePath("/admin/prompts");
+  return { ok: true, message: "Saved. It applies from the next generation." };
+}
+
+export async function resetPrompt(_previous: AdminState, form: FormData): Promise<AdminState> {
+  const actorId = await requireOwner();
+  const input = promptSchema.pick({ key: true }).safeParse(Object.fromEntries(form));
+  if (!input.success) return { ok: false, message: "Unknown prompt." };
+  await prisma.$transaction([
+    prisma.promptOverride.deleteMany({ where: { key: input.data.key } }),
+    prisma.adminAction.create({ data: { actorId, action: "PROMPT_RESET", data: { key: input.data.key } } }),
+  ]);
+  revalidatePath("/admin/prompts");
+  return { ok: true, message: "Back to the default prompt." };
 }

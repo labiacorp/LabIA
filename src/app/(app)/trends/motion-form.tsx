@@ -3,7 +3,7 @@ import { costText } from "@/lib/plan";
 import Image from "next/image";
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { TRENDS, motionEstimate, type MotionBrief } from "@/lib/motion";
+import { findMotionModel, MOTION_MODEL, MOTION_MODELS, motionEstimate, type MotionBrief } from "@/lib/motion";
 import { createMotion } from "./actions";
 type Media = {
   id: string;
@@ -19,7 +19,7 @@ export function MotionForm({
   initial,
   rate,
 }: {
-  trend: (typeof TRENDS)[number];
+  trend: { id: string; name: string; roles: readonly string[]; prompt: string };
   characters: { id: string; name: string }[];
   images: Media[];
   videos: Media[];
@@ -31,14 +31,25 @@ export function MotionForm({
     initial?.sourceId ?? videos[0]?.id ?? "",
   );
   const [refs, setRefs] = useState<string[]>(initial?.referenceIds ?? []);
-  const [resolution, setResolution] = useState<MotionBrief["resolution"]>(
+  const [modelId, setModelId] = useState(initial?.model ?? MOTION_MODEL);
+  const model = findMotionModel(modelId) ?? MOTION_MODELS[0];
+  const resolutions = Object.keys(model.rates) as MotionBrief["resolution"][];
+  const [chosen, setResolution] = useState<MotionBrief["resolution"]>(
     initial?.resolution ?? "720p",
   );
+  // Switching model keeps the resolution when the new one has it, else falls back to its first.
+  const resolution = resolutions.includes(chosen) ? chosen : resolutions.includes("720p") ? "720p" : resolutions[0];
   const source = videos.find((v) => v.id === sourceId);
+  // What this source would cost on a model at the resolution the form holds (or the model's own default).
+  const priceOf = (item: (typeof MOTION_MODELS)[number], seconds: number) => {
+    const keys = Object.keys(item.rates) as MotionBrief["resolution"][];
+    const pick = keys.includes(resolution) ? resolution : keys.includes("720p") ? "720p" : keys[0];
+    return motionEstimate(seconds, pick, item.id).usd * rate;
+  };
   const field =
     "min-h-11 w-full rounded-control border border-lab-border bg-lab-surface-2 p-3 text-body-sm";
   const usd = source?.durationSec
-    ? motionEstimate(source.durationSec, resolution).usd
+    ? motionEstimate(source.durationSec, resolution, model.id).usd
     : null;
   const cost = usd === null ? null : usd * rate;
   return (
@@ -80,7 +91,7 @@ export function MotionForm({
         </section>
         <section className="grid content-start gap-4 rounded-lab border border-lab-border bg-lab-surface-1 p-5">
           <h2 className="font-display text-xl">2. Quem entra na cena?</h2>
-          {trend.roles.map((role, index) => (
+          {trend.roles.slice(0, model.maxReferences).map((role, index) => (
             <label key={role} className="grid gap-2 text-body-sm">
               {role}
               {index > 0 ? " (opcional)" : ""}
@@ -158,20 +169,41 @@ export function MotionForm({
           />
         </label>
         <label className="grid gap-2 text-body-sm">
-          Resolução
+          Model
           <select
-            name="resolution"
-            value={resolution}
-            onChange={(e) =>
-              setResolution(e.target.value as MotionBrief["resolution"])
-            }
+            name="model"
+            value={model.id}
+            onChange={(e) => setModelId(e.target.value)}
             className={field}
           >
-            <option value="480p">480p · Econômico</option>
-            <option value="720p">720p · Equilibrado</option>
-            <option value="1080p">1080p · Alta resolução</option>
+            {MOTION_MODELS.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+                {source?.durationSec ? ` · ${costText(priceOf(item, source.durationSec))}` : ""}
+              </option>
+            ))}
           </select>
+          <span className="text-caption text-lab-text-muted">{model.note}</span>
         </label>
+        {resolutions.includes("default") ? (
+          <input type="hidden" name="resolution" value="default" />
+        ) : (
+          <label className="grid gap-2 text-body-sm">
+            Resolução
+            <select
+              name="resolution"
+              value={resolution}
+              onChange={(e) =>
+                setResolution(e.target.value as MotionBrief["resolution"])
+              }
+              className={field}
+            >
+              {resolutions.includes("480p") && <option value="480p">480p · Econômico</option>}
+              {resolutions.includes("720p") && <option value="720p">720p · Equilibrado</option>}
+              {resolutions.includes("1080p") && <option value="1080p">1080p · Alta resolução</option>}
+            </select>
+          </label>
+        )}
         <p className="text-body-sm text-lab-text-dim">
           {cost === null
             ? "Selecione o vídeo para estimar a geração."

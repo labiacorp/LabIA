@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { refreshRate } from "@/lib/fx";
 import { requireUserId } from "@/lib/session";
-import { motionSchema, MOTION_MODEL, type MotionBrief } from "@/lib/motion";
+import { findMotionModel, motionSchema, type MotionBrief } from "@/lib/motion";
 import { startPlan, UserError } from "@/lib/generation";
 import { providerMediaUrl } from "@/lib/media-access";
 import { readReference } from "@/lib/reference-storage";
@@ -60,9 +60,12 @@ export async function createMotion(_previous: string, form: FormData) {
     referenceIds,
     prompt: form.get("prompt"),
     resolution: form.get("resolution"),
+    model: form.get("model") ?? undefined,
   });
   const title = String(form.get("title") ?? "").trim();
   const influencerId = String(form.get("influencerId") ?? "");
+  const modelIssue = parsed.success ? undefined : parsed.error.issues.find((issue) => issue.code === "custom" && issue.message !== "Invalid input");
+  if (modelIssue) return `${modelIssue.message}. Pick another model or change the references.`;
   if (!parsed.success || !title || title.length > 120)
     return "Confira o título, o vídeo e as referências. Não repita a mesma referência.";
   let id: string;
@@ -132,11 +135,11 @@ export async function generateMotion(
       plan: [
         {
           role: null,
-          model: MOTION_MODEL,
+          model: parsed.data.model,
           params: {
             prompt: parsed.data.prompt,
             video_url: providerMediaUrl(source),
-            image_urls: references.map(providerMediaUrl),
+            image_urls: references.slice(0, findMotionModel(parsed.data.model)?.maxReferences).map(providerMediaUrl),
             resolution: parsed.data.resolution,
             sourceDuration: source.durationSec,
           },
