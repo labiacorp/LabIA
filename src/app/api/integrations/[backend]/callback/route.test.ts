@@ -2,14 +2,10 @@ import { randomBytes } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-const state = vi.hoisted(() => ({ userId: "u1" as string | null, owner: false }));
+const state = vi.hoisted(() => ({ userId: "u1" as string | null }));
 vi.mock("@/lib/session", async () => {
   const { redirect } = await import("next/navigation");
   return { requireUserId: async () => state.userId ?? redirect("/login") };
-});
-vi.mock("@/lib/owner", async () => {
-  const { notFound } = await import("next/navigation");
-  return { requireOwner: async () => (state.owner ? state.userId : notFound()) };
 });
 const owners: Record<string, string> = { "inf-mine": "u1", "inf-other": "u2" };
 vi.mock("@/lib/prisma", () => ({
@@ -39,7 +35,6 @@ beforeEach(() => {
   vi.stubEnv("LABIA_PUBLIC_URL", "");
   vi.stubEnv("SOCIAL_TOKEN_KEY", randomBytes(32).toString("base64"));
   state.userId = "u1";
-  state.owner = false;
   save.mockClear();
   save.mockResolvedValue(["acc1"]);
 });
@@ -96,12 +91,23 @@ describe("OAuth callback route", () => {
     expect(res.headers.getSetCookie().join()).toMatch(/labia_social_x=;/);
   });
 
-  it("404s an unknown backend and bundle for a non-owner", async () => {
+  it("404s an unknown backend", async () => {
     const notFound = { digest: "NEXT_HTTP_ERROR_FALLBACK;404" };
     await expect(callback(req("/api/integrations/foo/callback"), ctx("foo"))).rejects.toMatchObject(notFound);
     await expect(start(req("/api/integrations/foo/start"), ctx("foo"))).rejects.toMatchObject(notFound);
-    await expect(start(req("/api/integrations/bundle/start"), ctx("bundle"))).rejects.toMatchObject(notFound);
-    await expect(callback(req("/api/integrations/bundle/callback"), ctx("bundle"))).rejects.toMatchObject(notFound);
+  });
+
+  it("lets any signed-in user start and finish a bundle connection", async () => {
+    const res = await start(req("/api/integrations/bundle/start"), ctx("bundle"));
+    const redirect = new URL(res.headers.get("location")!);
+    const cookie = res.headers.getSetCookie().find((c) => c.startsWith("labia_social_bundle="))!.split(";")[0].split("=")[1];
+    const done = await callback(
+      new NextRequest(`http://127.0.0.1:3000/api/integrations/bundle/callback?code=mock&state=${redirect.searchParams.get("state")}`, {
+        headers: { cookie: `labia_social_bundle=${cookie}` },
+      }),
+      ctx("bundle"),
+    );
+    expect(location(done)).toBe("/integracoes?conectado=bundle");
   });
 
   it("redirects an unauthenticated user to /login", async () => {

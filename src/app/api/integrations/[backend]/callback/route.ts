@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import type { NextRequest } from "next/server";
 import { redirectTo, socialOrigin } from "../../origin";
-import { requireOwner } from "@/lib/owner";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/session";
 import { saveConnectedAccounts } from "@/lib/social/accounts";
@@ -15,7 +14,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { backend } = await params;
   if (backend !== "x" && backend !== "bundle") notFound();
   const userId = await requireUserId();
-  if (backend === "bundle") await requireOwner();
 
   const origin = socialOrigin(request);
   const cookieName = `labia_social_${backend}`;

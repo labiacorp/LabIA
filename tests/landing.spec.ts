@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { signInDev } from "./helpers";
 
 // A visitor (no session cookie) lands on the landing at "/"; a signed-in user is sent to Início.
+// A visitor (no session cookie) lands on the landing at "/"; a signed-in user keeps the studio there.
 test("a visitor on / sees the landing page", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle(/Conteúdo para influencers de IA/);

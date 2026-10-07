@@ -88,7 +88,7 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
             return (
               <NetworkCard
                 key={network.id}
-                network={{ id: network.id, label: network.label, backend: network.backend, note: network.note }}
+                network={{ id: network.id, label: network.label, backend: network.backend, audience: network.audience, note: network.note }}
                 state={networkVisible(network, owner)}
                 account={account}
                 owner={owner}
