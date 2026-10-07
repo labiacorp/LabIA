@@ -7,6 +7,7 @@ import { requireUserId } from "@/lib/session";
 import { NETWORKS, networkVisible } from "@/lib/social/networks";
 import { dispatchDuePosts, reconcileScheduled } from "@/lib/social/posts";
 import { backendReady } from "@/lib/social/publisher";
+import { syncBundleAccounts } from "@/lib/social/sync";
 import { NetworkCard, type CardAccount } from "./network-card";
 import { PostList, type PostRow } from "./post-list";
 
@@ -28,6 +29,7 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
     : null;
   const owner = role === "OWNER";
 
+  await syncBundleAccounts(userId); // never throws
   try {
     await dispatchDuePosts({ userId, limit: 2 });
     await reconcileScheduled(userId);
