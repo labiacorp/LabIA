@@ -1,20 +1,8 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import {
-  AtSign,
-  Briefcase,
-  Camera,
-  CircleCheck,
-  Cloud,
-  Link2,
-  Music2,
-  Play,
-  ThumbsUp,
-  TriangleAlert,
-  X as CloseIcon,
-  type LucideIcon,
-} from "lucide-react";
+import { CircleCheck, Link2, TriangleAlert, X as CloseIcon } from "lucide-react";
+import { NetworkLogo } from "@/components/app/network-logos";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { NetworkId } from "@/lib/social/networks";
@@ -33,37 +21,6 @@ const NAMES: Record<NetworkId, string> = {
   FACEBOOK: "Facebook",
   BLUESKY: "Bluesky",
 };
-const GLYPHS: Partial<Record<NetworkId, LucideIcon>> = {
-  INSTAGRAM: Camera,
-  TIKTOK: Music2,
-  LINKEDIN: Briefcase,
-  THREADS: AtSign,
-  YOUTUBE: Play,
-  FACEBOOK: ThumbsUp,
-  BLUESKY: Cloud,
-};
-
-export function NetworkLogo({ id, className }: { id: NetworkId; className?: string }) {
-  const tile =
-    id === "X"
-      ? "bg-lab-text text-lab-bg"
-      : id === "LINKEDIN"
-        ? "bg-lab-reagent text-lab-on-reagent"
-        : "bg-lab-surface-2 text-lab-text";
-  const Glyph = GLYPHS[id];
-  return (
-    <span aria-hidden className={cn("flex size-12 shrink-0 items-center justify-center rounded-control", tile, className)}>
-      {id === "X" ? (
-        <svg viewBox="0 0 24 24" className="size-5" fill="currentColor">
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-        </svg>
-      ) : Glyph ? (
-        <Glyph className="size-5" />
-      ) : null}
-    </span>
-  );
-}
-
 const pill = "inline-flex h-6 items-center gap-1.5 rounded-full border px-2 text-caption font-medium";
 
 export function NetworkCard({
@@ -154,7 +111,7 @@ export function NetworkCard({
       data-state={soon ? "soon" : notConfigured ? "pending" : (account?.status ?? "none")}
       className="flex flex-col gap-4 rounded-lab border border-lab-border bg-lab-surface-1 p-5"
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         <NetworkLogo id={network.id} />
         {status}
       </div>
@@ -176,7 +133,7 @@ export function NetworkCard({
                 ? `Reconecte sua conta @${account.handle}`
                 : account?.status === "ERROR"
                   ? "Erro na conexão. Reconecte para continuar."
-                  : (network.note ?? `Publique e agende posts no ${network.label}.`)}
+                  : (network.note ?? `Publique e agende no ${network.label}.`)}
         </p>
         {notice ? (
           <p role="status" className="mt-1 text-caption text-lab-success">
@@ -186,15 +143,9 @@ export function NetworkCard({
       </div>
       <div className="mt-auto grid gap-2">
         {soon || notConfigured ? null : connected ? (
-          <>
-            {ready ? (
-              <a href={href} className={linkClass(false)}>
-                <Link2 aria-hidden />
-                Reconectar conta do {network.label}
-              </a>
-            ) : null}
-            {unlink}
-          </>
+          <button type="button" className={linkClass(false)} onClick={openDialog}>
+            Desvincular
+          </button>
         ) : account ? (
           <>
             {ready ? (
