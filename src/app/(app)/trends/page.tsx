@@ -141,10 +141,6 @@ export default async function TrendsPage({
         </>
       ) : (
         <>
-          <UploadReference
-            ready={referenceStorageReady()}
-            local={localReferenceStorage()}
-          />
           {!characters.length && (
             <p className="mb-5 text-body-sm">
               Crie um personagem para organizar esta produção.{" "}
@@ -163,6 +159,7 @@ export default async function TrendsPage({
             characters={characters}
             images={images}
             videos={videos}
+            uploadReady={referenceStorageReady()}
             initial={initial}
             rate={motionEstimate(4, "720p").rate}
           />

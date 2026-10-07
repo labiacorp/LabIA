@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Plus, UserRound } from "lucide-react";
+import { Plus, Upload, UserRound } from "lucide-react";
 import { Prisma } from "@/generated/prisma/client";
 import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -23,12 +23,13 @@ export default async function InfluencersPage() {
   ]);
   const previewBrl = quote(previewItems({ name: "", role: "Lifestyle", visualSignature: "rosto" })).totalBrl;
   const create = (cls: string) => <Link href="/influenciadores/nova" className={cls}><Plus className="size-[18px]" />Nova</Link>;
+  const importer = (cls: string) => <Link href="/influenciadores/importar" className={cls}><Upload className="size-4" />Importar</Link>;
   return <div className="mx-auto flex max-w-content flex-col gap-6">
     <div className="flex flex-wrap items-end justify-between gap-3">
       <h1 className="font-display text-[30px] font-black uppercase leading-[.9] lg:text-[40px]">Influencers</h1>
-      {items.length ? create(buttonVariants({ className: "h-12 px-[18px] text-[15px]" })) : null}
+      {items.length ? <div className="flex gap-2">{create(buttonVariants({ className: "h-11 px-[18px] text-[15px]" }))}{importer(buttonVariants({ variant: "secondary", className: "h-11 px-[18px] text-[15px]" }))}</div> : null}
     </div>
-    {items.length === 0 ? <EmptyState icon={UserRound} title="Nenhuma influencer" description="Crie a primeira. Você aprova o rosto antes de gerar qualquer vídeo." action={<Link href="/influenciadores/nova" className={buttonVariants({ size: "lg" })}><Plus className="size-[18px]" />Criar influencer</Link>} /> : <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
+    {items.length === 0 ? <EmptyState icon={UserRound} title="Nenhuma influencer" description="Crie a primeira. Você aprova o rosto antes de gerar qualquer vídeo." action={<div className="flex flex-wrap justify-center gap-2"><Link href="/influenciadores/nova" className={buttonVariants({ size: "lg" })}><Plus className="size-[18px]" />Criar influencer</Link>{importer(buttonVariants({ variant: "secondary", size: "lg" }))}</div>} /> : <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
       {items.map((item) => { const face = faces.find((f) => f.id === item.faceAssetId); return <Link key={item.id} href={`/i/${item.id}`} className="flex flex-col overflow-hidden rounded-card bg-lab-surface-1 shadow-[inset_0_0_0_1px_var(--lab-border)] hover:shadow-[inset_0_0_0_1.5px_var(--lab-text-dim)] focus-visible:outline-none focus-visible:shadow-lab-focus">
         <span className="relative block aspect-[4/5] w-full bg-[repeating-linear-gradient(135deg,var(--lab-surface-2)_0_10px,var(--lab-surface-3)_10px_20px)]">{face ? <Image src={face.url} alt="" fill unoptimized className="object-cover" /> : null}</span>
         <span className="flex flex-col gap-1.5 px-3.5 pb-3.5 pt-3"><span className="break-words font-display text-2xl font-black uppercase leading-none">{item.name}</span><span className="text-[13px] text-lab-text-dim">{face ? item.niche : "Falta escolher o rosto"}</span>
