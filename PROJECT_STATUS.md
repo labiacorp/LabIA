@@ -45,6 +45,8 @@ The model is picked on the form (`MOTION_MODELS` in `src/lib/motion.ts`): Genjut
 
 `/trends` prepares parking/group, dance and custom motion briefs with an owned imported video and up to three ordered images. Import supports normalized JPEG/PNG/WebP and structurally validated MP4 H.264 (4–30s), maximum 4 MiB. Production uses private Vercel Blob; explicit development mock mode uses ignored local storage. Private previews enforce ownership, support ranges and expose short-lived provider links only at generation.
 
+While a recreation runs the page shows `GenerationProgress` (indeterminate bar plus the time since it started): neither Higgsfield nor fal reports a percentage, only queued / running / done.
+
 Genjutsu Motion Transfer uses the shared reservation/operation-key coordinator and asynchronous polling. Completed video appears in production review and the library. Real final cost stays unknown until verified; reservations are preserved for reconciliation. Mock output is clearly identified. Live Blob/Higgsfield integration remains unverified without credentials; the catalog contains recipes and requires the user's source video. Details: `docs/qa/2026-10-04-motion-recreation.md`.
 
 ## How generation works (`src/lib/generation.ts`)
