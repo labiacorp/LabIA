@@ -3,10 +3,8 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 
 import { cookies } from "next/headers";
-import { consentAcceptedNow, GOOGLE_TERMS_COOKIE } from "@/lib/consent";
-import { admitted, registerSignIn, REFERRAL_COOKIE } from "@/lib/referrals";
+import { registerSignIn, REFERRAL_COOKIE } from "@/lib/referrals";
 import { z } from "zod";
-import { gateMode, grantPass } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/password";
 import { clearHits, clientIp, hit } from "@/lib/rate-limit";
@@ -26,16 +24,6 @@ declare module "@auth/core/jwt" {
     authMethod?: string;
     authAt?: number;
   }
-}
-
-// Optional extra restriction on top of the access code: when ALLOWED_EMAILS is set, only those e-mails get in.
-export function isAllowed(email?: string | null) {
-  if (!email) return false;
-  const allowed = (process.env.ALLOWED_EMAILS ?? "")
-    .split(",")
-    .map((item) => item.trim().toLowerCase())
-    .filter(Boolean);
-  return allowed.length === 0 || allowed.includes(email.toLowerCase());
 }
 
 // Open to everyone by default. LABIA_CLOSED=1 closes production to the public: only owner accounts (granted
@@ -76,7 +64,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       authorize: async (credentials) => {
         const email = String(credentials?.email ?? "").trim().toLowerCase();
         const password = String(credentials?.password ?? "");
-        if (!z.email().safeParse(email).success || !password || !isAllowed(email))
+        if (!z.email().safeParse(email).success || !password)
           return null;
         // Enforced here, not in the form action, so a direct hit on /api/auth/* is limited too.
         const ip = await clientIp();
@@ -101,7 +89,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               const email = String(credentials?.email ?? "")
                 .trim()
                 .toLowerCase();
-              return z.email().safeParse(email).success && isAllowed(email)
+              return z.email().safeParse(email).success
                 ? { id: email, email }
                 : null;
             },
@@ -116,16 +104,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (google && profile?.email_verified !== true) return false;
         return isOwnerAccount(google ? profile?.email : user.email, google ? account.providerAccountId : undefined);
       }
-      // The access code (or an invite link) guards every entry point, including a direct hit on /api/auth/*.
-      if (!(await admitted())) return false;
+      // Open sign-in: the same rules for everyone (no access code, invite or e-mail list).
       if (account?.provider === "google") {
-        if (profile?.email_verified !== true || !isAllowed(profile.email)) return false;
+        if (profile?.email_verified !== true) return false;
         // An address already bound to another Google account is not taken over by this one.
         const bound = await prisma.user.findUnique({ where: { email: profile.email!.toLowerCase() }, select: { googleSub: true } });
         const subOwner = await prisma.user.findUnique({ where: { googleSub: account.providerAccountId }, select: { id: true } });
         return !bound?.googleSub || bound.googleSub === account.providerAccountId || subOwner !== null;
       }
-      return (devLogin || account?.provider === "password") && isAllowed(user.email);
+      return devLogin || account?.provider === "password";
     },
     async jwt({ token, user, account }) {
       if (user?.email) {
@@ -134,11 +121,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           (await cookies()).get(REFERRAL_COOKIE)?.value,
           account?.provider === "google" ? account.providerAccountId : undefined,
         );
-        // Accepted on the login page before the Google round trip (see loginGoogle): record it on the account.
-        if (account?.provider === "google" && (await cookies()).get(GOOGLE_TERMS_COOKIE)?.value === "1")
-          await prisma.user.updateMany({ where: { id: row.id, consentAcceptedAt: null }, data: consentAcceptedNow() });
-        // Whoever got in keeps a pass, so an invited account does not need the code next time.
-        if (gateMode() === "on") await grantPass();
         token.uid = row.id;
         token.tokenVersion = row.tokenVersion;
         token.authMethod = account?.provider;

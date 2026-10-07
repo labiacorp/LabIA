@@ -124,7 +124,7 @@ export function Landing({ numbers, open }: { numbers: LandingNumbers; open: bool
         )}
         <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
           {open ? <Link href="/login" className="lp-nav" style={{ ...pill({ height: 44, padding: "0 14px", fontSize: 15, fontWeight: 500 }), color: T.ink, textDecoration: "none" }}>Entrar</Link> : null}
-          {open ? <Link href="/login" style={ctaLight} onClick={() => track("landing_cta", { place: "header" })}>Criar conta</Link> : null}
+          {open ? <Link href="/criar-conta" style={ctaLight} onClick={() => track("landing_cta", { place: "header" })}>Criar conta</Link> : null}
         </span>
       </header>
 
@@ -279,7 +279,7 @@ export function Landing({ numbers, open }: { numbers: LandingNumbers; open: bool
           <div style={{ display: "flex", flexDirection: "column", fontSize: 15, borderTop: `1px solid ${T.line}` }}>
             {[["Créditos por mês", cr(plan)], ["Vídeos de 15s, mais ou menos", String(reels)], ["Cancelamento", "quando quiser"]].map(([a, b]) => <div key={a} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "12px 0", borderBottom: `1px solid ${T.line}` }}><span style={{ color: T.ink2 }}>{a}</span><span style={{ fontFamily: /\d/.test(b) ? mono : undefined }}>{b}</span></div>)}
           </div>
-          {open ? <Link href="/login" onClick={() => track("landing_cta", { place: "plan" })} style={{ ...pill({ height: 56, justifyContent: "center", background: T.ink, color: T.bg, fontWeight: 600, fontSize: 16 }), textDecoration: "none" }}>Criar conta</Link> : null}
+          {open ? <Link href="/criar-conta" onClick={() => track("landing_cta", { place: "plan" })} style={{ ...pill({ height: 56, justifyContent: "center", background: T.ink, color: T.bg, fontWeight: 600, fontSize: 16 }), textDecoration: "none" }}>Criar conta</Link> : null}
         </div>
       </section>
 
@@ -350,7 +350,7 @@ export function Landing({ numbers, open }: { numbers: LandingNumbers; open: bool
       {open ? <section id="comecar" style={{ borderTop: `1px solid ${T.line}`, padding: "clamp(80px,12vw,160px) clamp(16px,4vw,40px)", display: "flex", flexDirection: "column", alignItems: "center", gap: 32, textAlign: "center" }}>
         <Wordmark size="clamp(96px,20vw,280px)" />
         <p style={{ margin: 0, fontSize: "clamp(17px,2vw,20px)", lineHeight: 1.5, color: T.ink2, maxWidth: 520 }}>Crie sua conta e comece pela sua primeira influencer.</p>
-        <Link href="/login" onClick={() => track("landing_cta", { place: "final" })} style={{ ...ctaLight, height: 56, padding: "0 28px", fontSize: 16 }}>Criar conta</Link>
+        <Link href="/criar-conta" onClick={() => track("landing_cta", { place: "final" })} style={{ ...ctaLight, height: 56, padding: "0 28px", fontSize: 16 }}>Criar conta</Link>
       </section> : null}
 
       <footer style={{ borderTop: `1px solid ${T.line}`, padding: "28px clamp(16px,4vw,40px)", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px 20px", fontSize: 14, color: T.ink2 }}>

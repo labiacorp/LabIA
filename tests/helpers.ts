@@ -45,8 +45,8 @@ export async function signInDev(page: Page, email: string) {
 
 // What a Google-created account sees once: no sign-up form ever asked it.
 export async function acceptConsent(page: Page) {
-  await page.getByRole("checkbox").check();
-  await page.getByRole("button", { name: "Continuar" }).click();
+  for (const box of await page.getByRole("checkbox").all()) await box.check();
+  await page.getByRole("button", { name: "Concordar e continuar" }).click();
   await expect(page).toHaveURL(/\/painel/);
   // Wait for the panel to render: navigating away while the action's redirect is still landing
   // gets overridden by it.
