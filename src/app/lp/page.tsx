@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { Landing } from "./landing";
+import { accessOpen } from "@/auth";
 import { refreshRate } from "@/lib/fx";
 import { estimateReel } from "@/lib/content-plan";
 import { costCredits, PLAN_CREDITS, planPriceText } from "@/lib/plan";
@@ -19,5 +20,5 @@ export default async function LandingPage() {
   const { perStep } = estimateReel();
   const image = costCredits(perStep.IMAGE ?? 0);
   const video = costCredits(perStep.VIDEO ?? 0);
-  return <Landing numbers={{ price: planPriceText(), plan: PLAN_CREDITS, image, video, reels: Math.floor(PLAN_CREDITS / (image + video)) }} />;
+  return <Landing open={accessOpen()} numbers={{ price: planPriceText(), plan: PLAN_CREDITS, image, video, reels: Math.floor(PLAN_CREDITS / (image + video)) }} />;
 }

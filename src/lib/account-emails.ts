@@ -26,3 +26,4 @@ export async function sendEmailChangeConfirm(to: string, token: string) {
 export async function sendEmailChangedNotice(to: string, newEmail: string) {
   await sendEmail({ to, subject: "O e-mail da sua conta LabIA mudou", ...emailBody([`O e-mail de acesso da sua conta LabIA agora é ${newEmail}.`, "Se não foi você, responda a este e-mail ou fale com a equipe imediatamente."]) });
 }
+

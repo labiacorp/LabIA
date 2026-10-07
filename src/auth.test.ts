@@ -87,8 +87,8 @@ describe("password sign-in", () => {
   });
 });
 
-describe("closed to the public in production", () => {
-  beforeEach(() => { vi.clearAllMocks(); vi.stubEnv("NODE_ENV", "production"); });
+describe("closed to the public in production (LABIA_CLOSED=1)", () => {
+  beforeEach(() => { vi.clearAllMocks(); vi.stubEnv("NODE_ENV", "production"); vi.stubEnv("LABIA_CLOSED", "1"); });
   const signIn = (args: object) => mocks.config.callbacks!.signIn!(args as never);
   it("lets an owner in through Google or password, and nobody else", async () => {
     mocks.findFirst.mockResolvedValueOnce({ id: "owner" });
@@ -99,6 +99,12 @@ describe("closed to the public in production", () => {
     mocks.findFirst.mockResolvedValueOnce(null);
     expect(await signIn({ account: { provider: "password" }, user: { email: "stranger@x.com" } })).toBe(false);
     expect(await signIn({ account: { provider: "google", providerAccountId: "g1" }, profile: { email: "owner@x.com", email_verified: false }, user: {} })).toBe(false);
+    vi.unstubAllEnvs();
+  });
+  it("is open by default in production", async () => {
+    vi.stubEnv("LABIA_CLOSED", "");
+    const { accessOpen } = await import("./auth");
+    expect(accessOpen()).toBe(true);
     vi.unstubAllEnvs();
   });
 });

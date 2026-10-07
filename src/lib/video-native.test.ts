@@ -18,6 +18,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: boundary.prisma }));
 vi.mock("@fal-ai/client", () => ({ fal: { config: boundary.sdk.config, queue: boundary.sdk } }));
 
 import { collectRunning, quote } from "./generation";
+import { chargeBrl } from "./plan";
 import { getBalanceBrl } from "./ledger";
 import { MockProvider } from "./providers/mock";
 import { METADATA_MODEL } from "./providers/ffmpeg";
@@ -124,9 +125,9 @@ describe("native video lifecycle without a database or provider network", () => 
     { selection: seedance, reservation: 12.771, measured: 14.9766 }, // 1280 * 720 * 6 * 24 / 1024 / 1000 * $0.0214 * R$5.4
   ])("settles one $selection.model clip with the reserved rate and reuses it for assembly", async ({ selection, reservation, measured }) => {
     const requests = vi.spyOn(MockProvider.prototype, "generate");
-    expect(estimate(selection)).toBe(reservation);
+    expect(estimate(selection)).toBe(chargeBrl(reservation)); // reserved in whole credits
     expect(await start(selection)).toEqual({ started: 1 });
-    expect(await getBalanceBrl(fixture.owner.userId)).toBeCloseTo(30 - reservation, 4);
+    expect(await getBalanceBrl(fixture.owner.userId)).toBeCloseTo(30 - chargeBrl(reservation), 4);
 
     // Changing the current conversion rate after reservation must not reprice a job.
     vi.stubEnv("USD_BRL_RATE", "9"); vi.stubEnv("FAL_MOCK_VIDEO_DURATION", "6");
@@ -140,7 +141,7 @@ describe("native video lifecycle without a database or provider network", () => 
     const videoAssets = fixture.assets.filter((asset) => asset.stepId === "video");
     expect(videoAssets).toHaveLength(1);
     expect(videoAssets[0]).toMatchObject({ durationSec: 6, width: 1280, height: 720 });
-    expect(await getBalanceBrl(fixture.owner.userId)).toBeCloseTo(30 - measured, 4);
+    expect(await getBalanceBrl(fixture.owner.userId)).toBeCloseTo(30 - chargeBrl(measured), 4); // settled in whole credits; actualCostBrl keeps the raw cost
     expect(requests.mock.calls.map(([model]) => model)).toEqual([selection.model, METADATA_MODEL]);
 
     const ledgerBeforeAssembly = structuredClone(fixture.ledger);
@@ -185,7 +186,7 @@ describe("native video lifecycle without a database or provider network", () => 
     expect(await start()).toEqual({ started: 1 });
     expect(await start()).toEqual({ started: 0 });
     expect(fixture.ledger.filter((entry) => entry.reason === "SPEND")).toHaveLength(1);
-    expect(await getBalanceBrl(fixture.owner.userId)).toBeCloseTo(29.136, 4);
+    expect(await getBalanceBrl(fixture.owner.userId)).toBeCloseTo(30 - chargeBrl(0.864), 4);
     expect(requests).toHaveBeenCalledTimes(1);
   });
 
@@ -195,7 +196,7 @@ describe("native video lifecycle without a database or provider network", () => 
     vi.stubEnv("FAL_MOCK_METADATA_FAIL", "1");
     for (let attempt = 0; attempt < 3; attempt++) await poll();
     expect(fixture.video).toMatchObject({ status: "FAILED", submissionState: "cost_unknown" });
-    expect(await getBalanceBrl(fixture.owner.userId)).toBeCloseTo(17.229, 4);
+    expect(await getBalanceBrl(fixture.owner.userId)).toBeCloseTo(30 - chargeBrl(12.771), 4);
     expect(fixture.ledger.filter((entry) => entry.reason === "REFUND")).toHaveLength(0);
     await expect(startAssembly({ ...fixture.owner, intentId: "assembly-intent", expectedBrl: 0 })).rejects.toThrow(/Conclua/);
     expect(fixture.assembly.status).toBe("PENDING");
@@ -211,7 +212,7 @@ describe("native video lifecycle without a database or provider network", () => 
     await start();
     for (let attempt = 0; attempt < 3; attempt++) await poll();
     expect(fixture.video).toMatchObject({ status: "FAILED", submissionState: "cost_unknown", actualCostBrl: null });
-    expect(await getBalanceBrl(fixture.owner.userId)).toBeCloseTo(29.136, 4);
+    expect(await getBalanceBrl(fixture.owner.userId)).toBeCloseTo(30 - chargeBrl(0.864), 4);
     expect(fixture.ledger.filter((entry) => entry.reason === "REFUND")).toHaveLength(0);
     expect(fixture.assets.filter((asset) => asset.stepId === "video")).toHaveLength(0);
     await poll();

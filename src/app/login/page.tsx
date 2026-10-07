@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { accessOpen, auth } from "@/auth";
+import { gateMode, hasPass } from "@/lib/access";
 import { admitted } from "@/lib/referrals";
 import { googleConfigured, loginErrorMessage } from "@/lib/auth-config";
 import { emailEnabled } from "@/lib/email";
@@ -23,13 +24,17 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string; aviso?: string }>;
 }) {
   if ((await auth())?.user) redirect("/painel");
-  if (!(await admitted())) redirect("/acesso");
+  // Closed to the public: the sign-in form exists only for whoever entered the team code at /acesso.
+  // Without LABIA_ACCESS_CODE there is no way in (fails closed), and a referral link is not enough.
+  if (!accessOpen()) {
+    if (gateMode() !== "on" || !(await hasPass())) redirect("/");
+  } else if (!(await admitted())) redirect("/acesso");
   const enabled = googleConfigured();
   const { error, aviso } = await searchParams;
   const message = loginErrorMessage(error);
   const notice = aviso ? notices[aviso] : undefined;
   return (
-    <AuthShell title="Entrar" description="Cada geração mostra o custo antes de você confirmar. Pague só pelo que usar.">
+    <AuthShell title="Entrar" description={accessOpen() ? "Entre na sua conta." : "Acesso da equipe."}>
       {message ? <Alert variant="error" title={message} /> : null}
       {notice ? <Alert variant="success" title={notice} /> : null}
       <PasswordLogin signup={emailEnabled()} />
@@ -45,9 +50,6 @@ export default async function LoginPage({
         </Alert>
       ) : null}
       {process.env.NODE_ENV === "development" ? <DevelopmentLogin /> : null}
-      <p className="text-body-sm text-lab-text-dim">
-        Beta fechada · use a conta que recebeu acesso.
-      </p>
       <p className="text-body-sm text-lab-text-dim">
         <Link href="/termos" className="underline">Termos de Uso</Link> · <Link href="/privacidade" className="underline">Política de Privacidade</Link>
       </p>
