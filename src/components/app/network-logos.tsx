@@ -34,10 +34,10 @@ const MARKS: Record<NetworkId, Mark> = {
     svg: <path {...white} d={INSTAGRAM_PATH} />,
   },
   TIKTOK: { tile: "bg-black", svg: <path {...white} d={TIKTOK_PATH} /> },
-  LINKEDIN: { tile: "bg-[#0A66C2]", svg: <path {...white} d={LINKEDIN_PATH} /> },
+  LINKEDIN: { tile: "bg-white ring-black/15", svg: <path fill="#0A66C2" d={LINKEDIN_PATH} /> },
   THREADS: { tile: "bg-black", svg: <path {...white} d={THREADS_PATH} /> },
   YOUTUBE: { tile: "bg-[#FF0000]", svg: <path {...white} d={YOUTUBE_PATH} /> },
-  FACEBOOK: { tile: "bg-[#1877F2]", svg: <path {...white} d={FACEBOOK_PATH} /> },
+  FACEBOOK: { tile: "bg-white ring-black/15", svg: <path fill="#1877F2" d={FACEBOOK_PATH} /> },
   BLUESKY: { tile: "bg-[#1185FE]", svg: <path {...white} d={BLUESKY_PATH} /> },
 };
 
