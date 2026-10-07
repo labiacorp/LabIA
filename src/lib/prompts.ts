@@ -81,7 +81,11 @@ export function renderPrompt(key: PromptKey, vars: Record<string, string> = {}, 
 
 // Admin replacements, read on every generation start (a handful of rows).
 export async function loadPromptTemplates(): Promise<PromptTemplates> {
-  const rows = await prisma.promptOverride.findMany();
+  // A database that has not run the prompt_overrides migration yet must not stop generation: fall back to the defaults.
+  const rows = await prisma.promptOverride.findMany().catch((error: unknown) => {
+    console.error("[prompts] could not read overrides, using defaults", error instanceof Error ? error.message : error);
+    return [];
+  });
   const known = new Set<string>(PROMPT_KEYS);
   return Object.fromEntries(rows.filter((row) => known.has(row.key)).map((row) => [row.key, row.text]));
 }
