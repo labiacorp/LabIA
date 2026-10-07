@@ -13,8 +13,8 @@ const HOLD_AT = 100;
 const HOLD_MS = 600;
 const mono = "flex justify-between border-b border-lab-border py-2.5 font-mono text-body-sm";
 
-export function CostConfirm({ costBrl, balanceBrl, label, eyebrow, detail, disabled, pending }: {
-  costBrl: number | undefined; balanceBrl: number; label: string; eyebrow: string; detail: string; disabled?: boolean; pending?: boolean;
+export function CostConfirm({ costBrl, balanceBrl, label, eyebrow, detail, disabled, pending, variant = "primary" }: {
+  costBrl: number | undefined; balanceBrl: number; label: string; eyebrow: string; detail: string; disabled?: boolean; pending?: boolean; variant?: "primary" | "secondary";
 }) {
   const confirm = useRef<HTMLDialogElement>(null);
   const short = useRef<HTMLDialogElement>(null);
@@ -41,11 +41,13 @@ export function CostConfirm({ costBrl, balanceBrl, label, eyebrow, detail, disab
   return <>
     <button type="button" disabled={disabled || pending || credits === null} aria-busy={pending}
       onClick={() => { setArmed(false); (have < (credits ?? 0) ? short : confirm).current?.showModal(); }}
-      className="flex h-14 w-full items-center justify-between rounded-full bg-lab-reagent pl-[22px] pr-1.5 text-body font-semibold text-lab-on-reagent focus-visible:outline-none focus-visible:shadow-lab-focus disabled:bg-lab-surface-2 disabled:text-lab-text-disabled">
+      className={variant === "primary"
+        ? "flex h-14 w-full items-center justify-between rounded-full bg-lab-reagent pl-[22px] pr-1.5 text-body font-semibold text-lab-on-reagent focus-visible:outline-none focus-visible:shadow-lab-focus disabled:bg-lab-surface-2 disabled:text-lab-text-disabled"
+        : "flex h-[52px] w-full items-center justify-between rounded-full border-[1.5px] border-lab-border-strong pl-5 pr-1.5 text-[15px] font-semibold focus-visible:outline-none focus-visible:shadow-lab-focus disabled:text-lab-text-disabled"}>
       {pending ? "Enviando…" : label}
-      <span className="flex h-11 items-center rounded-full bg-lab-on-reagent px-3.5 font-mono text-[15px] text-lab-reagent-bright">{chip}</span>
+      <span className={variant === "primary" ? "flex h-11 items-center rounded-full bg-lab-on-reagent px-3.5 font-mono text-[15px] text-lab-reagent-bright" : "flex h-[38px] items-center rounded-full border-[1.5px] border-lab-reagent px-3 font-mono text-body-sm text-lab-reagent-bright"}>{chip}</span>
     </button>
-    {credits !== null && !team ? <span className="text-center font-mono text-caption text-lab-text-dim">créditos depois ~{Math.max(0, have - credits).toLocaleString("pt-BR")}</span> : null}
+    {credits !== null && !team && variant === "primary" ? <span className="text-center font-mono text-caption text-lab-text-dim">créditos depois ~{Math.max(0, have - credits).toLocaleString("pt-BR")}</span> : null}
 
     <Modal dialog={confirm} label={`Confirmar ${label.toLowerCase()}`}>
       <span className="font-mono text-caption uppercase tracking-[.08em] text-lab-text-dim">{eyebrow}</span>

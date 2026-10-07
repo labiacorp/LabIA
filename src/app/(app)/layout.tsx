@@ -49,7 +49,7 @@ export default async function AppLayout({
         owner={owner}
         lowAt={costCredits(estimateReel().totalBrl)}
         // One "Novo conteúdo" button: with no influencer yet it starts at creating one.
-        newContentHref={influencers ? "/conteudos/novo" : "/?criar=1"}
+        newContentHref={influencers ? "/conteudos/novo" : "/influenciadores/nova"}
       >
         <main id="app-content" className="mx-auto w-full max-w-wide px-4 pb-16 pt-6 md:px-8 md:pt-8">
           {children}

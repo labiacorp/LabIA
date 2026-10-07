@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { type CharacterCard, sheetItem } from "./character";
-import { collectRunning, quote, reconcileReservation, startPlan, UserError } from "./generation";
+import { collectRunning, type PlanItem, quote, reconcileReservation, startPlan, UserError } from "./generation";
 import { balanceCredits, costCredits } from "./plan";
 import { getBalanceBrl } from "./ledger";
 import { prisma } from "./prisma";
@@ -24,7 +24,7 @@ const sheetPlan = (prompt?: string) => {
   const item = sheetItem(card);
   return [prompt ? { ...item, params: { ...item.params, prompt } } : item];
 };
-const start = (who: { userId: string; influencerId: string }, plan = sheetPlan(), intentId: string = randomUUID(), expectedBrl = quote(plan).totalBrl) =>
+const start = (who: { userId: string; influencerId: string }, plan: PlanItem[] = sheetPlan(), intentId: string = randomUUID(), expectedBrl = quote(plan).totalBrl) =>
   startPlan({ ...who, intentId, plan, expectedBrl });
 const steps = (influencerId: string) => prisma.step.findMany({ where: { influencerId }, include: { assets: true } });
 
@@ -191,6 +191,21 @@ describe.skipIf(!process.env.DATABASE_URL)("character kit money path", () => {
     expect(check.rows).toBe(check.balance);
     expect(check.balance).toBe(200 - 13 - 9); // 10 reais, one sheet, one reconciled sheet; the refunded one nets zero
     expect(balanceCredits(await getBalanceBrl(who.userId))).toBe(check.balance);
+  });
+
+  it("runs the four face previews of one plan as four steps, each charged once", async () => {
+    const who = await seed(10);
+    const { previewItems } = await import("./character");
+    const plan = previewItems({ name: card.name, role: card.role, visualSignature: card.visualSignature });
+    const intentId = randomUUID();
+    expect((await start(who, plan, intentId)).started).toBe(4);
+    expect((await start(who, plan, intentId)).started).toBe(0); // same intent again: nothing new
+    const previews = await steps(who.influencerId);
+    expect(previews).toHaveLength(4);
+    expect(previews.every((step) => step.role === null && step.kind === "CHARACTER")).toBe(true);
+    await collectRunning(who.userId, who.influencerId);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - quote(plan).totalBrl, 4);
+    expect((await prisma.influencer.findUniqueOrThrow({ where: { id: who.influencerId } })).faceAssetId).toBeNull(); // nothing approved yet
   });
 
   it("does not let another user collect or see someone else's jobs", async () => {
