@@ -1,57 +1,18 @@
 "use client";
 
-import { useActionState, useId } from "react";
+import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
-import { Field, Textarea } from "@/components/ui/field";
+import { Textarea } from "@/components/ui/field";
 import { saveScript } from "./management-actions";
-export function ScriptForm({
-  influencerId,
-  contentId,
-  script,
-}: {
-  influencerId: string;
-  contentId: string;
-  script: string;
-}) {
-  const id = useId();
-  const [state, action, pending] = useActionState(
-    saveScript.bind(null, influencerId, contentId),
-    { error: "", message: "" },
-  );
+
+// Roteiro is free: written here, saved without a cost confirm, and suggested to the next stages.
+export function ScriptForm({ influencerId, contentId, script }: { influencerId: string; contentId: string; script: string }) {
+  const [state, action, pending] = useActionState(saveScript.bind(null, influencerId, contentId), { error: "", message: "" });
   return (
-    <form action={action} className="mt-4 grid gap-3">
-      <Field
-        label="Roteiro e direção da cena"
-        htmlFor={id}
-        description="Escreva o roteiro sem custo. Ele será sugerido nas próximas gerações; arquivos existentes não são alterados."
-      >
-        <Textarea
-          id={id}
-          name="script"
-          defaultValue={script}
-          rows={5}
-          maxLength={2000}
-          required
-          className="font-sans text-body-sm"
-        />
-      </Field>
-      <Button
-        type="submit"
-        size="lg"
-        variant="secondary"
-        loading={pending}
-        className="justify-self-start"
-      >
-        Salvar roteiro
-      </Button>
-      {state.error || state.message ? (
-        <p
-          role={state.error ? "alert" : "status"}
-          className={`text-body-sm ${state.error ? "text-lab-danger" : "text-lab-success"}`}
-        >
-          {state.error || state.message}
-        </p>
-      ) : null}
+    <form action={action} className="flex flex-col gap-3">
+      <Textarea aria-label="Roteiro" name="script" defaultValue={script} rows={6} maxLength={2000} required placeholder="O que ela fala e o que acontece em cena, em até 15 segundos." className="font-sans text-body-sm" />
+      <Button type="submit" className="h-14 w-full text-body" loading={pending}>Salvar roteiro · grátis</Button>
+      {state.error ? <p role="alert" className="text-body-sm text-lab-danger">{state.error}</p> : null}
     </form>
   );
 }

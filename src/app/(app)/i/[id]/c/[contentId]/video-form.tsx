@@ -1,16 +1,13 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { CostConfirm } from "@/components/app/cost-confirm";
+import { Textarea } from "@/components/ui/field";
 import { track } from "@/lib/track";
-import { CostChip } from "@/components/ui/cost-chip";
-import { Field, Select, Textarea } from "@/components/ui/field";
 import type { ContentState } from "./actions";
-
-import { costText, DEFAULT_VIDEO, rateText } from "@/lib/plan";
-const totalPrice = { format: costText };
+import { pill } from "./scene-form";
+import { DEFAULT_VIDEO, rateText } from "@/lib/plan";
 const perSecond = { format: rateText };
 
 export type VideoFormOption = {
@@ -38,9 +35,10 @@ type VideoFormProps = {
   balanceBrl: number;
   blockedReason?: string;
   options: VideoFormOption[];
+  label?: string;
 };
 
-export function VideoForm({ action, intent, prompt, balanceBrl, blockedReason, options }: VideoFormProps) {
+export function VideoForm({ action, intent, prompt, balanceBrl, blockedReason, options, label = "Gerar vídeo" }: VideoFormProps) {
   const [state, formAction, pending] = useActionState(action, {});
 
   const [quality, setQuality] = useState<string>(DEFAULT_VIDEO.resolution);
@@ -68,7 +66,6 @@ export function VideoForm({ action, intent, prompt, balanceBrl, blockedReason, o
   const audioConfigurations = configurations.filter((item) => item.duration === configuration?.duration && item.resolution === configuration?.resolution);
   const canChooseAudio = configurations.some((item) => item.audio) && configurations.some((item) => !item.audio);
   const sameAudioEstimate = canChooseAudio && audioConfigurations.some((item) => item.audio) && audioConfigurations.some((item) => !item.audio) && new Set(audioConfigurations.map((item) => item.brl)).size === 1;
-  const insufficientBalance = !!configuration && balanceBrl + 1e-9 < configuration.brl;
   const unavailable = !option || !configuration;
   const pricing = option?.pricing;
   function qualityLabel(resolution: string) {
@@ -114,83 +111,38 @@ export function VideoForm({ action, intent, prompt, balanceBrl, blockedReason, o
   }
 
   return (
-    <form action={formAction} className="mt-4 grid min-w-0 gap-3" aria-busy={pending}>
+    <form action={formAction} onSubmit={() => track("generate_clicked", { kind: "video", estimate_brl: configuration?.brl ?? 0 })} className="flex min-w-0 flex-col gap-3.5" aria-busy={pending}>
       <input type="hidden" name="intent" value={intent} />
       <input type="hidden" name="expectedBrl" value={configuration?.brl ?? ""} />
       <input type="hidden" name="strategy" value={option?.strategy ?? ""} />
       <input type="hidden" name="model" value={option?.model ?? ""} />
       <input type="hidden" name="generateAudio" value={configuration?.audio ? "true" : "false"} />
       <input type="hidden" name="resolution" value={configuration?.resolution ?? ""} />
-      <Field label="Modelo de vídeo" htmlFor="video-model" description={option?.notice}>
-        <Select
-          id="video-model"
-          className="h-11 min-w-0"
-          value={option?.key ?? ""}
-          onChange={(event) => chooseModel(event.target.value)}
-          disabled={pending || availableOptions.length === 0}
-          aria-describedby={option?.notice ? "video-model-description" : undefined}
-        >
+      <input type="hidden" name="duration" value={configuration?.duration ?? ""} />
+      <div className="flex flex-wrap gap-1.5">
+        <select aria-label="Modelo de vídeo" className={pill} value={option?.key ?? ""} onChange={(event) => chooseModel(event.target.value)} disabled={pending || availableOptions.length === 0}>
           {availableOptions.length === 0 ? <option value="">Nenhum modelo disponível</option> : null}
           {availableOptions.map((item) => <option key={item.key} value={item.key} disabled={item.configurations.length === 0}>{item.name}</option>)}
-        </Select>
-      </Field>
-      {option?.strategy === "clip" && configuration ? <>
-          {canChooseAudio ? (
-            <label htmlFor="video-audio" className="flex min-h-11 cursor-pointer items-center gap-3 text-body-sm text-lab-text">
-              <input id="video-audio" type="checkbox" className="size-5 accent-lab-reagent focus-visible:outline-2 focus-visible:outline-offset-2" checked={configuration?.audio ?? false} onChange={(event) => chooseAudio(event.target.checked)} disabled={pending} />
-              <span>Gerar áudio{sameAudioEstimate ? <span className="ml-2 text-caption text-lab-text-dim">· mesma estimativa</span> : null}</span>
-            </label>
-          ) : <p className="text-caption text-lab-text-dim">{configuration?.audio ? "Áudio incluído" : "Áudio não disponível nesta opção"}</p>}
-      </> : null}
-      <Field label="Qualidade" htmlFor="video-quality">
-        <Select id="video-quality" className="h-11" value={quality} onChange={(event) => chooseQuality(event.target.value)} disabled={pending}>
+        </select>
+        <select aria-label="Qualidade do vídeo" className={pill} value={quality} onChange={(event) => chooseQuality(event.target.value)} disabled={pending}>
           {qualities.map((value) => <option key={value} value={value}>{qualityLabel(value)}</option>)}
-        </Select>
-      </Field>
-
-      {configuration && pricing?.baseFeesBrl?.[configuration.resolution] ? <p className="text-caption text-lab-text-dim">+ {totalPrice.format(pricing.baseFeesBrl[configuration.resolution])} por geração.</p> : null}
-      {pricing?.imageFeeBrl ? <p className="text-caption text-lab-text-dim">+ {perSecond.format(pricing.imageFeeBrl)} por imagem de entrada.</p> : null}
-      {pricing ? <details className="text-caption text-lab-text-dim"><summary className="cursor-pointer">Detalhes do preço</summary>
-        <p className="mt-2">{pricing.perClip ? "Cobrança por clipe; o valor por segundo é um equivalente." : pricing.approximate ? "Valor por segundo aproximado; depende dos pixels e da duração." : "Tarifa para a qualidade e áudio selecionados."} <a href={pricing.source} target="_blank" rel="noreferrer" className="underline">Fonte fal.ai</a> · Conferido em {pricing.checkedOn.split("-").reverse().join("/")}.</p>
-      </details> : null}
-      {option?.strategy === "clip" && configuration ? (
-        <>
-          <div className="grid min-w-0 gap-3">
-            <Field label="Duração" htmlFor="video-duration">
-              <input type="hidden" name="duration" value={configuration.duration} />
-              <div className="flex items-baseline justify-between gap-3" aria-live="polite" aria-atomic="true">
-                <span className="text-body-sm text-lab-text">{configuration.duration}s</span>
-                <span className="text-body-sm text-lab-text"><span className="text-lab-text-dim">Total estimado </span>{totalPrice.format(configuration.brl)}</span>
-              </div>
-              {durations.length > 1 ? <>
-                <input id="video-duration" type="range" min={0} max={durations.length - 1} step={1}
-                  value={durations.indexOf(configuration.duration)}
-                  aria-valuetext={`${configuration.duration} segundos, total estimado ${totalPrice.format(configuration.brl)}`}
-                  className="h-11 w-full cursor-pointer accent-lab-reagent focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed"
-                  onChange={(event) => chooseDuration(durations[Number(event.target.value)])} disabled={pending} />
-                <div className="flex justify-between text-caption text-lab-text-dim" aria-hidden="true"><span>{durations[0]}s</span><span>{durations[durations.length - 1]}s</span></div>
-              </> : <p id="video-duration" className="text-caption text-lab-text-dim">Duração disponível nesta configuração.</p>}
-
-            </Field>
-          </div>
-
-        </>
-      ) : (
-        <>
-          <input type="hidden" name="duration" value={configuration?.duration ?? ""} />
-        </>
-      )}
-      <Field label="Movimento e ação" htmlFor="video-prompt" description="Descreva o que acontece no vídeo. A imagem desta etapa será usada como referência.">
-        <Textarea id="video-prompt" name="prompt" defaultValue={prompt} required maxLength={2000} disabled={pending} aria-describedby="video-prompt-description" />
-      </Field>
-      {blockedReason || insufficientBalance ? <Alert variant="warning" title={blockedReason ?? "Créditos insuficientes para esta configuração."}>{blockedReason ? null : <>Escolha uma opção mais barata ou <Link href="/saldo" className="underline">veja seu plano</Link>.</>}</Alert> : null}
-      <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" variant="cost" onClick={() => track("generate_clicked", { kind: "video", estimate_brl: configuration?.brl ?? 0 })} size="lg" loading={pending} disabled={!!blockedReason || unavailable || insufficientBalance}>Aprovar custo e gerar vídeo</Button>
-        <span aria-live="polite" aria-atomic="true">
-          <CostChip state={configuration ? "estimated" : "unavailable"} value={configuration?.brl} prefix="total estimado" />
-        </span>
+        </select>
+        {option?.strategy === "clip" && configuration && durations.length > 1 ? <select aria-label="Duração do vídeo" className={pill} value={configuration.duration} onChange={(event) => chooseDuration(Number(event.target.value))} disabled={pending}>
+          {durations.map((value) => <option key={value} value={value}>{value} segundos</option>)}
+        </select> : configuration ? <span className="flex h-8 items-center rounded-full bg-lab-surface-2 px-3 text-[13px]">{option?.strategy === "reel" ? "3 clipes de 5s" : `${configuration.duration} segundos`}</span> : null}
+        {option?.strategy === "clip" && configuration && canChooseAudio ? <label className={`${pill} flex cursor-pointer items-center gap-2`}>
+          <input type="checkbox" className="size-4 accent-lab-text" checked={configuration.audio} onChange={(event) => chooseAudio(event.target.checked)} disabled={pending} />Com áudio{sameAudioEstimate ? " · mesmo custo" : ""}
+        </label> : null}
+        <span className="flex h-8 items-center rounded-full bg-lab-surface-2 px-3 text-[13px]">a partir da imagem aprovada</span>
       </div>
+      {option?.notice ? <p className="text-caption text-lab-text-dim">{option.notice}</p> : null}
+      <details className="text-body-sm">
+        <summary className="min-h-11 cursor-pointer content-center text-lab-text-dim">Direção do movimento</summary>
+        <Textarea aria-label="Direção do movimento" name="prompt" defaultValue={prompt} required maxLength={2000} disabled={pending} className="mt-1" />
+      </details>
+      {blockedReason ? <Alert variant="warning" title={blockedReason} /> : null}
       {unavailable ? <p role="status" className="text-caption text-lab-warning">Nenhuma configuração de vídeo disponível.</p> : null}
+      <CostConfirm costBrl={configuration?.brl} balanceBrl={balanceBrl} label={label} eyebrow={`Confirmar vídeo · ${option?.name ?? ""}`} detail={`previstos para ${configuration?.duration ?? 15} segundos de vídeo`} disabled={!!blockedReason || unavailable} pending={pending} />
       {state.error ? <Alert variant="error" title={state.error} /> : null}
     </form>
   );

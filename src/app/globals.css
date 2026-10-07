@@ -319,8 +319,6 @@ button:not(:disabled),summary { cursor:pointer; }
 
 /* Início + cards de produção (Corte) */
 .lp-eyebrow { font-family: var(--font-mono), monospace; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--lab-text-dim); }
-.home-production-card { display:flex; flex-direction:column; overflow:hidden; border-radius:var(--lab-radius-card,20px); background:var(--lab-surface-1); box-shadow:inset 0 0 0 1px var(--lab-border); transition:box-shadow 200ms; }
-.home-production-card:hover { box-shadow:inset 0 0 0 1.5px var(--lab-border-strong); }
 .home-production-preview { position:relative; display:grid; place-items:center; aspect-ratio:4/5; color:var(--lab-text-muted); background:repeating-linear-gradient(135deg,var(--lab-surface-2) 0 8px,#26262A 8px 16px); }
 .home-production-preview img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .home-production-preview span { position:absolute; left:10px; top:10px; z-index:1; display:flex; align-items:center; height:26px; padding:0 10px; border-radius:999px; background:rgba(11,11,12,.8); font-size:12px; font-weight:500; color:var(--lab-text); }

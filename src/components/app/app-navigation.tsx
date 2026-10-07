@@ -29,7 +29,7 @@ const profile: NavItem[] = [
   { href: "/saldo", label: "Saldo e extrato", icon: Receipt, money: true },
   { href: "/termos", label: "Termos e privacidade", icon: FileText },
 ];
-const crumbs: [string, string][] = [["/i/", "Influencers"], ["/influencers", "Influencers"], ["/conteudos/novo", "Conteúdos / Novo"], ["/conta/seguranca", "Conta e segurança"], ["/conta", "Perfil"]];
+const crumbs: [RegExp, string][] = [[/^\/i\/[^/]+\/c\//, "Conteúdos"], [/^\/i\//, "Influencers"], [/^\/influencers/, "Influencers"], [/^\/conteudos\/novo/, "Conteúdos / Novo"], [/^\/conta\/seguranca/, "Conta e segurança"], [/^\/conta/, "Perfil"]];
 const focus = "focus-visible:outline-none focus-visible:shadow-lab-focus";
 const wordmark = (size: string) => <span className={`lab-wordmark ${size} leading-none`}>Lab<span>I</span>A</span>;
 
@@ -45,7 +45,7 @@ export function AppNavigation({ name, email, balance, lowAt, newContentHref, ava
   const tone = credits === null ? "text-lab-text-muted border-lab-border-strong" : credits === 0 ? "text-lab-danger border-lab-danger" : credits < lowAt ? "text-lab-warning border-lab-warning" : "text-lab-reagent-bright border-lab-reagent";
   const active = (href: string) => pathname === href || (href !== "/painel" && pathname.startsWith(href));
   const visible = [...main, ...footer].filter((i) => !i.admin || owner);
-  const crumb = visible.find((i) => active(i.href))?.label ?? crumbs.find(([prefix]) => pathname.startsWith(prefix))?.[1] ?? "Início";
+  const crumb = crumbs.find(([pattern]) => pattern.test(pathname))?.[1] ?? visible.find((i) => active(i.href))?.label ?? "Início";
   const close = () => sheet.current?.close();
 
   const row = (item: NavItem, big = false) => (

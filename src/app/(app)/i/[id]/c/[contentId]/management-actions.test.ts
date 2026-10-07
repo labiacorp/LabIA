@@ -4,15 +4,21 @@ const mocks = vi.hoisted(() => ({
   find: vi.fn(),
   step: vi.fn(),
   review: vi.fn(),
+  stepKind: vi.fn(),
+  contentUpdate: vi.fn(),
+  deleteMany: vi.fn(),
+  redirect: vi.fn(),
 }));
+vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 vi.mock("@/lib/session", () => ({ requireUserId: mocks.userId }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     $transaction: async (callback: (tx: unknown) => unknown) =>
       callback({
-        content: { findFirst: mocks.find },
-        step: { updateMany: mocks.step },
+        content: { findFirst: mocks.find, update: mocks.contentUpdate, deleteMany: mocks.deleteMany },
+        step: { updateMany: mocks.step, findUniqueOrThrow: mocks.stepKind },
+        $queryRaw: vi.fn(),
       }),
     content: { updateMany: mocks.review },
   },
@@ -20,7 +26,7 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("@/lib/generation", () => ({
   UserError: class UserError extends Error {},
 }));
-import { saveScript, reviewContent, updateBrief } from "./management-actions";
+import { saveScript, reviewContent, approveStep, deleteContent } from "./management-actions";
 const previous = { error: "", message: "" };
 const form = (field: string, value: string) => {
   const data = new FormData();
@@ -86,7 +92,7 @@ describe("production management", () => {
     expect(where.influencer).toEqual({ userId: "owner" });
     expect(where.steps.some).toEqual({
       kind: "ASSEMBLY",
-      status: "DONE",
+      status: { in: ["DONE", "APPROVED"] },
       assets: { some: { kind: "VIDEO", userId: "owner" } },
     });
     expect(where.steps.none).toEqual({ status: "RUNNING" });
@@ -117,42 +123,30 @@ describe("production management", () => {
   });
 });
 
-describe("brief editing", () => {
-  beforeEach(() => {
-    vi.resetAllMocks();
+describe("stage actions", () => {
+  beforeEach(() => vi.resetAllMocks());
+  it("approves only a finished take of owned content; the montage also approves the content", async () => {
     mocks.userId.mockResolvedValue("owner");
-    mocks.review.mockResolvedValue({ count: 1 });
+    mocks.step.mockResolvedValue({ count: 1 });
+    mocks.stepKind.mockResolvedValue({ kind: "VIDEO" });
+    expect(await approveStep("influencer", "content", "step")).toEqual(previous);
+    expect(mocks.step).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ status: "DONE", submissionState: "completed", content: expect.objectContaining({ influencer: { userId: "owner" } }) }) }));
+    expect(mocks.contentUpdate).not.toHaveBeenCalled();
+    mocks.stepKind.mockResolvedValue({ kind: "ASSEMBLY" });
+    await approveStep("influencer", "content", "step");
+    expect(mocks.contentUpdate).toHaveBeenCalledWith({ where: { id: "content" }, data: { status: "APPROVED" } });
+    mocks.step.mockResolvedValue({ count: 0 });
+    expect((await approveStep("influencer", "content", "step")).error).toMatch(/não pode ser aprovada/);
   });
-  it("uses authenticated ownership and blocks running production in the write itself", async () => {
-    const data = form("title", "  Novo título  ");
-    data.set("idea", "Ideia");
-    data.set("userId", "foreign");
-    expect(
-      (await updateBrief("character", "content", previous, data)).error,
-    ).toBe("");
-    expect(mocks.review).toHaveBeenCalledWith({
-      where: {
-        archivedAt: null,
-        id: "content",
-        influencerId: "character",
-        influencer: { userId: "owner" },
-        steps: { none: { status: "RUNNING" } },
-      },
-      data: { title: "Novo título", idea: "Ideia" },
-    });
-  });
-  it("rejects unavailable content and invalid input", async () => {
-    const data = form("title", "Título");
-    data.set("idea", "");
-    mocks.review.mockResolvedValue({ count: 0 });
-    expect(
-      (await updateBrief("character", "content", previous, data)).error,
-    ).toContain("indisponível");
-    mocks.review.mockClear();
-    data.set("title", "x".repeat(121));
-    expect(
-      (await updateBrief("character", "content", previous, data)).error,
-    ).toContain("120");
-    expect(mocks.review).not.toHaveBeenCalled();
+  it("deletes owned content with nothing running and refuses while a reservation is open", async () => {
+    mocks.userId.mockResolvedValue("owner");
+    mocks.deleteMany.mockResolvedValue({ count: 1 });
+    await deleteContent("influencer", "content");
+    expect(mocks.deleteMany).toHaveBeenCalledWith({ where: { id: "content", influencerId: "influencer", influencer: { userId: "owner" }, steps: { none: { status: "RUNNING" } } } });
+    expect(mocks.redirect).toHaveBeenCalledWith("/conteudos");
+    mocks.redirect.mockClear();
+    mocks.deleteMany.mockResolvedValue({ count: 0 });
+    expect((await deleteContent("influencer", "content")).error).toMatch(/em andamento/);
+    expect(mocks.redirect).not.toHaveBeenCalled();
   });
 });

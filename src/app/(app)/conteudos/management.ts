@@ -1,34 +1,34 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { createContentDraft } from "@/lib/content-draft";
 import { requireUserId } from "@/lib/session";
-export async function createProduction(_previous: string, form: FormData) {
+export type CreateState = { error: string; created?: string };
+// Novo conteúdo (design): influencer + idea. The title is the idea's first clause; the format is 9:16 unless a
+// copied or template brief brings another one. Creating is free; the success screen links to the content.
+export async function createProduction(_previous: CreateState, form: FormData): Promise<CreateState> {
   const userId = await requireUserId();
   const input = z
     .object({
       influencerId: z.string().min(1),
-      title: z.string().trim().min(1).max(120),
-      idea: z.string().trim().max(2000),
+      title: z.string().trim().max(120).optional(),
+      idea: z.string().trim().min(1).max(2000),
       script: z.string().trim().max(2000).default(""),
-      aspectRatio: z.enum(["9:16", "16:9", "1:1"]),
+      aspectRatio: z.enum(["9:16", "16:9", "1:1"]).default("9:16"),
     })
     .safeParse(Object.fromEntries(form));
-  if (!input.success)
-    return "Escolha um personagem e preencha um título de até 120 caracteres e uma ideia de até 2.000 caracteres.";
-  let id: string;
+  if (!input.success) return { error: "Escolha uma influencer e conte a ideia em pelo menos uma frase." };
+  const title = input.data.title || input.data.idea.split(/[,.;!?\n]/)[0].trim().slice(0, 120) || input.data.idea.slice(0, 120);
   try {
-    const content = await createContentDraft(userId, input.data);
-    if (!content) return "Escolha um personagem da sua conta.";
-    id = content.id;
+    const content = await createContentDraft(userId, { ...input.data, title });
+    if (!content) return { error: "Escolha uma influencer da sua conta." };
+    revalidatePath("/conteudos");
+    revalidatePath("/painel");
+    return { error: "", created: `/i/${input.data.influencerId}/c/${content.id}` };
   } catch {
-    return "Não conseguimos criar o rascunho. Tente novamente.";
+    return { error: "Não conseguimos criar o conteúdo. Tente novamente." };
   }
-  revalidatePath("/conteudos");
-  revalidatePath("/painel");
-  redirect(`/i/${input.data.influencerId}/c/${id}`);
 }
 export async function setArchive(
   contentId: string,
