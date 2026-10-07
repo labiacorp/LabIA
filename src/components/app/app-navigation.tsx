@@ -3,18 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, type ReactNode } from "react";
-import { Cpu, FileText, Film, House, KeyRound, Library, LogOut, Mail, Menu, Plus, Receipt, ShieldCheck, TrendingUp, UserRound, Wallet, X, type LucideIcon } from "lucide-react";
+import { Cpu, FileText, Film, House, KeyRound, Library, LogOut, Mail, Menu, Plus, Receipt, Share2, ShieldCheck, TrendingUp, UserRound, Wallet, X, type LucideIcon } from "lucide-react";
 import { logout } from "@/app/(app)/actions";
 import { AccountAvatar } from "@/components/app/account-avatar";
 import { balanceCredits } from "@/lib/plan";
 
-// Shell from the design (LabIA App.dc.html · Header e menus). Conexões stays out of the menu until publishing exists.
+// Shell from the design (LabIA App.dc.html · Header e menus). Integrações is the publishing area (connect networks, publish, schedule).
 type NavItem = { href: string; label: string; icon: LucideIcon; admin?: boolean; money?: boolean };
 const main: NavItem[] = [
   { href: "/painel", label: "Início", icon: House },
   { href: "/influenciadores", label: "Influencers", icon: UserRound },
   { href: "/conteudos", label: "Conteúdos", icon: Film },
   { href: "/biblioteca", label: "Biblioteca", icon: Library },
+  { href: "/integracoes", label: "Integrações", icon: Share2 },
   { href: "/modelos", label: "Modelos", icon: Cpu },
   { href: "/trends", label: "Tendências", icon: TrendingUp },
 ];
@@ -29,7 +30,7 @@ const profile: NavItem[] = [
   { href: "/saldo", label: "Saldo e extrato", icon: Receipt, money: true },
   { href: "/termos", label: "Termos e privacidade", icon: FileText },
 ];
-const crumbs: [RegExp, string][] = [[/^\/i\/[^/]+\/c\//, "Conteúdos"], [/^\/i\//, "Influencers"], [/^\/influencers/, "Influencers"], [/^\/conteudos\/novo/, "Conteúdos / Novo"], [/^\/conta\/seguranca/, "Conta e segurança"], [/^\/conta/, "Perfil"]];
+const crumbs: [RegExp, string][] = [[/^\/i\/[^/]+\/c\//, "Conteúdos"], [/^\/i\//, "Influencers"], [/^\/influencers/, "Influencers"], [/^\/conteudos\/novo/, "Conteúdos / Novo"], [/^\/integracoes/, "Integrações"], [/^\/conta\/seguranca/, "Conta e segurança"], [/^\/conta/, "Perfil"]];
 const focus = "focus-visible:outline-none focus-visible:shadow-lab-focus";
 const wordmark = (size: string) => <span className={`lab-wordmark ${size} leading-none`}>Lab<span>I</span>A</span>;
 
