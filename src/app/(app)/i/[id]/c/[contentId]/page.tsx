@@ -68,7 +68,7 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
   const planned = steps.reduce((sum, step) => sum + Number(step.actualCostBrl ?? step.estimatedCostBrl ?? reel.perStep[step.kind] ?? 0), 0);
   const [balance, front, admin] = await Promise.all([
     getBalanceBrl(userId),
-    prisma.asset.findFirst({ where: { userId, id: content.influencer.faceAssetId ?? "", influencerId: id, role: "FRONT", step: { status: { in: ["DONE", "APPROVED"] } } }, select: { id: true } }),
+    prisma.asset.findFirst({ where: { userId, id: content.influencer.faceAssetId ?? "", influencerId: id, role: "FRONT", OR: [{ step: { status: { in: ["DONE", "APPROVED"] } } }, { storageKey: { not: null } }] }, select: { id: true } }),
     isOwner(),
   ]);
   const configured = providerConfigured();

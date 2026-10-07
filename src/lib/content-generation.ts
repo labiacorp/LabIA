@@ -49,7 +49,7 @@ export async function startContentImage(input: { userId: string; influencerId: s
       influencerId: input.influencerId,
       role: "FRONT",
       kind: "IMAGE",
-      step: { status: { in: ["DONE", "APPROVED"] } },
+      OR: [{ step: { status: { in: ["DONE", "APPROVED"] } } }, { storageKey: { not: null } }],
     },
     orderBy: { createdAt: "desc" },
   });
