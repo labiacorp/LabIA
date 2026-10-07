@@ -9,7 +9,7 @@ import { CostChip } from "@/components/ui/cost-chip";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { NetworkId } from "@/lib/social/networks";
 import { cancelPostAction } from "./actions";
-import { NetworkLogo } from "./network-card";
+import { NetworkLogo } from "@/components/app/network-logos";
 
 export type PostRow = {
   id: string;
