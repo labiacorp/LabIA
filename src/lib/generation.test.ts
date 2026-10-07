@@ -287,7 +287,35 @@ describe.skipIf(!process.env.DATABASE_URL)("content scene money path", () => {
     expect(results.reduce((sum, result) => sum + result.started, 0)).toBe(1);
     expect(await prisma.ledgerEntry.count({ where: { userId: who.userId, reason: "SPEND" } })).toBe(1);
     await collectRunning(who.userId, who.influencerId);
-    expect((await runScene(who)).started).toBe(0);
+    await prisma.step.updateMany({ where: { contentId: who.contentId, kind: "IMAGE" }, data: { status: "APPROVED" } });
+    expect((await runScene(who)).started).toBe(0); // an approved take is never overwritten
+  });
+
+  it("retries a refunded failure: the new take is reserved and charged once, the failed one stays at zero", async () => {
+    const who = await contentSeed();
+    await runScene(who, { prompt: "[mock-fail]" });
+    for (let attempt = 0; attempt < 3; attempt++) await collectRunning(who.userId, who.influencerId);
+    expect((await image(who.contentId)).status).toBe("FAILED");
+    expect((await runScene(who)).started).toBe(1); // "Tentar de novo"
+    expect(await image(who.contentId)).toMatchObject({ status: "RUNNING", submissionState: "submitted", actualCostBrl: null, error: null });
+    await collectRunning(who.userId, who.influencerId);
+    expect((await image(who.contentId)).status).toBe("DONE");
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.45, 4); // only the take that worked
+  });
+
+  it("redoes a finished take only while nobody approved it and every later step is untouched", async () => {
+    const who = await contentSeed();
+    const video = await prisma.step.create({ data: { contentId: who.contentId, influencerId: who.influencerId, kind: "VIDEO", position: 2 } });
+    await runScene(who);
+    await collectRunning(who.userId, who.influencerId);
+    expect((await runScene(who)).started).toBe(1); // "Refazer"
+    await collectRunning(who.userId, who.influencerId);
+    const redone = await image(who.contentId);
+    expect(redone.status).toBe("DONE");
+    expect(redone.assets).toHaveLength(2); // both takes stay in the library
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.9, 4); // two takes, two charges
+    await prisma.step.update({ where: { id: video.id }, data: { status: "DONE" } });
+    expect((await runScene(who)).started).toBe(0); // a later step already ran
   });
 
   it("serializes different content spends on the same user balance", async () => {

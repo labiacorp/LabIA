@@ -11,7 +11,7 @@ const chip = cva("inline-flex shrink-0 items-center gap-1 whitespace-nowrap roun
     state: {
       estimated: "border-[1.5px] border-lab-reagent bg-transparent text-lab-reagent-bright",
       actual: "border-lab-reagent bg-lab-reagent font-semibold text-lab-on-reagent",
-      free: "border-lab-reagent bg-lab-reagent font-semibold text-lab-on-reagent", // known zero, e.g. an import
+      free: "border-[1.5px] border-lab-border-strong bg-transparent text-lab-text", // known zero: not money, so not lime
       pending: "border-dashed border-lab-border-strong bg-transparent text-lab-text-dim", // A calcular
       unavailable: "border-lab-border bg-lab-surface-2 text-lab-text-muted", // falha ao ler
     },

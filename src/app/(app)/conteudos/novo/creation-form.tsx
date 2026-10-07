@@ -1,110 +1,61 @@
 "use client";
+
+import Link from "next/link";
 import { useActionState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Check, CircleAlert, Smartphone, Timer } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { CostChip } from "@/components/ui/cost-chip";
+import { costCredits, creditsText } from "@/lib/plan";
 import { createProduction } from "../management";
-export function CreationForm({
-  characters,
-  selected,
-  initial,
-  defaultAspectRatio = "9:16",
-}: {
-  characters: { id: string; name: string }[];
-  selected?: string;
-  initial?: {
-    title: string;
-    idea: string;
-    script: string;
-    aspectRatio: string;
-  };
-  defaultAspectRatio?: string;
+
+type Row = { step: string; model: string; brl: number };
+
+export function CreationForm({ influencers, selected, initial, rows, totalBrl }: {
+  influencers: { id: string; name: string; face?: string }[];
+  selected: string;
+  initial?: { title: string; idea: string; script: string; aspectRatio: string };
+  rows: Row[];
+  totalBrl: number;
 }) {
-  const [error, action, pending] = useActionState(createProduction, "");
-  const selectClass =
-    "min-h-11 w-full rounded-control border border-lab-border bg-lab-surface-2 p-3 text-body-sm";
-  return (
-    <form
-      action={action}
-      className="grid gap-5 rounded-lab border border-lab-border bg-lab-surface-1 p-6"
-    >
-      <label className="grid gap-2 text-body-sm">
-        Personagem
-        <select
-          name="influencerId"
-          required
-          defaultValue={selected ?? (characters.length === 1 ? characters[0].id : "")}
-          className={selectClass}
-        >
-          <option value="" disabled>
-            Escolha seu personagem
-          </option>
-          {characters.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="grid gap-2 text-body-sm">
-        Título
-        <Input
-          name="title"
-          defaultValue={initial?.title ?? ""}
-          required
-          maxLength={120}
-          placeholder="Ex.: três dicas para começar"
-        />
-      </label>
-      <label className="grid gap-2 text-body-sm">
-        Ideia (opcional)
-        <textarea
-          name="idea"
-          defaultValue={initial?.idea ?? ""}
-          rows={4}
-          maxLength={2000}
-          className={selectClass}
-        />
-      </label>
-      <label className="grid gap-2 text-body-sm">
-        Formato
-        <select
-          name="aspectRatio"
-          defaultValue={initial?.aspectRatio ?? defaultAspectRatio}
-          className={selectClass}
-        >
-          <option value="9:16">Vertical · 9:16</option>
-          <option value="16:9">Horizontal · 16:9</option>
-          <option value="1:1">Quadrado · 1:1</option>
-        </select>
-      </label>
-      <details open={Boolean(initial?.script)} className="border-t border-lab-border pt-4"><summary className="cursor-pointer py-2 text-body-sm font-medium">Já tem um roteiro? (opcional)</summary>
-      <label className="mt-3 grid gap-2 text-body-sm">
-        Roteiro inicial
-        <textarea
-          name="script"
-          defaultValue={initial?.script ?? ""}
-          rows={6}
-          maxLength={2000}
-          className={selectClass}
-        />
-        <span className="text-caption text-lab-text-muted">
-          Revise os campos entre colchetes antes de gerar. O roteiro pode ser
-          editado depois.
-        </span>
-      </label>
-      </details>
-      <p className="text-body-sm text-lab-text-dim">
-        Criar o rascunho é gratuito. Cada geração será confirmada separadamente,
-        com a estimativa em reais.
-      </p>
-      <Button type="submit" size="lg" loading={pending}>
-        Criar rascunho
-      </Button>
-      {error && (
-        <p role="alert" className="text-body-sm text-lab-danger">
-          {error}
-        </p>
-      )}
-    </form>
-  );
+  const [state, action, pending] = useActionState(createProduction, { error: "" });
+  if (state.created) return <div className="flex flex-col gap-4">
+    <span className="flex size-[52px] items-center justify-center rounded-control bg-lab-text text-lab-bg"><Check className="size-[26px]" aria-hidden /></span>
+    <h1 className="font-display text-[44px] font-black uppercase leading-[.9] lg:text-[64px]">Conteúdo criado</h1>
+    <p className="text-[15px] leading-[1.5] text-lab-text-dim">Nada foi cobrado. A primeira etapa, o roteiro, é grátis.</p>
+    <Link href={state.created} className={buttonVariants({ className: "h-14 max-w-[400px] text-body" })}>Escrever roteiro</Link>
+  </div>;
+  return <form action={action} className="flex flex-col gap-6">
+    <h1 className="font-display text-[44px] font-black uppercase leading-[.9] lg:text-[64px]">Novo conteúdo</h1>
+    {initial?.title ? <input type="hidden" name="title" value={initial.title} /> : null}
+    {initial?.script ? <input type="hidden" name="script" value={initial.script} /> : null}
+    {initial?.aspectRatio ? <input type="hidden" name="aspectRatio" value={initial.aspectRatio} /> : null}
+    <fieldset className="flex flex-col gap-2">
+      <legend className="mb-2 text-body-sm font-medium">Influencer</legend>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {influencers.map((item) => <label key={item.id} className="flex h-[52px] shrink-0 cursor-pointer items-center gap-2.5 rounded-full bg-lab-surface-2 pl-1.5 pr-4 text-body-sm font-medium has-[:checked]:shadow-[inset_0_0_0_2px_var(--lab-text)] has-[:focus-visible]:shadow-lab-focus">
+          <input type="radio" name="influencerId" value={item.id} defaultChecked={item.id === selected} className="sr-only" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {item.face ? <img src={item.face} alt="" className="size-10 rounded-full object-cover" /> : <span className="size-10 rounded-full bg-[repeating-linear-gradient(135deg,var(--lab-surface-3)_0_5px,var(--lab-border-strong)_5px_10px)]" />}
+          {item.name}
+        </label>)}
+      </div>
+    </fieldset>
+    <label className="flex flex-col gap-2">
+      <span className="text-body-sm font-medium">Ideia do vídeo</span>
+      <textarea name="idea" required maxLength={2000} rows={4} defaultValue={initial?.idea ?? ""} placeholder="Ex.: 3 hábitos de quem acorda às 5h, tom leve, gancho nos 2 primeiros segundos."
+        aria-invalid={!!state.error} className={`min-h-28 rounded-control border-[1.5px] bg-lab-surface-2 px-4 py-3.5 text-body leading-[1.5] placeholder:text-lab-text-dim focus-visible:border-lab-text focus-visible:outline-none ${state.error ? "border-lab-danger" : "border-lab-border-strong"}`} />
+      {state.error ? <span role="alert" className="flex items-center gap-1.5 text-[13px] text-lab-danger"><CircleAlert className="size-3.5" aria-hidden />{state.error}</span> : null}
+    </label>
+    <div className="flex flex-wrap gap-2">
+      <span className="flex h-9 items-center gap-1.5 rounded-full bg-lab-surface-2 px-3 text-[13px]"><Smartphone className="size-[15px]" aria-hidden />{initial?.aspectRatio ?? "9:16"}</span>
+      <span className="flex h-9 items-center gap-1.5 rounded-full bg-lab-surface-2 px-3 text-[13px]"><Timer className="size-[15px]" aria-hidden />15 segundos</span>
+    </div>
+    <div className="flex flex-col rounded-card bg-lab-surface-1 p-4 shadow-[inset_0_0_0_1px_var(--lab-border)]">
+      <span className="pb-1.5 font-mono text-caption uppercase tracking-[.1em] text-lab-text-dim">Custo previsto por etapa</span>
+      {rows.map((row) => <div key={row.step} className="flex min-h-10 items-center justify-between border-b border-lab-border text-body-sm"><span>{row.step} <span className="text-lab-text-dim">· {row.model}</span></span>{row.brl > 0 ? <CostChip size="sm" state="estimated" value={row.brl} /> : <CostChip size="sm" state="free" value={0} />}</div>)}
+      <div className="flex items-baseline justify-between pt-3"><span className="font-semibold">Total previsto</span><span className="font-display text-[40px] font-black leading-[.9] text-lab-reagent-bright">~{creditsText(costCredits(totalBrl))}</span></div>
+      <span className="pt-2 text-[13px] text-lab-text-dim">Criar é grátis. Você confirma os créditos de cada etapa na hora de gerar.</span>
+    </div>
+    <Button type="submit" className="h-14 text-body" loading={pending}>Criar conteúdo · grátis</Button>
+  </form>;
 }
