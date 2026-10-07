@@ -3,7 +3,6 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { type CharacterCard, sheetItem } from "./character";
 import { collectRunning, type PlanItem, quote, reconcileReservation, startPlan, UserError } from "./generation";
-import { collectRunning, quote, reconcileReservation, startPlan, UserError } from "./generation";
 import { balanceCredits, costCredits } from "./plan";
 import { getBalanceBrl } from "./ledger";
 import { prisma } from "./prisma";
