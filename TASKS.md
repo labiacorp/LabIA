@@ -22,6 +22,12 @@ Source: founders' call 2026-10-07 (Gemini notes) plus the Playwright run that cr
 
 Owns: `src/app/(app)/layout.tsx` and nav/header components, `src/app/(app)/conta/`, `src/app/(app)/integracoes/`, `src/app/(app)/conexoes/`, `src/components/ui/`, `src/app/globals.css`, `tailwind.config.ts`, `src/app/api/mcp/`.
 
+- [ ] **D0. Consent before sign-in, one checkbox.** Today the "Antes de começar" screen (`src/app/consentimento/`, gate in `src/app/(app)/layout.tsx`, fields in `src/lib/consent.ts`) appears only after Google sign-in, so a user signs in and then has to decide to agree or leave, which makes no sense.
+  - Move the agreement to before authentication: on `/login` and `/criar-conta`, show the checkbox next to the Google button and the e-mail form; the Google button stays disabled until it is ticked.
+  - One checkbox only: "I'm 18 or older and I accept the Terms of Use and the Privacy Policy" (links to `/termos` and `/privacidade`). Remove the synthetic-media and no-real-people checkboxes (`CONSENT_FIELDS` becomes `[CONSENT_FIELD]`); keep the synthetic-media notice in the Terms text instead.
+  - Google flow: the checkbox is read before redirecting to Google (cookie or `state`), and the server records `consentAcceptedAt` and `consentTermsVersion` on first sign-in, so Google users never see the post-login screen. Check how Auth.js creates the user and record consent there. E-mail sign-up already has its own checkbox: make it the same single one.
+  - Existing accounts with `consentAcceptedAt` null that were created after `CONSENT_TRACKING_SINCE` keep the old gate, now with the single checkbox, as a fallback. Bump `CURRENT_TERMS_VERSION` only if `/termos` text changes (add "18 or older" there if missing).
+  - Tests: the consent action test, an e2e for sign-in blocked without the tick, and the Google path with the mock "Entrar sem Google". Check at 1280 and 390. Copy in English.
 - [ ] **D1. Navigation on top.** Move the left sidebar nav into a top bar (keeps the cost chip and the mobile sheet). Check 1280 and 390.
 - [ ] **D3. Google connection.** In Conta, Google shows "desconectado" with nothing to click. Make it connect (Auth.js account linking) or show the real state. Fix the root cause, not the label.
 - [ ] **D5. Visual pass.** Shrink the giant warnings on the content/step screens to inline notes; fix contrast; the credit counter on the video step (step 03) is white text on green, unreadable: fix it in `CostChip`/tokens, not per screen. Run `PRODUCT_REVIEW_LENS.md`.
