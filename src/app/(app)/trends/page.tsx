@@ -150,6 +150,10 @@ export default async function TrendsPage({
               Crie um personagem para organizar esta produção.{" "}
               <Link href="/influenciadores/nova" className="underline">
                 Criar personagem
+              </Link>{" "}
+              ou{" "}
+              <Link href="/influenciadores/importar" className="underline">
+                importar um que você já tem
               </Link>
             </p>
           )}

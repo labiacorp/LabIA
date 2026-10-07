@@ -34,6 +34,10 @@ App UI follows the Claude Design "Corte" handoff (2026-10-05): dark only (light 
 - While creating an influencer, owners also read the prompts before paying: the 4-face prompt updates live as the form is filled, and the sheet and side-portrait prompts show on the choose-face step.
 - Owners (`isOwner()` in `src/lib/owner.ts`) see the exact prompt sent for each step (`AdminPrompt`): content steps, motion recreation, the character sheet and face previews, and the library detail. `loadLibrary(..., admin)` strips the prompt on the server for everyone else, who only keep the video direction they typed.
 
+## Import an existing influencer (2026-10-07)
+
+`/influenciadores/importar`: upload her photo (same private reference storage as `/trends`), pick it, name her. Free, no generation: the image becomes her face (role FRONT, `faceAssetId`), so she works in Trends and in Content. Scene generation and the content page accept an imported FRONT (`storageKey` set) as well as a generated one. Linked from the create-influencer form and from the Trends empty state. She has no character sheet; nothing in Trends or Content needs one.
+
 ## Motion recreation and imported references
 
 The model is picked on the form (`MOTION_MODELS` in `src/lib/motion.ts`): Genjutsu Motion Transfer (Higgsfield, up to 3 references, 480p/720p/1080p) and Kling 2.6 / Kling 3 Pro Motion Control (fal.ai, one reference, per-second rate 0.112 / 0.168 USD checked 2026-10-07, run by `FalMotionProvider`). Briefs saved before the picker default to Genjutsu. The fal endpoints have only been run in mock mode.
