@@ -2,339 +2,207 @@ import { MotionProduction } from "@/app/(app)/trends/motion-production";
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft, CircleAlert, Clapperboard, FileText, Image as ImageIcon, Scissors, type LucideIcon } from "lucide-react";
 
-import { Badge, stepStatus } from "@/components/ui/badge";
 import { CostChip } from "@/components/ui/cost-chip";
-import { Alert } from "@/components/ui/alert";
 import { getImageOptions } from "@/lib/content-generation";
 import { getBalanceBrl } from "@/lib/ledger";
 import { estimateReel } from "@/lib/content-plan";
-import { PIPELINE } from "@/lib/pipeline";
 import { providerConfigured } from "@/lib/provider";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/session";
 import { getVideoOptions } from "@/lib/video-options";
 import type { VideoChain } from "@/lib/video-chain";
-import { KitForm } from "../../personagem/kit-form";
+import { chargeBrl, costCredits, costText, creditsText } from "@/lib/plan";
 import { KitWatcher } from "../../personagem/kit-watcher";
-import { assembleVideo, generateScene, generateVideo } from "./actions";
-import { FlowCanvas } from "./flow-canvas";
-import { SaveTemplate } from "../../../../modelos/save-template";
 import { ArchiveControl } from "../../../../conteudos/archive-control";
-import { BriefForm } from "./brief-form";
-import { ScriptForm } from "./script-form";
-import { ReviewForm } from "./review-form";
 import { DownloadAsset } from "@/app/(app)/biblioteca/library-view";
 import { PublishButton } from "@/components/app/publish-dialog";
-import { contentStatusLabels } from "@/lib/platform";
-import { costText } from "@/lib/plan";
+import { assembleVideo, generateScene, generateVideo } from "./actions";
+import { ScriptForm } from "./script-form";
 import { SceneForm } from "./scene-form";
 import { VideoForm } from "./video-form";
+import { StepToast } from "./step-toast";
+import { ApproveButton, AssembleButton, DeleteContentButton } from "./stage-actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function ContentPage({
-  params,
-  searchParams,
-}: {
-  searchParams: Promise<{ view?: string }>;
-  params: Promise<{ id: string; contentId: string }>;
-}) {
+// Conteúdo e etapas, from the design (LabIA App.dc.html): finished stages collapse to a row, only the current one
+// is open, later ones wait with their estimate. A paid take ends "Pronto" and opens the next stage once approved.
+const STAGE: Record<string, { name: string; icon: LucideIcon; done: string; noun: string }> = {
+  SCRIPT: { name: "Roteiro", icon: FileText, done: "Pronta", noun: "o roteiro" },
+  IMAGE: { name: "Imagem", icon: ImageIcon, done: "Aprovada", noun: "a imagem" },
+  VIDEO: { name: "Vídeo", icon: Clapperboard, done: "Aprovado", noun: "o vídeo" },
+  ASSEMBLY: { name: "Montagem", icon: Scissors, done: "Aprovada", noun: "a montagem" },
+};
+const unsettled = (state: string) => state === "submission_unknown" || state === "cost_unknown";
+// Toasts only for takes that just finished; StepToast also shows each one once per session.
+const recent = (date: Date | null) => !!date && Date.now() - date.getTime() < 10 * 60_000;
+
+export default async function ContentPage({ params }: { params: Promise<{ id: string; contentId: string }> }) {
   const userId = await requireUserId();
   const { id, contentId } = await params;
   const content = await prisma.content.findFirst({
     where: { id: contentId, influencerId: id, influencer: { userId } },
-    include: {
-      steps: { orderBy: { position: "asc" }, include: { assets: true } },
-      influencer: { select: { name: true, faceAssetId: true } },
-    },
+    include: { steps: { orderBy: { position: "asc" }, include: { assets: { orderBy: { createdAt: "desc" } } } }, influencer: { select: { name: true, faceAssetId: true } } },
   });
   if (!content) notFound();
 
   if (content.archivedAt)
-    return (
-      <div className="mx-auto grid max-w-2xl gap-5">
-        <Link
-          href="/conteudos?archive=1"
-          className="text-body-sm text-lab-text-dim"
-        >
-          ← Arquivados
-        </Link>
-        <h1 className="break-words font-display text-h1">{content.title}</h1>
-        <p className="text-lab-text-dim">
-          Conteúdo arquivado. Suas mídias e o histórico foram preservados.
-          Restaure para continuar a produção.
-        </p>
-        <ArchiveControl id={contentId} archived />
-        <Link
-          href={`/biblioteca?influencer=${id}`}
-          className="text-body-sm underline"
-        >
-          Ver mídias do personagem
-        </Link>
-      </div>
-    );
+    return <div className="mx-auto grid max-w-2xl gap-5">
+      <Link href="/conteudos" className="text-body-sm text-lab-text-dim">← Conteúdos</Link>
+      <h1 className="break-words font-display text-[44px] font-black uppercase leading-[.9]">{content.title}</h1>
+      <p className="text-lab-text-dim">Conteúdo arquivado. Suas mídias e o histórico foram preservados. Restaure para continuar.</p>
+      <ArchiveControl id={contentId} archived />
+    </div>;
 
   if (content.motion) return <MotionProduction userId={userId} contentId={contentId} />;
 
-  const requestedView = (await searchParams).view;
-  const preferences = requestedView
-    ? null
-    : await prisma.user.findUnique({
-        where: { id: userId },
-        select: { defaultContentView: true },
-      });
-  const canvasView =
-    (requestedView ?? preferences?.defaultContentView) === "canvas";
-  const { steps } = content;
-  const script =
-    (
-      steps.find((step) => step.kind === "SCRIPT")?.input as
-        | { script?: string }
-        | undefined
-    )?.script ?? "";
-  const unknownCost = steps.some(
-    (step) =>
-      ["submission_unknown", "cost_unknown"].includes(step.submissionState) ||
-      (["DONE", "APPROVED"].includes(step.status) &&
-        step.actualCostBrl === null),
-  );
-  const total = (
-    pick: (step: (typeof steps)[number]) => { toString(): string } | null,
-  ) =>
-    steps.reduce((sum, step) => sum + Number(pick(step)?.toString() ?? 0), 0);
+  const steps = content.steps.filter((step) => STAGE[step.kind]);
+  const script = (steps.find((step) => step.kind === "SCRIPT")?.input as { script?: string } | undefined)?.script ?? "";
   const reel = estimateReel();
-  const spent = total((step) => step.actualCostBrl);
+  const unknownCost = steps.some((step) => unsettled(step.submissionState) || (["DONE", "APPROVED"].includes(step.status) && step.actualCostBrl === null));
+  const spent = steps.reduce((sum, step) => sum + chargeBrl(Number(step.actualCostBrl ?? 0)), 0);
   const planned = steps.reduce((sum, step) => sum + Number(step.actualCostBrl ?? step.estimatedCostBrl ?? reel.perStep[step.kind] ?? 0), 0);
-  const imageOptions = getImageOptions(content.aspectRatio);
   const [balance, front] = await Promise.all([
     getBalanceBrl(userId),
-    prisma.asset.findFirst({
-      where: {
-        userId,
-        id: content.influencer.faceAssetId ?? "",
-        influencerId: id,
-        role: "FRONT",
-        step: { status: { in: ["DONE", "APPROVED"] } },
-      },
-      select: { id: true },
-    }),
+    prisma.asset.findFirst({ where: { userId, id: content.influencer.faceAssetId ?? "", influencerId: id, role: "FRONT", step: { status: { in: ["DONE", "APPROVED"] } } }, select: { id: true } }),
   ]);
   const configured = providerConfigured();
-  const blockedReason = !configured
-    ? "A geração ainda precisa ser configurada pela equipe."
-    : !front
-      ? "Gere o retrato de frente na aba Personagem antes de criar a cena."
-      : undefined;
-  const nextStepId = steps.find((step) => step.status === "PENDING" || step.status === "QUOTED")?.id;
-  const sceneAsset = steps.find((step) => step.kind === "IMAGE" && step.status === "DONE")?.assets[0];
-  const videoOptions = getVideoOptions(sceneAsset ? { width: sceneAsset.width, height: sceneAsset.height } : undefined);
-  const sceneReady = steps.some((step) => step.kind === "IMAGE" && step.status === "DONE" && step.assets.length > 0);
-  const videoReady = steps.some((step) => step.kind === "VIDEO" && step.status === "DONE" && step.assets.length > 0);
-  const videoBlocked = !configured
-    ? "A geração ainda precisa ser configurada pela equipe."
-    : !sceneReady
-      ? "Disponível depois que a imagem da cena estiver pronta."
-      : undefined;
+  const complete = (step: (typeof steps)[number]) => step.status === "APPROVED" || (step.kind === "SCRIPT" && step.status === "DONE");
+  const activeIndex = steps.findIndex((step) => !complete(step));
+  const active = activeIndex === -1 ? null : steps[activeIndex];
+  const running = steps.some((step) => step.status === "RUNNING");
+  const prompt = script || content.idea || content.title;
 
-  return (
-    <div className="grid gap-6">
-      <details className="justify-self-end"><summary className="cursor-pointer rounded-full border-[1.5px] border-lab-border-strong px-4 py-2.5 text-body-sm">Opções da produção</summary><div className="mt-3 flex flex-wrap justify-end gap-3">
-        <Link
-          href={`/conteudos/novo?copy=${contentId}&influencer=${id}`}
-          className="rounded-full border-[1.5px] border-lab-border-strong px-4 py-2.5 text-body-sm"
-        >
-          Duplicar briefing
-        </Link>
-        <SaveTemplate contentId={contentId} />
-        <ArchiveControl id={contentId} archived={false} />
-      </div></details>
-      <KitWatcher
-        influencerId={id}
-        active={steps.some((step) => step.status === "RUNNING")}
-      />
-      <div>
-        <Link
-          href={`/i/${id}`}
-          className="text-body-sm text-lab-text-dim hover:text-lab-text"
-        >
-          ← {content.influencer.name}
-        </Link>
-        <h1 className="mt-2 font-display text-[clamp(40px,7vw,56px)] leading-[.9]">{content.title}</h1>
-        <p className="mt-2 font-mono text-caption text-lab-text-dim">{contentStatusLabels[content.status]} · {content.aspectRatio}</p>
-        <BriefForm
-          influencerId={id}
-          contentId={contentId}
-          title={content.title}
-          idea={content.idea}
-          running={steps.some((step) => step.status === "RUNNING")}
-        />
-        {content.idea ? (
-          <p className="mt-1.5 max-w-form text-body-sm text-lab-text-dim">
-            {content.idea}
-          </p>
-        ) : null}
-        <div className="mt-4 grid grid-cols-2 border-y border-lab-border">
-          <div className="flex flex-col gap-0.5 py-3"><span className="font-mono text-caption text-lab-text-dim">usado ✓</span><span className="font-mono text-[22px]">{unknownCost ? "indisponível" : costText(spent)}</span></div>
-          <div className="flex flex-col gap-0.5 border-l border-lab-border py-3 pl-3.5"><span className="font-mono text-caption text-lab-text-dim">total previsto</span><span className="font-mono text-[22px] text-lab-reagent-bright">{costText(planned)}</span></div>
-        </div>
+  // Latest media for the 9:16 preview: the final cut, then the video, then the scene image.
+  const media = (kind: string) => steps.find((step) => step.kind === kind)?.assets.find((asset) => asset.kind === (kind === "IMAGE" ? "IMAGE" : "VIDEO"));
+  const finalCut = media("ASSEMBLY");
+  const shown = finalCut ?? media("VIDEO") ?? media("IMAGE");
+  const previewLabel = active?.status === "RUNNING" ? `gerando ${STAGE[active.kind].noun}` : finalCut ? `vídeo final · ${finalCut.durationSec ? Math.round(finalCut.durationSec) : 15}s` : shown?.kind === "VIDEO" ? "vídeo · aguardando montagem" : shown ? "imagem · aguardando vídeo" : "nada gerado ainda";
+  const preview = (cls: string) => <div className={`relative aspect-[9/16] w-full overflow-hidden rounded-card bg-[repeating-linear-gradient(135deg,var(--lab-surface-1)_0_12px,var(--lab-surface-2)_12px_24px)] shadow-[inset_0_0_0_1px_var(--lab-border)] ${cls}`}>
+    {shown?.kind === "VIDEO" ? <video controls preload="metadata" src={shown.url} className="absolute inset-0 size-full object-cover" />
+      // eslint-disable-next-line @next/next/no-img-element
+      : shown ? <img src={shown.url} alt="" className="absolute inset-0 size-full object-cover" /> : null}
+    {active?.status === "RUNNING" ? <div className="absolute inset-x-0 bottom-0 h-[62%] bg-lab-reagent/10" /> : null}
+    {!shown ? <span className="absolute left-3 top-3 flex items-center gap-1.5 font-mono text-caption"><span className="size-[7px] rounded-full bg-lab-reagent" />00:00</span> : null}
+    {shown?.kind !== "VIDEO" ? <span className="absolute bottom-3 left-3 font-mono text-caption text-lab-text-dim">{previewLabel}</span> : null}
+  </div>;
+
+  const estimate = (step: (typeof steps)[number]) => {
+    const value = step.estimatedCostBrl === null ? reel.perStep[step.kind] : Number(step.estimatedCostBrl);
+    return value === undefined || value === null ? null : value;
+  };
+  const chip = (step: (typeof steps)[number]) => {
+    if (step.actualCostBrl !== null && ["DONE", "APPROVED"].includes(step.status)) return Number(step.actualCostBrl) > 0 ? <CostChip size="sm" state="actual" value={Number(step.actualCostBrl)} /> : <CostChip size="sm" state="free" value={0} />;
+    const value = estimate(step);
+    return value === null ? <CostChip size="sm" state="pending" /> : value === 0 ? <CostChip size="sm" state="free" value={0} /> : <CostChip size="sm" state="estimated" value={value} />;
+  };
+  const row = (step: (typeof steps)[number], index: number, before: boolean) => {
+    const stage = STAGE[step.kind];
+    const previous = steps[index - 1];
+    const status = before ? stage.done : estimate(step) === 0 ? "Sem custo" : previous ? `Espera ${STAGE[previous.kind].noun}` : "Próxima";
+    return <div key={step.id} className="flex min-h-14 items-center gap-3 border-b border-lab-border">
+      <span className="w-[18px] font-mono text-[11px] text-lab-text-disabled">{String(index + 1).padStart(2, "0")}</span>
+      <stage.icon className="size-[18px] text-lab-text-dim" aria-hidden />
+      <span className={`flex-1 text-[15px] font-medium ${before ? "" : "text-lab-text-dim"}`}>{stage.name}</span>
+      <span className="text-caption text-lab-text-dim">{status}</span>
+      {chip(step)}
+    </div>;
+  };
+
+  const imageBlocked = !configured ? "A geração ainda precisa ser configurada pela equipe." : !front ? "Crie o rosto da influencer antes de gerar a cena." : undefined;
+  const sceneAsset = media("IMAGE");
+  const form = (step: (typeof steps)[number], label?: string) => step.kind === "IMAGE"
+    ? <SceneForm action={generateScene.bind(null, id, contentId)} intent={randomUUID()} options={getImageOptions(content.aspectRatio)} balanceBrl={balance} prompt={prompt} blockedReason={imageBlocked} label={label} />
+    : step.kind === "VIDEO"
+      ? <VideoForm action={generateVideo.bind(null, id, contentId)} intent={randomUUID()} balanceBrl={balance} options={getVideoOptions(sceneAsset ? { width: sceneAsset.width, height: sceneAsset.height } : undefined)} prompt={prompt} blockedReason={!configured ? "A geração ainda precisa ser configurada pela equipe." : undefined} label={label} />
+      : null;
+
+  const card = (step: (typeof steps)[number], index: number) => {
+    const stage = STAGE[step.kind];
+    const paid = step.kind === "IMAGE" || step.kind === "VIDEO";
+    const reserved = Number(step.estimatedCostBrl ?? 0);
+    const actual = step.actualCostBrl === null ? null : Number(step.actualCostBrl);
+    const failedUnknown = step.status === "FAILED" && unsettled(step.submissionState);
+    const [status, tone] = step.status === "RUNNING" ? ["Gerando", "text-lab-info"]
+      : step.status === "DONE" ? ["Pronto", "text-lab-text"]
+      : step.status === "FAILED" ? [failedUnknown ? "Falhou · em conferência" : "Falhou · estornado", "text-lab-danger"]
+      : paid ? ["Aprovar custo", "text-lab-warning"] : step.kind === "SCRIPT" ? ["Grátis", "text-lab-text-dim"] : ["Sem custo", "text-lab-text-dim"];
+    const ring = step.status === "FAILED" ? "var(--lab-danger)" : paid && (step.status === "PENDING" || step.status === "QUOTED") ? "var(--lab-reagent)" : "var(--lab-border-strong)";
+    const chain = (step.input as { chain?: VideoChain } | null)?.chain;
+    const blocks = chain?.recipe?.blocks ?? (chain ? 3 : 1);
+    const toastKey = `${step.id}:${step.completedAt?.getTime() ?? 0}`;
+    return <section key={step.id} className="flex flex-col gap-3.5 rounded-card bg-lab-surface-1 p-4" style={{ boxShadow: `inset 0 0 0 1.5px ${ring}` }}>
+      <div className="flex items-center gap-2.5">
+        <span className="font-mono text-[11px] text-lab-text-disabled">{String(index + 1).padStart(2, "0")}</span>
+        <h2 className="font-display text-[28px] font-black uppercase leading-none">{stage.name}</h2>
+        <span className={`ml-auto flex items-center gap-1.5 text-caption ${tone}`}><span className="size-1.5 rounded-full bg-current" />{status}</span>
       </div>
-      <nav aria-label="Visualização da produção" className="flex gap-2">
-        {[
-          { value: "steps", label: "Etapas" },
-          { value: "canvas", label: "Canvas" },
-        ].map((view) => (
-          <Link
-            key={view.value}
-            href={`/i/${id}/c/${contentId}?view=${view.value}`}
-            aria-current={
-              (canvasView ? "canvas" : "steps") === view.value
-                ? "page"
-                : undefined
-            }
-            className={`flex h-10 items-center rounded-full px-4 text-body-sm font-medium ${canvasView === (view.value === "canvas") ? "bg-lab-text text-lab-on-reagent" : "bg-lab-surface-2 text-lab-text-dim"}`}
-          >
-            {view.label}
-          </Link>
-        ))}
-      </nav>
-      {canvasView ? (
-        <FlowCanvas
-          contentId={contentId}
-          steps={steps.map((step) => ({
-            id: step.id,
-            kind: step.kind,
-            title:
-              PIPELINE.find((item) => item.kind === step.kind)?.title ??
-              "Etapa",
-            status: step.status,
-            assets: step.assets.length,
-            actualCost:
-              step.actualCostBrl === null ? null : Number(step.actualCostBrl),
-            estimatedCost:
-              step.estimatedCostBrl === null
-                ? (reel.perStep[step.kind] ?? null)
-                : Number(step.estimatedCostBrl),
-          }))}
-        />
-      ) : null}
-      <ol className="grid gap-3">
-        {steps.map((step, index) => {
-          const info = PIPELINE.find((item) => item.kind === step.kind)!;
-          const [variant, label] = step.kind === "SCRIPT" && step.status === "DONE" ? (["ready", "Salvo"] as const) : stepStatus[step.status];
-          return (
-            <li
-              id={`step-${step.id}`}
-              key={step.id}
-              className={`scroll-mt-20 flex flex-wrap items-start gap-3 rounded-card bg-lab-surface-1 p-4 sm:gap-4 sm:p-5 ${step.status === "FAILED" ? "shadow-[inset_0_0_0_1.5px_var(--lab-danger)]" : step.id === nextStepId ? "shadow-[inset_0_0_0_1.5px_var(--lab-reagent)]" : "shadow-[inset_0_0_0_1px_var(--lab-border)]"}`}
-            >
-              <span
-                className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-lab-surface-2 font-mono text-caption text-lab-text-dim`}
-              >
-                {index + 1}
-              </span>
-              <div className="min-w-0 flex-1 basis-40">
-                <p className="font-display text-[28px] font-black uppercase leading-none">{info.title}</p>
-                <p className="mt-0.5 text-body-sm text-lab-text-dim">
-                  {info.description}
-                </p>
-              </div>
-              <div className="flex shrink-0 flex-col items-end gap-2">
-                <Badge variant={variant} dot>
-                  {label}
-                </Badge>
-                {(() => {
-                  if ((step.kind === "VIDEO" || step.kind === "IMAGE") && !step.estimatedCostBrl) return null;
-                  const planned = reel.perStep[step.kind];
-                  if (step.actualCostBrl)
-                    return (
-                      <CostChip
-                        size="sm"
-                        state="actual"
-                        value={Number(step.actualCostBrl.toString())}
-                      />
-                    );
-                  if (step.estimatedCostBrl)
-                    return (
-                      <CostChip
-                        size="sm"
-                        state="estimated"
-                        value={Number(step.estimatedCostBrl.toString())}
-                      />
-                    );
-                  if (planned === 0)
-                    return <CostChip size="sm" state="free" value={0} />;
-                  return (
-                    <CostChip
-                      size="sm"
-                      state={planned == null ? "pending" : "estimated"}
-                      value={planned ?? undefined}
-                    />
-                  );
-                })()}
-              </div>
-              {step.kind === "SCRIPT" ? (
-                <div className="w-full">
-                  <ScriptForm influencerId={id} contentId={contentId} script={script} />
-                </div>
-              ) : null}
-              {step.kind === "IMAGE" ? <div className="w-full min-w-0">
-                {step.status === "PENDING" || step.status === "QUOTED" ? <SceneForm
-                  action={generateScene.bind(null, id, contentId)} intent={randomUUID()} options={imageOptions} balanceBrl={balance}
-                  prompt={script || content.idea || content.title} blockedReason={blockedReason}
-                /> : null}
-                {step.status === "RUNNING" ? <p role="status" className="mt-3 text-body-sm text-lab-text-dim">Gerando imagem… O custo está reservado.</p> : null}
-                {step.status === "FAILED" ? <Alert variant="error" title="Esta geração falhou">{["submission_unknown", "cost_unknown"].includes(step.submissionState)
-                  ? "O custo ainda precisa de conferência. Nada será reenviado automaticamente."
-                  : "A geração não foi concluída. Confira seus créditos e tente outra produção enquanto verificamos a falha."}</Alert> : null}
-                {step.assets.map((asset) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img key={asset.id} src={asset.url} alt="Imagem da cena com o influencer" className="mt-4 max-h-[32rem] max-w-full rounded-lab border border-lab-border object-contain" />
-                ))}
-              </div> : null}
-              {step.kind === "VIDEO" ? <div className="w-full min-w-0">
-                {step.status === "PENDING" || step.status === "QUOTED" ? <VideoForm
-                  action={generateVideo.bind(null, id, contentId)} intent={randomUUID()} balanceBrl={balance} options={videoOptions}
-                  prompt={script || content.idea || content.title} blockedReason={videoBlocked}
-                /> : null}
-                {step.status === "RUNNING" ? <p role="status" className="text-body-sm text-lab-text-dim">
-                  Gerando vídeo… {(step.input as { chain?: VideoChain }).chain?.clips.length ?? 0} de {(step.input as { chain?: VideoChain }).chain?.recipe?.blocks ?? 3} clipes verificados. O custo está reservado.
-                </p> : null}
-              </div> : null}
-              {step.kind === "ASSEMBLY" && (step.status === "PENDING" || step.status === "QUOTED") ? <div className="w-full">
-                <KitForm action={assembleVideo.bind(null, id, contentId)} intent={randomUUID()} expectedBrl={0}
-                  label="Finalizar vídeo" blockedReason={!configured ? "A geração ainda precisa ser configurada pela equipe." : videoReady ? undefined : "Disponível depois da geração do vídeo."} />
-              </div> : null}
-              {step.kind !== "IMAGE" && step.status === "FAILED" ? <div className="w-full"><Alert variant="error" title="Esta etapa falhou">{["submission_unknown", "cost_unknown"].includes(step.submissionState)
-                  ? "O custo ainda precisa de conferência. Nada será reenviado automaticamente."
-                  : "A geração não foi concluída. Confira seus créditos e tente outra produção enquanto verificamos a falha."}</Alert></div> : null}
-              {step.assets.filter((asset) => asset.kind === "VIDEO").sort((a, b) => {
-                const clips = (step.input as { chain?: VideoChain }).chain?.clips ?? [];
-                return clips.findIndex((clip) => clip.url === a.url) - clips.findIndex((clip) => clip.url === b.url);
-              }).map((asset, clipIndex) => <figure key={asset.id} className="grid w-full max-w-xs gap-2">
-                <video controls preload="metadata" src={asset.url} className="max-h-[28rem] w-full rounded-lab border border-lab-border" />
-                <DownloadAsset id={asset.id} />
-                {step.kind === "ASSEMBLY" ? <PublishButton assetId={asset.id} contentId={content.id} /> : null}
-                <figcaption className="text-caption text-lab-text-dim">{step.kind === "ASSEMBLY" ? "Vídeo final" : `Clipe ${clipIndex + 1} · ${asset.durationSec?.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}s`}</figcaption>
-              </figure>)}
-            </li>
-          );
-        })}
-      </ol>
-      {steps.some(
-        (step) =>
-          step.kind === "ASSEMBLY" &&
-          step.status === "DONE" &&
-          step.assets.some((asset) => asset.kind === "VIDEO"),
-      ) ? (
-        <section className="rounded-card bg-lab-surface-1 p-5 shadow-[inset_0_0_0_1px_var(--lab-border)]">
-          <ReviewForm
-            influencerId={id}
-            contentId={contentId}
-            status={content.status}
-          />
-        </section>
-      ) : null}
+
+      {step.kind === "SCRIPT" ? <ScriptForm influencerId={id} contentId={contentId} script={script} /> : null}
+
+      {paid && (step.status === "PENDING" || step.status === "QUOTED") ? form(step) : null}
+
+      {step.status === "RUNNING" ? <>
+        <div className="flex gap-1">{Array.from({ length: blocks }, (_, block) => <span key={block} className={`h-2 flex-1 rounded ${block < (chain?.clips.length ?? 0) ? "bg-lab-reagent" : block === (chain?.clips.length ?? 0) ? "animate-lab-shimmer bg-[linear-gradient(90deg,var(--lab-reagent),var(--lab-surface-3))] bg-[length:200%_100%]" : "bg-lab-surface-3"}`} />)}</div>
+        <div className="flex flex-wrap items-center justify-between gap-2.5 font-mono text-[13px]">
+          <span className="text-lab-text-dim">{blocks > 1 ? `clipe ${Math.min((chain?.clips.length ?? 0) + 1, blocks)} de ${blocks}` : "leva cerca de 1 min"}</span>
+          {reserved > 0 ? <span className="flex h-[30px] items-center gap-[7px] rounded-full bg-lab-surface-2 px-[11px]"><span className="size-[7px] animate-pulse rounded-full bg-lab-reagent" />{costText(reserved)} reservados</span> : null}
+        </div>
+      </> : null}
+
+      {step.status === "DONE" ? <>
+        {recent(step.completedAt) && actual !== null && paid ? <StepToast id={toastKey} tone="money" title={`${stage.name} pront${step.kind === "IMAGE" ? "a" : "o"}`}>Saiu por {costText(actual)}{costCredits(reserved) > costCredits(actual) ? `, ${creditsText(costCredits(reserved) - costCredits(actual))} abaixo do previsto` : ""}.</StepToast> : null}
+        <div className="lg:hidden">{step.assets[0]?.kind === "VIDEO" ? <video controls preload="metadata" src={step.assets[0].url} className="max-h-[28rem] w-full rounded-control" />
+          // eslint-disable-next-line @next/next/no-img-element
+          : step.assets[0] ? <img src={step.assets[0].url} alt="" className="max-h-[28rem] w-full rounded-control object-contain" /> : null}</div>
+        {paid ? <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <span className="text-[13px] text-lab-text-dim">{actual === null ? "custo real em conferência" : `previsto ~${costText(reserved)}${costCredits(reserved) > costCredits(actual) ? ` · ${creditsText(costCredits(reserved) - costCredits(actual))} voltaram` : ""}`}</span>
+          {actual === null ? <CostChip state="unavailable" /> : <CostChip size="lg" state="actual" value={actual} />}
+        </div> : null}
+        <div className="flex flex-wrap gap-2">
+          <ApproveButton influencerId={id} contentId={contentId} stepId={step.id} label={step.kind === "ASSEMBLY" ? "Aprovar vídeo" : `Aprovar ${stage.name.toLowerCase()}`} />
+          {step.kind === "ASSEMBLY" && finalCut ? <><DownloadAsset id={finalCut.id} /><PublishButton assetId={finalCut.id} contentId={content.id} /></> : null}
+        </div>
+        {paid && step.submissionState === "completed" ? <details className="group">
+          <summary className="flex h-12 cursor-pointer list-none items-center justify-center gap-2 rounded-full border-[1.5px] border-lab-border-strong text-body-sm font-semibold">Refazer {estimate(step) ? <span className="flex h-[34px] items-center rounded-full border-[1.5px] border-lab-reagent px-2.5 font-mono text-[13px] text-lab-reagent-bright">~{costText(estimate(step)!)}</span> : null}</summary>
+          <div className="mt-3.5">{form(step, "Refazer")}</div>
+        </details> : null}
+      </> : null}
+
+      {step.status === "FAILED" ? <>
+        {!failedUnknown && recent(step.completedAt) ? <StepToast id={toastKey} tone="error" title={`${stage.name} falhou`}>Os {costText(reserved)} reservados voltaram pro seu saldo.</StepToast> : null}
+        <div className="flex items-start gap-2.5 text-body-sm leading-[1.5]"><CircleAlert className="mt-px size-[18px] shrink-0 text-lab-danger" aria-hidden />
+          <span>{failedUnknown ? "Não conseguimos confirmar o resultado. O valor ficou reservado para conferência e nada será reenviado sozinho." : <>A geração não deu certo. Os <span className="font-mono">{costText(reserved)}</span> reservados voltaram pro seu saldo.</>}</span></div>
+        {!failedUnknown ? <>
+          <div className="flex items-center gap-2.5"><span className="flex h-7 items-center rounded-full border-[1.5px] border-lab-border-strong px-2.5 font-mono text-caption text-lab-text-dim line-through">{costText(reserved)}</span><span className="text-[13px] text-lab-text-dim">estornado</span></div>
+          {form(step, "Tentar de novo")}
+        </> : null}
+      </> : null}
+
+      {step.kind === "ASSEMBLY" && (step.status === "PENDING" || step.status === "QUOTED") ? <AssembleButton action={assembleVideo.bind(null, id, contentId)} intent={randomUUID()} blockedReason={!configured ? "A geração ainda precisa ser configurada pela equipe." : undefined} /> : null}
+    </section>;
+  };
+
+  return <div className="grid items-start gap-8 lg:grid-cols-[300px_minmax(0,1fr)]">
+    <KitWatcher influencerId={id} active={running} />
+    <div className="sticky top-24 hidden flex-col gap-3 lg:flex">{preview("")}{finalCut ? <><DownloadAsset id={finalCut.id} /><PublishButton assetId={finalCut.id} contentId={content.id} /></> : null}</div>
+    <div className="flex min-w-0 flex-col gap-4">
+      <div className="flex items-center gap-2">
+        <Link href="/conteudos" aria-label="Voltar para conteúdos" className="flex size-11 items-center justify-center rounded-full bg-lab-surface-2 focus-visible:outline-none focus-visible:shadow-lab-focus"><ArrowLeft className="size-[19px]" aria-hidden /></Link>
+        <span className="text-body-sm text-lab-text-dim">{content.influencer.name} · {content.aspectRatio}</span>
+        <DeleteContentButton influencerId={id} contentId={contentId} stages={steps.length} spent={unknownCost ? "créditos" : costText(spent)} running={running} />
+      </div>
+      <h1 className="break-words font-display text-[44px] font-black uppercase leading-[.9] lg:text-[64px]">{content.title}</h1>
+      {!active && finalCut ? <div className="lg:hidden">{preview("")}</div> : null}
+      <div className="grid grid-cols-2 border-y border-lab-border">
+        <div className="flex flex-col gap-0.5 py-3"><span className="font-mono text-[11px] text-lab-text-dim">gasto ✓</span><span className="font-mono text-[22px]">{unknownCost ? "indisponível" : costText(spent)}</span></div>
+        <div className="flex flex-col gap-0.5 border-l border-lab-border py-3 pl-3.5"><span className="font-mono text-[11px] text-lab-text-dim">total previsto</span><span className="font-mono text-[22px] text-lab-reagent-bright">~{costText(planned)}</span></div>
+      </div>
+      <div className="flex flex-col">{steps.slice(0, activeIndex === -1 ? steps.length : activeIndex).map((step, index) => row(step, index, true))}</div>
+      {active ? card(active, activeIndex) : null}
+      {active ? <div className="flex flex-col">{steps.slice(activeIndex + 1).map((step, offset) => row(step, activeIndex + 1 + offset, false))}</div> : null}
     </div>
-  );
+  </div>;
 }

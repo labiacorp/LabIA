@@ -3,98 +3,116 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, type ReactNode } from "react";
-import { Film, House, Library, LogOut, Menu, Cpu, Plug, Plus, ShieldCheck, Share2, TrendingUp, UserRound, Wallet, X, type LucideIcon } from "lucide-react";
+import { Cpu, FileText, Film, House, KeyRound, Library, LogOut, Mail, Menu, Plus, Receipt, ShieldCheck, TrendingUp, UserRound, Wallet, X, type LucideIcon } from "lucide-react";
 import { logout } from "@/app/(app)/actions";
 import { AccountAvatar } from "@/components/app/account-avatar";
 import { balanceCredits } from "@/lib/plan";
 
-type NavItem = { href: string; label: string; icon: LucideIcon; admin?: boolean };
+// Shell from the design (LabIA App.dc.html · Header e menus). Conexões stays out of the menu until publishing exists.
+type NavItem = { href: string; label: string; icon: LucideIcon; admin?: boolean; money?: boolean };
 const main: NavItem[] = [
   { href: "/painel", label: "Início", icon: House },
   { href: "/influenciadores", label: "Influencers", icon: UserRound },
   { href: "/conteudos", label: "Conteúdos", icon: Film },
   { href: "/biblioteca", label: "Biblioteca", icon: Library },
-  { href: "/integracoes", label: "Integrações", icon: Share2 },
   { href: "/modelos", label: "Modelos", icon: Cpu },
   { href: "/trends", label: "Tendências", icon: TrendingUp },
-  { href: "/conexoes", label: "Conexões", icon: Plug },
 ];
 const footer: NavItem[] = [
-  { href: "/saldo", label: "Plano e créditos", icon: Wallet },
+  { href: "/saldo", label: "Saldo e extrato", icon: Wallet, money: true },
   { href: "/admin", label: "Admin", icon: ShieldCheck, admin: true },
 ];
+const profile: NavItem[] = [
+  { href: "/conta", label: "Perfil", icon: UserRound },
+  { href: "/conta/seguranca", label: "Trocar senha", icon: KeyRound },
+  { href: "/conta/seguranca", label: "Trocar e-mail", icon: Mail },
+  { href: "/saldo", label: "Saldo e extrato", icon: Receipt, money: true },
+  { href: "/termos", label: "Termos e privacidade", icon: FileText },
+];
+const crumbs: [RegExp, string][] = [[/^\/i\/[^/]+\/c\//, "Conteúdos"], [/^\/i\//, "Influencers"], [/^\/influencers/, "Influencers"], [/^\/conteudos\/novo/, "Conteúdos / Novo"], [/^\/conta\/seguranca/, "Conta e segurança"], [/^\/conta/, "Perfil"]];
 const focus = "focus-visible:outline-none focus-visible:shadow-lab-focus";
 const wordmark = (size: string) => <span className={`lab-wordmark ${size} leading-none`}>Lab<span>I</span>A</span>;
 
-export function AppNavigation({ name, email, balance, avatarVersion, owner = false, children }: {
-  name: string | null; email: string; balance: number | null; avatarVersion?: number; owner?: boolean; children: ReactNode;
+export function AppNavigation({ name, email, balance, lowAt, newContentHref, avatarVersion, owner = false, children }: {
+  name: string | null; email: string; balance: number | null; lowAt: number; newContentHref: string; avatarVersion?: number; owner?: boolean; children: ReactNode;
 }) {
   const pathname = usePathname();
   const sheet = useRef<HTMLDialogElement>(null);
-  const account = useRef<HTMLDialogElement>(null);
   const displayName = name || email.split("@")[0];
+  const credits = balance === null ? null : balanceCredits(balance);
+  const amount = credits === null ? "indisponível" : credits.toLocaleString("pt-BR");
+  // Chip colour follows the design: lime, warning when a 15s video no longer fits, danger at zero.
+  const tone = credits === null ? "text-lab-text-muted border-lab-border-strong" : credits === 0 ? "text-lab-danger border-lab-danger" : credits < lowAt ? "text-lab-warning border-lab-warning" : "text-lab-reagent-bright border-lab-reagent";
   const active = (href: string) => pathname === href || (href !== "/painel" && pathname.startsWith(href));
-  const items = (list: NavItem[]) => list.filter((i) => !i.admin || owner).map(({ href, label, icon: Icon }) => (
-    <Link key={href} href={href} aria-current={active(href) ? "page" : undefined}
-      className={`flex h-11 items-center gap-3 rounded-lab px-3 text-body-sm transition-colors ${focus} ${active(href) ? "bg-lab-surface-2 font-semibold text-lab-text" : "text-lab-text-dim hover:bg-lab-surface-1 hover:text-lab-text"}`}>
-      <Icon className="size-[18px] shrink-0" aria-hidden />{label}
+  const visible = [...main, ...footer].filter((i) => !i.admin || owner);
+  const crumb = crumbs.find(([pattern]) => pattern.test(pathname))?.[1] ?? visible.find((i) => active(i.href))?.label ?? "Início";
+  const close = () => sheet.current?.close();
+
+  const row = (item: NavItem, big = false) => (
+    <Link key={item.href + item.label} href={item.href} onClick={close} aria-current={active(item.href) ? "page" : undefined}
+      className={`flex items-center rounded-control px-3 transition-colors ${focus} ${big ? "min-h-[52px] gap-3.5 text-body" : "h-11 gap-3 text-[15px]"} ${active(item.href) ? "bg-lab-surface-2 font-semibold text-lab-text" : "text-lab-text-dim hover:bg-lab-surface-1 hover:text-lab-text"}`}>
+      <item.icon className={`${big ? "size-5" : "size-[19px]"} shrink-0 ${item.money ? "text-lab-reagent-bright" : ""}`} aria-hidden />
+      <span className="flex-1">{item.label}</span>
+      {item.money ? <span className="font-mono text-[13px] text-lab-reagent-bright">{amount}</span> : null}
     </Link>
-  ));
-  const current = [...main, ...footer].find((i) => active(i.href))?.label ?? (pathname.startsWith("/conta") ? "Conta" : "LabIA");
-  const create = (cls: string) => <Link href="/conteudos/novo" className={`${cls} flex h-12 items-center justify-center gap-2 rounded-full bg-lab-text font-semibold text-lab-on-reagent hover:bg-white ${focus}`}><Plus className="size-[18px]" aria-hidden />Novo conteúdo</Link>;
+  );
+  const create = (cls: string) => <Link href={newContentHref} onClick={close} className={`${cls} flex items-center justify-center gap-2 rounded-full bg-lab-text font-semibold text-lab-bg hover:bg-white ${focus}`}><Plus className="size-[18px]" aria-hidden />Novo conteúdo</Link>;
+  const who = <><span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-lab-surface-3"><AccountAvatar name={displayName} version={avatarVersion} /></span><span className="flex min-w-0 flex-1 flex-col"><span className="truncate text-[15px] font-semibold">{displayName}</span><span className="truncate text-[13px] text-lab-text-dim">{email}</span></span></>;
+  const signOut = (cls: string) => <form action={logout}><button type="submit" className={`flex w-full items-center rounded-control px-3 text-left hover:bg-lab-surface-2 ${focus} ${cls}`}><LogOut className="size-[18px] shrink-0 text-lab-text-dim" aria-hidden />Sair</button></form>;
+
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col border-r border-lab-border bg-lab-bg p-3 lg:flex">
-        <Link href="/painel" aria-label="LabIA, início" className={`flex h-12 items-center px-3 ${focus}`}>{wordmark("text-[28px]")}</Link>
-        {create("mb-3 mt-4")}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col border-r border-lab-border bg-lab-bg px-3 py-4 lg:flex">
+        <Link href="/painel" aria-label="A LabIA, início" className={`flex h-12 items-center px-3 ${focus}`}>{wordmark("text-[28px]")}</Link>
+        {create("mb-3 mt-4 h-12 text-[15px]")}
         <nav aria-label="Navegação principal" className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
-          {items(main)}
+          {main.map((item) => row(item))}
           <span className="mx-3 my-2 h-px bg-lab-border" />
-          {items(footer)}
+          {footer.filter((i) => !i.admin || owner).map((item) => row(item))}
         </nav>
-        <span className="flex items-center gap-2 px-3 py-2 text-caption text-lab-text-muted"><span className="lab-status-dot bg-lab-reagent" />Beta fechado</span>
       </aside>
       <div className="lg:pl-[248px]">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-2.5 border-b border-lab-border bg-lab-bg/90 px-4 backdrop-blur md:px-8">
-          <Link href="/painel" aria-label="LabIA, início" className={`lg:hidden ${focus}`}>{wordmark("text-[26px]")}</Link>
-          <span className="hidden text-body-sm text-lab-text-dim lg:block">{current}</span>
+        <header className="sticky top-0 z-header flex h-16 items-center gap-2.5 border-b border-lab-border bg-lab-bg/90 px-4 backdrop-blur lg:px-8">
+          <Link href="/painel" aria-label="A LabIA, início" className={`lg:hidden ${focus}`}>{wordmark("text-[26px]")}</Link>
+          <span className="hidden text-body-sm text-lab-text-dim lg:block">{crumb}</span>
           <span className="ml-auto" />
-          <Link href="/saldo" aria-label="Ver plano e créditos" className={`rounded-full ${focus}`}>
-            <span className="flex h-11 items-center gap-2 rounded-full border-[1.5px] border-lab-reagent px-3.5 font-mono text-body-sm text-lab-reagent-bright">
-              <span className="text-caption text-lab-text-dim">créditos</span>{balance === null ? "indisponível" : balanceCredits(balance).toLocaleString("pt-BR")}
-            </span>
+          <Link href="/saldo" aria-label={`Créditos: ${amount}`} className={`flex h-11 items-center gap-2 rounded-full border-[1.5px] bg-transparent pl-3.5 font-mono text-[15px] ${credits === 0 ? "pr-1.5" : "pr-3.5"} ${tone} ${focus}`}>
+            <span className="text-[11px] text-lab-text-dim">créditos</span>{amount}
+            {credits === 0 ? <span className="flex h-8 items-center rounded-full bg-lab-reagent px-2.5 font-sans text-[13px] font-semibold text-lab-on-reagent">Ver plano</span> : null}
           </Link>
-          <button type="button" onClick={() => account.current?.showModal()} aria-label={`Abrir conta de ${displayName}`} className={`hidden size-11 items-center justify-center rounded-full bg-lab-surface-2 lg:flex ${focus}`}><AccountAvatar name={displayName} version={avatarVersion} /></button>
-          <button type="button" onClick={() => sheet.current?.showModal()} aria-label="Abrir menu" className={`flex size-11 items-center justify-center rounded-full bg-lab-surface-2 lg:hidden ${focus}`}><Menu className="size-5" /></button>
+          <button type="button" popoverTarget="profile-menu" aria-label="Abrir menu do perfil" className={`hidden size-11 items-center justify-center overflow-hidden rounded-full bg-lab-surface-3 text-[13px] font-semibold lg:flex ${focus}`}><AccountAvatar name={displayName} version={avatarVersion} /></button>
+          <button type="button" onClick={() => sheet.current?.showModal()} aria-label="Abrir menu" className={`flex size-11 items-center justify-center rounded-full bg-lab-surface-2 lg:hidden ${focus}`}><Menu className="size-5" aria-hidden /></button>
         </header>
         {children}
       </div>
 
-      <dialog ref={sheet} className="app-menu-dialog app-navigation-dialog" aria-labelledby="sheet-title" onClick={(e) => { if (e.target === e.currentTarget) sheet.current?.close(); }}>
-        <div className="flex items-center justify-between border-b border-lab-border p-4">
-          <h2 id="sheet-title" className="font-display text-xl">Menu</h2>
-          <button aria-label="Fechar menu" className="lab-hit-target" onClick={() => sheet.current?.close()}><X className="mx-auto size-5" /></button>
-        </div>
-        <div className="grid gap-1 p-3" onClick={(e) => { if ((e.target as HTMLElement).closest("a")) sheet.current?.close(); }}>
-          {create("mb-2")}
-          {items(main)}
-          <span className="mx-3 my-1 h-px bg-lab-border" />
-          {items(footer)}
-          <Link href="/conta" className={`flex h-11 items-center gap-3 rounded-lab px-3 text-body-sm text-lab-text-dim ${focus}`}><UserRound className="size-[18px]" />Minha conta</Link>
-          <form action={logout}><button type="submit" className={`flex h-11 w-full items-center gap-3 rounded-lab px-3 text-body-sm text-lab-text-dim ${focus}`}><LogOut className="size-[18px]" />Sair da conta</button></form>
-        </div>
-      </dialog>
+      <div id="profile-menu" popover="auto" className="app-profile-menu" onClick={(e) => { if ((e.target as HTMLElement).closest("a")) (e.currentTarget as HTMLElement).hidePopover(); }}>
+        <div className="flex items-center gap-3 p-3">{who}</div>
+        <span className="mx-2 my-1 block h-px bg-lab-border" />
+        {profile.map((item) => (
+          <Link key={item.label} href={item.href} className={`flex h-12 items-center gap-3 rounded-lab px-3 text-[15px] hover:bg-lab-surface-2 ${focus}`}>
+            <item.icon className={`size-[18px] shrink-0 ${item.money ? "text-lab-reagent-bright" : "text-lab-text-dim"}`} aria-hidden /><span className="flex-1">{item.label}</span>
+            {item.money ? <span className="font-mono text-[13px] text-lab-reagent-bright">{amount}</span> : null}
+          </Link>
+        ))}
+        {signOut("h-12 gap-3 text-[15px]")}
+      </div>
 
-      <dialog ref={account} className="app-menu-dialog app-account-dialog" aria-labelledby="account-title" onClick={(e) => { if (e.target === e.currentTarget) account.current?.close(); }}>
-        <div className="flex items-start justify-between gap-3 border-b border-lab-border p-4">
-          <div className="min-w-0"><h2 id="account-title" className="break-words font-semibold">{displayName}</h2><p className="mt-1 break-all text-caption text-lab-text-dim">{email}</p></div>
-          <button aria-label="Fechar conta" className="lab-hit-target shrink-0" onClick={() => account.current?.close()}><X className="mx-auto size-4" /></button>
+      <dialog ref={sheet} className="app-mobile-menu" aria-label="Menu">
+        <div className="flex h-16 shrink-0 items-center gap-2.5 border-b border-lab-border px-4">
+          {wordmark("text-[26px]")}
+          <button type="button" onClick={close} aria-label="Fechar menu" className={`ml-auto flex size-11 items-center justify-center rounded-full bg-lab-surface-2 ${focus}`}><X className="size-5" aria-hidden /></button>
         </div>
-        <div className="grid gap-1 p-2">
-          <Link href="/conta" onClick={() => account.current?.close()} className={`flex h-11 items-center gap-3 rounded-lab px-3 text-body-sm hover:bg-lab-surface-2 ${focus}`}><UserRound className="size-4" />Perfil e conta</Link>
-          <Link href="/saldo" onClick={() => account.current?.close()} className={`flex h-11 items-center gap-3 rounded-lab px-3 text-body-sm hover:bg-lab-surface-2 ${focus}`}><Wallet className="size-4" />Plano e créditos</Link>
-          <form action={logout}><button type="submit" className={`flex h-11 w-full items-center gap-3 rounded-lab border-t border-lab-border px-3 text-body-sm hover:bg-lab-surface-2 ${focus}`}><LogOut className="size-4" />Sair da conta</button></form>
-        </div>
+        <nav aria-label="Menu" className="flex flex-1 flex-col overflow-y-auto px-2 pb-6 pt-3">
+          <div className="mb-2 flex items-center gap-3 rounded-card bg-lab-surface-1 p-3">{who}<span className="font-mono text-[15px] text-lab-reagent-bright">{amount}</span></div>
+          {main.map((item) => row(item, true))}
+          <span className="mx-3 my-2 h-px bg-lab-border" />
+          {footer.filter((i) => !i.admin || owner).map((item) => row(item, true))}
+          <span className="mx-3 my-2 h-px bg-lab-border" />
+          {profile.map((item) => row(item, true))}
+          {signOut("min-h-[52px] gap-3.5 text-body")}
+        </nav>
+        <div className="border-t border-lab-border px-4 pb-7 pt-3">{create("h-14 w-full text-body")}</div>
       </dialog>
     </>
   );

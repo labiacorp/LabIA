@@ -92,7 +92,7 @@ export async function advanceVideo(step: Step, result: GenerationResult): Promis
 
 export async function startAssembly(input: { userId: string; influencerId: string; contentId: string; intentId: string; expectedBrl: number }) {
   const video = await prisma.step.findFirst({
-    where: { contentId: input.contentId, content: { influencerId: input.influencerId, influencer: { userId: input.userId } }, kind: "VIDEO", status: "DONE" },
+    where: { contentId: input.contentId, content: { influencerId: input.influencerId, influencer: { userId: input.userId } }, kind: "VIDEO", status: { in: ["DONE", "APPROVED"] } },
     include: { assets: true },
   });
   // Asset timestamps share the transaction timestamp. Persisted chain order is the source of truth.

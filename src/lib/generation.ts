@@ -47,6 +47,16 @@ export function quote(plan: PlanItem[]): Quote {
 
 type Created = { id: string; model: string; params: GenParams };
 
+type Tx = Prisma.TransactionClient;
+type StepRow = { id: string; contentId: string | null; position: number; status: string; submissionState: string };
+async function rerunnable(tx: Tx, step: StepRow) {
+  if (step.status === "PENDING" || step.status === "QUOTED") return true;
+  if (step.status === "FAILED") return !["submission_unknown", "cost_unknown"].includes(step.submissionState);
+  if (step.status !== "DONE" || step.submissionState !== "completed") return false;
+  const later = await tx.step.count({ where: { contentId: step.contentId, position: { gt: step.position }, status: { notIn: ["PENDING", "QUOTED"] } } });
+  return later === 0;
+}
+
 export async function startPlan(input: {
   userId: string;
   influencerId: string;
@@ -107,11 +117,13 @@ export async function startPlan(input: {
         ? await tx.step.findFirst({ where: { contentId: content.id, kind } })
         : null;
       if (content && !target) throw new UserError("Etapa não encontrada.");
-      // Each content step runs once. A second tab or a different intent cannot overwrite a live/completed job.
-      if (target && target.status !== "PENDING" && target.status !== "QUOTED")
-        return [];
+      // A content step runs again only when nothing is in flight or unsettled: "Tentar de novo" after a refunded
+      // failure, or "Refazer" on a finished take nobody approved yet while every later step is still untouched.
+      // A second tab or a different intent cannot overwrite a live job or an approved one.
+      if (target && !(await rerunnable(tx, target))) return [];
+      // Several items of one plan (the four face previews) share role and kind, so the index keeps keys apart.
       const keys = priced.items.map(
-        (item) => `${input.intentId}:${item.role ?? kind}`,
+        (item, index) => `${input.intentId}:${item.role ?? kind}${index ? `:${index}` : ""}`,
       );
       if ((await tx.step.count({ where: { operationKey: { in: keys } } })) > 0)
         return []; // same intent again: nothing to do
@@ -138,6 +150,12 @@ export async function startPlan(input: {
           input: item.params as Prisma.InputJsonValue,
           operationKey: keys[index],
           estimatedCostBrl: item.costBrl,
+          // A rerun starts clean: the previous take's ledger rows already net to what it cost.
+          submissionState: "not_submitted",
+          falRequestId: null,
+          actualCostBrl: null,
+          error: null,
+          completedAt: null,
         };
         const step = target
           ? await tx.step.update({

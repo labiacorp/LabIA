@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInDev } from "./helpers";
 
+// A visitor (no session cookie) lands on the landing at "/"; a signed-in user is sent to Início.
 // A visitor (no session cookie) lands on the landing at "/"; a signed-in user keeps the studio there.
 test("a visitor on / sees the landing page", async ({ page }) => {
   await page.goto("/");
@@ -85,11 +86,12 @@ test("link previews have art and metadata", async ({ page, request }) => {
 
 // Runs only with an existing account in the environment (never committed): LANDING_EMAIL. Dev-provider
 // sign-in, because owners have no password; read-only: it only opens pages.
-test("a signed-in user gets the studio on /, and the landing stays on /lp", async ({ page }) => {
+test("a signed-in user goes from / to Início, and the landing stays on /lp", async ({ page }) => {
   const email = process.env.LANDING_EMAIL;
   test.skip(!email, "LANDING_EMAIL not set");
   await signInDev(page, email!);
   await page.goto("/");
+  await expect(page).toHaveURL(/\/painel$/);
   await expect(page.locator("#app-content")).toBeVisible();
   await expect(page.getByText("Quatro etapas. Cada uma com custo.")).toHaveCount(0);
   await page.goto("/lp");

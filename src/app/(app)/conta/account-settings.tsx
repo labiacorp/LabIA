@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef, type ReactNode, type RefObject } from "react";
 import { ChevronRight, Wallet, ShieldCheck, Download, Gift, X, LogOut, Camera } from "lucide-react";
 import { AccountAvatar } from "@/components/app/account-avatar";
+import { Modal } from "@/components/ui/modal";
 import { AccountForm } from "./account-form";
 import { AvatarForm } from "./avatar-form";
 import { ReferralLink } from "./referral-link";
@@ -13,10 +14,10 @@ const brl = (v: number) => creditsText(balanceCredits(v));
 import { logout } from "../actions";
 
 export function SettingsDialog({ dialog, title, children }: { dialog: RefObject<HTMLDialogElement | null>; title: string; children: ReactNode }) {
-  return <dialog ref={dialog} className="account-settings-dialog" aria-label={title} onClick={(event) => { if(event.target === event.currentTarget) dialog.current?.close(); }}>
-    <div className="account-dialog-heading"><h2>{title}</h2><button type="button" aria-label={`Fechar ${title.toLowerCase()}`} onClick={() => dialog.current?.close()}><X className="size-5" /></button></div>
-    <div className="account-dialog-body">{children}</div>
-  </dialog>;
+  return <Modal dialog={dialog} label={title}>
+    <div className="flex items-center justify-between gap-4"><h2 className="font-display text-[36px] font-black uppercase leading-[.95]">{title}</h2><button type="button" aria-label={`Fechar ${title.toLowerCase()}`} onClick={() => dialog.current?.close()} className="flex size-11 shrink-0 items-center justify-center rounded-full text-lab-text-dim hover:bg-lab-surface-2"><X className="size-5" /></button></div>
+    <div>{children}</div>
+  </Modal>;
 }
 
 export function AccountSettings({ name, email, avatarVersion, referralCode, referral: stats }: { name: string; email: string; avatarVersion?: number; referralCode: string; referral: { accounts: number; confirmed: number; earnedBrl: number; invites: number } }) {

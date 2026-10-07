@@ -1,7 +1,40 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "labia-dev", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev"], "port": 3000 },
-    { "name": "design-proposal", "runtimeExecutable": "python3", "runtimeArgs": ["-m", "http.server", "4100", "--directory", "Proposta LabIA com Design System"], "port": 4100 }
+    {
+      "name": "labia-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "design-proposal",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4100",
+        "--directory",
+        "Proposta LabIA com Design System"
+      ],
+      "port": 4100
+    },
+    {
+      "name": "labia-mock",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "FAL_MOCK=1",
+        "ALLOWED_EMAILS=",
+        "npx",
+        "next",
+        "dev",
+        "-p",
+        "3100"
+      ],
+      "port": 3100
+    }
   ]
 }

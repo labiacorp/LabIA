@@ -45,6 +45,26 @@ export function sheetItem(card: CharacterCard, selection: SheetSelection = DEFAU
   return item;
 }
 
+// Create-influencer flow (design): four face previews from the description, then the sheet made from the approved
+// face, so every later image keeps that face. Previews are CHARACTER steps with no role until one is approved.
+export const PREVIEW = { model: "bytedance/seedream/v5/lite/text-to-image", resolution: "2K", count: 4 } as const;
+export function previewItems(card: Pick<CharacterCard, "name" | "role" | "visualSignature">): KitItemPlan[] {
+  const prompt = `Photorealistic head-and-shoulders portrait of a social-media creator (${card.role}): ${card.visualSignature}. Natural skin texture, soft daylight, plain light background, looking at the camera, no text, no watermark.`;
+  return Array.from({ length: PREVIEW.count }, () => {
+    const params: Record<string, unknown> = { prompt, aspect_ratio: "4:5", resolution: PREVIEW.resolution };
+    params.imagePricing = prepareImage(PREVIEW.model, params, usdBrlRate()).snapshot;
+    return { role: null, model: PREVIEW.model, params };
+  });
+}
+export function sheetFromFaceItem(card: CharacterCard, faceUrl: string): KitItem {
+  const base = String(sheetItem(card).params.prompt);
+  const prompt = `Use the person in the reference photo as the only character: keep exactly the same face. ${base}`;
+  const params: Record<string, unknown> = { prompt, image_urls: [faceUrl], aspect_ratio: "3:2", resolution: "2K" };
+  params.imagePricing = prepareImage("fal-ai/nano-banana-2/edit", params, usdBrlRate()).snapshot;
+  return { role: "SHEET", model: "fal-ai/nano-banana-2/edit", params };
+}
+type KitItemPlan = { role: AssetRole | null; model: string; params: Record<string, unknown> };
+
 // Every text-to-image model and quality that can take this sheet prompt, priced by the server (invalid pairs are left out).
 export function getSheetOptions(card: CharacterCard) {
   return SHEET_DEFINITIONS.map((model) => ({

@@ -144,7 +144,7 @@ export default async function TrendsPage({
           {!characters.length && (
             <p className="mb-5 text-body-sm">
               Crie um personagem para organizar esta produção.{" "}
-              <Link href="/?criar=1" className="underline">
+              <Link href="/influenciadores/nova" className="underline">
                 Criar personagem
               </Link>
             </p>

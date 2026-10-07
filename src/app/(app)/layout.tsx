@@ -8,6 +8,8 @@ import { needsConsent } from "@/lib/consent";
 import { ownerSession } from "@/lib/owner";
 import { refreshRate } from "@/lib/fx";
 import { requireUserId } from "@/lib/session";
+import { estimateReel } from "@/lib/content-plan";
+import { costCredits } from "@/lib/plan";
 
 export default async function AppLayout({
   children,
@@ -21,6 +23,7 @@ export default async function AppLayout({
     .catch(() => ({ ok: false as const }));
   // Founders (unlimited) see the real fal.ai credit instead of the ledger.
   const falUsd = balance.ok && balance.value === Infinity ? await getFalCreditsUsd() : undefined;
+  const influencers = await prisma.influencer.count({ where: { userId } });
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
     select: { name: true, email: true, avatarUpdatedAt: true, role: true, createdAt: true, consentAcceptedAt: true },
@@ -44,6 +47,9 @@ export default async function AppLayout({
         avatarVersion={user.avatarUpdatedAt?.getTime()}
         balance={falUsd !== undefined ? (falUsd === null ? null : falUsd * videoUsdBrlRate()) : balance.ok ? balance.value : null}
         owner={owner}
+        lowAt={costCredits(estimateReel().totalBrl)}
+        // One "Novo conteúdo" button: with no influencer yet it starts at creating one.
+        newContentHref={influencers ? "/conteudos/novo" : "/influenciadores/nova"}
       >
         <main id="app-content" className="mx-auto w-full max-w-wide px-4 pb-16 pt-6 md:px-8 md:pt-8">
           {children}

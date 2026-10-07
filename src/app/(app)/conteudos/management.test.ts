@@ -54,13 +54,11 @@ describe("content organization", () => {
     const f = new FormData();
     f.set("script", "Um roteiro reutilizado.");
     f.set("title", "Novo");
-    f.set("idea", "");
+    f.set("idea", "Uma ideia");
     f.set("aspectRatio", "16:9");
     f.set("influencerId", "character");
     f.set("userId", "foreign");
-    await expect(createProduction("", f)).rejects.toThrow(
-      "redirect:/i/character/c/new",
-    );
+    expect(await createProduction({ error: "" }, f)).toEqual({ error: "", created: "/i/character/c/new" });
     expect(mocks.find).toHaveBeenCalledWith({
       where: { id: "character", userId: "owner" },
       select: { id: true },
@@ -87,13 +85,21 @@ describe("content organization", () => {
   it("rejects invalid formats and foreign characters before creation", async () => {
     const f = new FormData();
     f.set("title", "Novo");
-    f.set("idea", "");
+    f.set("idea", "Uma ideia");
     f.set("aspectRatio", "invalid");
     f.set("influencerId", "foreign");
-    expect(await createProduction("", f)).toContain("Escolha");
+    expect((await createProduction({ error: "" }, f)).error).toContain("Escolha");
     f.set("aspectRatio", "9:16");
     mocks.find.mockResolvedValue(null);
-    expect(await createProduction("", f)).toContain("sua conta");
+    expect((await createProduction({ error: "" }, f)).error).toContain("sua conta");
     expect(mocks.create).not.toHaveBeenCalled();
+  });
+  it("takes the title from the idea's first clause and defaults to 9:16", async () => {
+    const f = new FormData();
+    f.set("idea", "3 hábitos de quem acorda às 5h, tom leve, gancho nos 2 primeiros segundos.");
+    f.set("influencerId", "character");
+    await createProduction({ error: "" }, f);
+    expect(mocks.create.mock.calls[0][0].data).toMatchObject({ title: "3 hábitos de quem acorda às 5h", aspectRatio: "9:16" });
+    expect((await createProduction({ error: "" }, (f.set("idea", " "), f))).error).toContain("ideia");
   });
 });

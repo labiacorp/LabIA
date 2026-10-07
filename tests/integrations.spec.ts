@@ -96,7 +96,8 @@ test("the final video on the content page can be published", async ({ page }, in
   await connectX(page);
 
   await page.goto(`/i/${influencerId}/c/${contentId}`);
-  await page.locator("figure", { hasText: "Vídeo final" }).getByRole("button", { name: "Publicar" }).click();
+  // The finished montage card (and, on desktop, the preview column) offer "Publicar" next to "Baixar".
+  await page.getByRole("button", { name: "Publicar" }).first().click();
   await publish(page, "Meu vídeo final");
   await page.goto("/integracoes");
   await expect(page.locator("li[data-status=PUBLISHED]")).toContainText("Meu vídeo final");
