@@ -6,7 +6,7 @@ This file is identical to `AGENTS.md` (read by Codex). Edit one, mirror the othe
 
 ## Rules
 
-- Everything in the repo is in English. The product UI and customer-facing copy are in Brazilian Portuguese (PT-BR). Chat with Diego and Felipe is in PT-BR.
+- Everything in the repo is in English. Product UI copy defaults to English (decided 2026-10-07; PT-BR localization later, new or changed copy goes in English, the full sweep is `TASKS.md` S1). Chat with Diego and Felipe is in PT-BR.
 - The code is the source of truth; `PROJECT_STATUS.md` is the short current-state snapshot. Update it in the same commit as any behavior change.
 - Branches and sync: see "Branches and sync" below. It is the same for Diego, Felipe and every agent (Claude, Codex); follow it exactly so the two machines never drift.
 - Autonomy: work freely on `dev` without asking: commit, push, merge task branches into `dev`, pull/rebase local commits, delete dead code and run mock (`FAL_MOCK=1`) flows. Still confirm first: anything into `main`, a real paid call (say why, the scope and the max R$ first; the real cost after), Production env vars, the Production ledger, and destructive operations on real data.
@@ -24,7 +24,7 @@ This file is identical to `AGENTS.md` (read by Codex). Edit one, mirror the othe
 
 Diego and Felipe work at the same time, each with an agent. One flow for everyone:
 
-1. **Start of every session, before reading or editing code:** `git switch dev && git pull origin dev`. The other person (or their agent) may have pushed minutes ago. Pull again before every push.
+1. **Start of every session, before reading or editing code:** `git switch dev && git pull origin dev`, then read `TASKS.md` and take the next task in your lane. The other person (or their agent) may have pushed minutes ago. Pull again before every push.
 2. **`dev` is the shared working branch and the only preview:** all work lands here. Every push to `dev` makes the Vercel Preview (`labia-git-dev-labiacorp-5727.vercel.app`, LabIA Dev database). That preview is where things are checked; other branches never deploy (`vercel.json` `git.deploymentEnabled`).
 3. **`main` is production:** every push deploys labia.studio. Nobody works on it directly. When a founder says "puxa/sobe para a main", it means release to the web now, with exactly one deploy (Production): `git fetch origin && git push origin origin/dev:main` (fast-forward, no merge commit). `dev` and `main` then point at the same commit, so nothing is pushed to `dev` afterwards; a push to `dev` only to "align" it makes a useless extra preview. No new preview, no extra review step: the preview on `dev` was the check. If `main` has commits `dev` lacks, merge `main` into `dev` first, check the preview, then fast-forward.
 4. **Task branches are short and optional:** `diego/<task>` or `felipe/<task>` from `dev`, merged back into `dev` (`--no-ff`) as soon as the task is done, then deleted locally and on origin. Small changes can go straight to `dev`. No branch lives for days.

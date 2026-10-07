@@ -1,6 +1,8 @@
 # LabIA: current state
 
-Production is `main` and it is the only branch (all others merged and deleted on 2026-10-06; work goes straight to `main`). V2 was rewritten from scratch on 2026-10-03. Describes what exists, nothing else. If this file and the code disagree, the code wins; fix this file in the same commit as the change.
+Production is `main`; all work lands on `dev` (Preview) first, see CLAUDE.md "Branches and sync". V2 was rewritten from scratch on 2026-10-03. Describes what exists, nothing else. If this file and the code disagree, the code wins; fix this file in the same commit as the change.
+
+Open work and who does it: `TASKS.md`.
 
 ## What it is
 
