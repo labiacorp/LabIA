@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Check, CircleAlert } from "lucide-react";
 import { CostConfirm } from "@/components/app/cost-confirm";
@@ -42,7 +41,6 @@ export function BriefForm({ intent, choices, defaultModel, balanceBrl, previewTe
       <CostConfirm costBrl={previewBrl} balanceBrl={balanceBrl} label="Gerar prévia" eyebrow="Confirmar prévia do rosto · 4 opções" detail="previstos para 4 opções de rosto" pending={pending} />
     </div>
     {state.error ? <p role="alert" className="flex items-center gap-1.5 text-[13px] text-lab-danger"><CircleAlert className="size-3.5" aria-hidden />{state.error}</p> : null}
-    <p className="text-body-sm text-lab-text-dim">Already have her photo? <Link href="/influenciadores/importar" className="underline">Import an existing influencer</Link></p>
   </form>;
 }
 

@@ -3,6 +3,7 @@ import { costText } from "@/lib/plan";
 import Image from "next/image";
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { InlineUpload } from "@/components/app/inline-upload";
 import { findMotionModel, MOTION_MODEL, MOTION_MODELS, motionEstimate, type MotionBrief } from "@/lib/motion";
 import { createMotion } from "./actions";
 type Media = {
@@ -14,8 +15,9 @@ type Media = {
 export function MotionForm({
   trend,
   characters,
-  images,
-  videos,
+  images: savedImages,
+  videos: savedVideos,
+  uploadReady = true,
   initial,
   rate,
 }: {
@@ -23,10 +25,15 @@ export function MotionForm({
   characters: { id: string; name: string }[];
   images: Media[];
   videos: Media[];
+  uploadReady?: boolean;
   initial?: MotionBrief;
   rate: number;
 }) {
   const [state, action, pending] = useActionState(createMotion, "");
+  // Files uploaded from this form join the lists at once, so nothing has to be imported elsewhere first.
+  const [uploaded, setUploaded] = useState<{ images: Media[]; videos: Media[] }>({ images: [], videos: [] });
+  const images = [...uploaded.images, ...savedImages];
+  const videos = [...uploaded.videos, ...savedVideos];
   const [sourceId, setSource] = useState(
     initial?.sourceId ?? videos[0]?.id ?? "",
   );
@@ -75,6 +82,16 @@ export function MotionForm({
               ))}
             </select>
           </label>
+          {uploadReady && (
+            <InlineUpload
+              accept="video"
+              label="Upload a video (MP4, 4 to 30 s)"
+              onUploaded={(asset) => {
+                setUploaded((current) => ({ ...current, videos: [{ id: asset.id, url: asset.url, name: asset.name, durationSec: asset.durationSec }, ...current.videos] }));
+                setSource(asset.id);
+              }}
+            />
+          )}
           {source && (
             <video
               key={source.id}
@@ -117,6 +134,20 @@ export function MotionForm({
                   </option>
                 ))}
               </select>
+              {uploadReady && (
+                <InlineUpload
+                  accept="image"
+                  label="Upload an image"
+                  onUploaded={(asset) => {
+                    setUploaded((current) => ({ ...current, images: [{ id: asset.id, url: asset.url, name: asset.name, durationSec: null }, ...current.images] }));
+                    setRefs((current) => {
+                      const next = [...current];
+                      next[index] = asset.id;
+                      return next;
+                    });
+                  }}
+                />
+              )}
               {refs[index] && images.find((a) => a.id === refs[index]) && (
                 <Image
                   unoptimized

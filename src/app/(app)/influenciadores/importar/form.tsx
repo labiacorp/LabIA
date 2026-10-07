@@ -1,13 +1,16 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { InlineUpload } from "@/components/app/inline-upload";
 import { Button } from "@/components/ui/button";
 import { importInfluencer, type ImportState } from "./actions";
 import { NICHES } from "../nova/niches";
 
 const field = "rounded-control border-[1.5px] border-lab-border-strong bg-lab-surface-2 px-3 text-body-sm text-lab-text placeholder:text-lab-text-dim focus-visible:border-lab-text focus-visible:outline-none";
 
-export function ImportForm({ images }: { images: { id: string; url: string; name: string }[] }) {
+export function ImportForm({ images: saved, uploadReady }: { images: { id: string; url: string; name: string }[]; uploadReady: boolean }) {
+  const [added, setAdded] = useState<{ id: string; url: string; name: string }[]>([]);
+  const images = [...added, ...saved];
   const [state, action, pending] = useActionState(importInfluencer, {} as ImportState);
   const [chosen, setChosen] = useState(images[0]?.id ?? "");
   return <form action={action} className="flex flex-col gap-5">
@@ -19,7 +22,8 @@ export function ImportForm({ images }: { images: { id: string; url: string; name
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={image.url} alt={image.name} className="absolute inset-0 size-full object-cover" />
         </button>)}
-      </div> : <p className="text-body-sm text-lab-text-dim">Import her photo above first, then pick it here.</p>}
+      </div> : <p className="text-body-sm text-lab-text-dim">No photo yet. Upload hers below.</p>}
+      {uploadReady ? <InlineUpload accept="image" label="Upload her photo" onUploaded={(asset) => { setAdded((current) => [{ id: asset.id, url: asset.url, name: asset.name }, ...current]); setChosen(asset.id); }} /> : <p className="text-caption text-lab-warning">File storage is not connected yet, so uploads are off.</p>}
     </fieldset>
     <label className="flex flex-col gap-1.5"><span className="text-body-sm font-medium">Name</span><input name="name" required maxLength={60} placeholder="Ex.: Malu Andrade" className={`h-11 ${field}`} /></label>
     <fieldset className="flex flex-col gap-2"><legend className="mb-1 text-body-sm font-medium">Niche</legend><div className="flex flex-wrap gap-2">

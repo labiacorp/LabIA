@@ -36,7 +36,7 @@ App UI follows the Claude Design "Corte" handoff (2026-10-05): dark only (light 
 
 ## Import an existing influencer (2026-10-07)
 
-`/influenciadores/importar`: upload her photo (same private reference storage as `/trends`), pick it, name her. Free, no generation: the image becomes her face (role FRONT, `faceAssetId`), so she works in Trends and in Content. Scene generation and the content page accept an imported FRONT (`storageKey` set) as well as a generated one. Linked from the create-influencer form and from the Trends empty state. She has no character sheet; nothing in Trends or Content needs one.
+`/influenciadores/importar`: upload her photo (same private reference storage as `/trends`), pick it, name her. Free, no generation: the image becomes her face (role FRONT, `faceAssetId`), so she works in Trends and in Content. Scene generation and the content page accept an imported FRONT (`storageKey` set) as well as a generated one. Reached from the "Importar" button next to "Nova" on the influencers list (and its empty state) and from the Trends empty state. Every field that asks for an image or video can take an upload in place (`InlineUpload`, same private storage as the library): the Trends source video and each reference, and her photo on the import page; the new file is selected at once. She has no character sheet; nothing in Trends or Content needs one.
 
 ## Motion recreation and imported references
 

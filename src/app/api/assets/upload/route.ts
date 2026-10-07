@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       },
     });
     return Response.json(
-      { id: asset.id, url: asset.url, kind: asset.kind },
+      { id: asset.id, url: asset.url, kind: asset.kind, name: asset.fileName, durationSec: asset.durationSec },
       { status: 201 },
     );
   } catch (error) {
