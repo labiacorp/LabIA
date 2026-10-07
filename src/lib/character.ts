@@ -1,6 +1,7 @@
 import { usdBrlRate } from "@/lib/fx";
 import type { AssetRole } from "@/generated/prisma/enums";
 import { quote } from "@/lib/generation";
+import { chargeBrl } from "@/lib/plan";
 import { prepareImage, SHEET_DEFINITIONS } from "@/lib/providers/image-models";
 
 export type CharacterCard = { name: string; role: string; mood: string; visualSignature: string; persona: string };
@@ -82,5 +83,6 @@ export function stepCost(step: CostStep): { state: "none" } | { state: "unknown"
 
 export function kitSpent(steps: CostStep[]): { unknown: boolean; brl: number } {
   const costs = steps.map(stepCost);
-  return { unknown: costs.some((cost) => cost.state === "unknown"), brl: costs.reduce((sum, cost) => sum + (cost.state === "known" ? cost.brl : 0), 0) };
+  // Each step is charged in whole credits, so the total is the sum of those charges (equal to the sum of the chips).
+  return { unknown: costs.some((cost) => cost.state === "unknown"), brl: costs.reduce((sum, cost) => sum + (cost.state === "known" ? chargeBrl(cost.brl) : 0), 0) };
 }

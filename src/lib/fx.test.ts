@@ -52,3 +52,16 @@ it("uses USD_BRL_RATE when every source is down", async () => {
   expect(fx.usdBrlRate()).toBe(5.3);
   expect(fx.rateInfo().source).toBe("fallback");
 });
+
+it("USD_BRL_RATE_FIXED ignores a live quote already in the cache", async () => {
+  const fetchMock = vi.fn().mockResolvedValue(awesome("5.02"));
+  vi.stubGlobal("fetch", fetchMock);
+  const fx = await import("./fx");
+  await fx.refreshRate();
+  expect(fx.usdBrlRate()).toBe(5.02); // live quote cached
+  vi.stubEnv("USD_BRL_RATE_FIXED", "5.40");
+  expect(fx.usdBrlRate()).toBe(5.4); // page and action both read the pinned rate, whatever the instance cached
+  expect(fx.rateInfo().source).toBe("fixed");
+  await fx.refreshRate(true);
+  expect(fetchMock).toHaveBeenCalledTimes(1); // no further live lookups
+});

@@ -44,7 +44,7 @@ describe("reference image model contracts", () => {
     const item = sceneItem("scene", params.image_urls[0], "9:16", { model: "fal-ai/flux-pro/kontext", resolution: "default" });
     const changedRate = new FalProvider({ apiKey: "fixture-no-network", usdBrlRate: 9 });
     expect(changedRate.estimateActualCost(item.model, item.params, [{ url: "https://fixture/result.png" }]).brl).toBeCloseTo(.216, 4);
-    expect(getImageOptions("9:16").find((option) => option.model === "bytedance/seedream/v5/lite/edit")?.configurations[0].brl).toBeCloseTo(.189, 4);
+    expect(getImageOptions("9:16").find((option) => option.model === "bytedance/seedream/v5/lite/edit")?.configurations[0].brl).toBeCloseTo(.2, 4); // R$0.189 charged as 4 whole credits
   });
 });
 

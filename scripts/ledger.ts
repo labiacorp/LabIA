@@ -17,7 +17,8 @@ async function main() {
     if (command === "topup") {
       const value = Number(amount);
       if (!Number.isFinite(value) || value <= 0 || value > 1000) throw new Error("topup needs an amount between 0 and 1000 (BRL).");
-      await prisma.ledgerEntry.create({ data: { userId: user.id, deltaBrl: value, reason: "TOPUP", note: note.join(" ") || "manual top-up" } });
+      const { chargeBrl } = await import("../src/lib/plan");
+      await prisma.ledgerEntry.create({ data: { userId: user.id, deltaBrl: chargeBrl(value), reason: "TOPUP", note: note.join(" ") || "manual top-up" } });
     }
     console.log(`${user.email}: balance R$ ${(await getBalanceBrl(user.id)).toFixed(2)}`);
   } else if (command === "refund") {

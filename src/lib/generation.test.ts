@@ -2,7 +2,8 @@ import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { type CharacterCard, sheetItem } from "./character";
-import { collectRunning, quote, startPlan, UserError } from "./generation";
+import { collectRunning, quote, reconcileReservation, startPlan, UserError } from "./generation";
+import { balanceCredits, costCredits } from "./plan";
 import { getBalanceBrl } from "./ledger";
 import { prisma } from "./prisma";
 
@@ -69,7 +70,7 @@ describe.skipIf(!process.env.DATABASE_URL)("character kit money path", () => {
   it("reserves the quoted price, submits once and collects the result once", async () => {
     const who = await seed(10);
     expect((await start(who)).started).toBe(1);
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.648, 4);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.65, 4);
     const [step] = await steps(who.influencerId);
     expect(step).toMatchObject({ status: "RUNNING", submissionState: "submitted", kind: "CHARACTER", role: "SHEET" });
     expect(step.falRequestId).toMatch(/^mock-/);
@@ -79,7 +80,7 @@ describe.skipIf(!process.env.DATABASE_URL)("character kit money path", () => {
     expect(done.status).toBe("DONE");
     expect(done.assets).toHaveLength(1); // exactly one asset despite five polls
     expect(done.assets[0]).toMatchObject({ role: "SHEET", kind: "IMAGE" });
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.648, 4); // actual = estimate, no adjustment
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.65, 4); // actual = estimate, no adjustment
   });
 
   it("keeps a job pending while fal has not finished", async () => {
@@ -96,7 +97,7 @@ describe.skipIf(!process.env.DATABASE_URL)("character kit money path", () => {
     await Promise.allSettled([1, 2, 3, 4, 5].map(() => start(who, sheetPlan(), intentId)));
     expect(await steps(who.influencerId)).toHaveLength(1);
     expect(await prisma.ledgerEntry.count({ where: { userId: who.userId, reason: "SPEND" } })).toBe(1);
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.648, 4);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.65, 4);
   });
 
   it("refuses without enough balance and charges nothing", async () => {
@@ -114,7 +115,7 @@ describe.skipIf(!process.env.DATABASE_URL)("character kit money path", () => {
     expect(await getBalanceBrl(who.userId)).toBe(Infinity);
     expect(await prisma.ledgerEntry.count({ where: { userId: who.userId, reason: "SPEND" } })).toBe(1);
     vi.stubEnv("UNLIMITED_EMAILS", "");
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(-0.648, 4);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(-0.65, 4);
   });
 
   it("refuses when the price shown is not the price now", async () => {
@@ -123,12 +124,26 @@ describe.skipIf(!process.env.DATABASE_URL)("character kit money path", () => {
     expect(await steps(who.influencerId)).toHaveLength(0);
   });
 
+  it("accepts a price shown at 5.40 when the server quotes at 5.02, if the credit count is the same", async () => {
+    const who = await seed(10);
+    const shown = quote(sheetPlan()).totalBrl; // page rendered with the 5.40 fallback: 13 credits
+    vi.stubEnv("USD_BRL_RATE_FIXED", "5.02"); // the action quotes R$0.6024, still 13 credits
+    try {
+      expect((await start(who, sheetPlan(), randomUUID(), shown)).started).toBe(1);
+      expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.65, 4); // charged exactly the 13 credits shown
+      // A real change names two different numbers, never "13 para 13".
+      await expect(start(who, sheetPlan(), randomUUID(), 0.01)).rejects.toThrow("de 1 crédito para 13 créditos");
+    } finally {
+      vi.stubEnv("USD_BRL_RATE_FIXED", "");
+    }
+  });
+
   it("cannot overspend with parallel requests: only what the balance covers goes through", async () => {
-    const who = await seed(1); // covers one sheet (R$0.648), not two
+    const who = await seed(1); // covers one sheet (13 credits, R$0.65), not two
     const results = await Promise.allSettled([1, 2, 3, 4, 5].map(() => start(who)));
     expect(results.filter((result) => result.status === "fulfilled" && result.value.started === 1)).toHaveLength(1);
     expect(await steps(who.influencerId)).toHaveLength(1);
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(1 - 0.648, 4);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(1 - 0.65, 4);
   });
 
   it("an ambiguous submit keeps the reservation, is flagged and is never resent", async () => {
@@ -138,7 +153,7 @@ describe.skipIf(!process.env.DATABASE_URL)("character kit money path", () => {
     expect(step).toMatchObject({ status: "FAILED", submissionState: "submission_unknown" });
     expect(step.error).toMatch(/Envio incerto/);
     expect(await collectRunning(who.userId, who.influencerId)).toEqual({ running: 0 });
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.648, 4); // no automatic refund
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.65, 4); // no automatic refund
     expect(await prisma.ledgerEntry.count({ where: { userId: who.userId, reason: "REFUND" } })).toBe(0);
   });
 
@@ -151,6 +166,31 @@ describe.skipIf(!process.env.DATABASE_URL)("character kit money path", () => {
     expect(step.error).toMatch(/A geração falhou/);
     expect(await getBalanceBrl(who.userId)).toBeCloseTo(10, 4);
     expect(await prisma.ledgerEntry.count({ where: { userId: who.userId, reason: "REFUND" } })).toBe(1);
+    // Spend and full refund are the same whole-credit amount, so the step nets to exactly zero (−13 / +13).
+    const rows = await prisma.ledgerEntry.findMany({ where: { stepId: step.id }, orderBy: { createdAt: "asc" } });
+    expect(rows.map((row) => row.deltaBrl.toString())).toEqual(["-0.65", "0.65"]);
+    expect(rows.map((row) => Number(row.deltaBrl) > 0 ? balanceCredits(Number(row.deltaBrl)) : -costCredits(-Number(row.deltaBrl)))).toEqual([-13, 13]);
+  });
+
+  it("settles an off-grid real cost in whole credits, so ledger rows add up to the displayed balance", async () => {
+    const who = await seed(10);
+    await start(who); // completes at the estimate
+    await Promise.all([1, 2].map(() => collectRunning(who.userId, who.influencerId)));
+    await start(who, sheetPlan("[mock-fail]")); // full refund
+    for (let attempt = 0; attempt < 4; attempt++) await collectRunning(who.userId, who.influencerId);
+    await start(who, sheetPlan("[mock-submit-error]")); // ambiguous, reconciled at an off-grid real cost
+    const unknown = (await steps(who.influencerId)).find((step) => step.submissionState === "submission_unknown")!;
+    expect(await reconcileReservation(who.userId, unknown.id, 0.4016)).toEqual({ actualBrl: 0.4016, adjustmentBrl: 0.2 }); // charged 9 credits
+    // Same checks as scripts/ledger-round.ts check: no off-grid row, and the rows shown add up to the balance shown.
+    const [check] = await prisma.$queryRaw<{ off_grid: bigint; rows: number; balance: number }[]>`
+      SELECT count(*) FILTER (WHERE mod(delta_brl, 0.05) <> 0) AS off_grid,
+        SUM(CASE WHEN delta_brl > 0 THEN floor(delta_brl / 0.05) ELSE -ceil(-delta_brl / 0.05) END)::float AS rows,
+        floor(SUM(delta_brl) / 0.05)::float AS balance
+      FROM ledger_entries WHERE user_id = ${who.userId}`;
+    expect(Number(check.off_grid)).toBe(0);
+    expect(check.rows).toBe(check.balance);
+    expect(check.balance).toBe(200 - 13 - 9); // 10 reais, one sheet, one reconciled sheet; the refunded one nets zero
+    expect(balanceCredits(await getBalanceBrl(who.userId))).toBe(check.balance);
   });
 
   it("does not let another user collect or see someone else's jobs", async () => {
@@ -209,7 +249,7 @@ describe.skipIf(!process.env.DATABASE_URL)("content scene money path", () => {
     expect(done.status).toBe("DONE");
     expect(done.assets).toHaveLength(1);
     expect(done.assets[0]).toMatchObject({ userId: who.userId, contentId: who.contentId, influencerId: who.influencerId, role: null });
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.432, 4);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.45, 4);
     expect((await prisma.influencer.findUniqueOrThrow({ where: { id: who.influencerId } })).faceAssetId).toBe(influencer.faceAssetId);
     expect((await prisma.content.findUniqueOrThrow({ where: { id: who.contentId } })).status).toBe("IN_PROGRESS");
   });
@@ -223,7 +263,7 @@ describe.skipIf(!process.env.DATABASE_URL)("content scene money path", () => {
     expect(running.input).toMatchObject({ image_urls: ["/mock/portrait.svg"], resolution: "2K", imagePricing: { unitUsd: .035, usdBrlRate: 5.4 } });
     await collectRunning(who.userId, who.influencerId);
     expect((await image(who.contentId)).status).toBe("DONE");
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(9.811, 4);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(9.8, 4);
   });
 
   it("rejects an unregistered image endpoint without reserving funds", async () => {
@@ -255,7 +295,7 @@ describe.skipIf(!process.env.DATABASE_URL)("content scene money path", () => {
     const another = await prisma.content.create({ data: { influencerId: who.influencerId, title: "Other", steps: { create: { kind: "IMAGE", position: 1 } } } });
     const results = await Promise.allSettled([runScene(who), runScene({ ...who, contentId: another.id })]);
     expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(0.6 - 0.432, 4);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(0.6 - 0.45, 4);
   });
 
   it("refuses changed prices and insufficient funds without updating the placeholder", async () => {
@@ -281,7 +321,7 @@ describe.skipIf(!process.env.DATABASE_URL)("content scene money path", () => {
     await runScene(who, { prompt: "[mock-submit-error]" });
     expect((await image(who.contentId)).submissionState).toBe("submission_unknown");
     expect((await runScene(who)).started).toBe(0);
-    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.432, 4);
+    expect(await getBalanceBrl(who.userId)).toBeCloseTo(10 - 0.45, 4);
   });
 
   it("refuses another user's content before charging or submitting", async () => {
