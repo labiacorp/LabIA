@@ -27,14 +27,11 @@ test("sign-up confirms the address before the first sign-in, by code", async ({ 
   await page.getByLabel("Código").fill(codeIn((await lastEmail(email)).text));
   await page.getByRole("button", { name: "Confirmar", exact: true }).click();
   await expect(page.getByText("E-mail confirmado. Entre com sua senha.")).toBeVisible();
-  // Terms come after the first sign-in, on "Antes de começar".
+  // The terms were ticked on sign-up, so the first sign-in goes straight in (no "Antes de começar").
   await page.goto("/login");
   await page.getByPlaceholder("voce@exemplo.com").first().fill(email);
   await page.getByPlaceholder("Sua senha").fill("abcd");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Antes de começar" })).toBeVisible();
-  for (const box of await page.getByRole("checkbox").all()) await box.check();
-  await page.getByRole("button", { name: "Concordar e continuar" }).click();
   await expect(page).toHaveURL(/\/painel/);
   const [row] = await sql`SELECT consent_terms_version FROM users WHERE email = ${email}`;
   expect(row.consent_terms_version).toBe(CURRENT_TERMS_VERSION);
