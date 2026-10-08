@@ -10,7 +10,7 @@ import { PASSWORD_MAX, PASSWORD_MIN } from "@/lib/password-rules";
 import { logout } from "../../actions";
 import { SettingsDialog } from "../account-settings";
 import { SessionControls } from "../session-controls";
-import { deleteAccount, reauthWithGoogle, requestEmailChange, setPassword, type SecurityState } from "./actions";
+import { connectGoogle, deleteAccount, reauthWithGoogle, requestEmailChange, setPassword, type SecurityState } from "./actions";
 
 const initial: SecurityState = { error: "" };
 
@@ -56,9 +56,9 @@ export function SecurityPanel({ email, hasPassword, googleBound, googleReady, em
           ? <Row icon={<Mail className="size-5" />} label="E-mail" value={email} locked={locked} onOpen={() => open(emailDialog)} />
           : <div className="account-settings-row" data-static><span className="account-row-icon"><Mail className="size-5" /></span><span className="account-row-label" style={{ flex: "none" }}>E-mail</span><span className="account-row-value account-row-value-wide" title={email}>{email}</span></div>}
         <Row icon={<KeyRound className="size-5" />} label="Senha" value={hasPassword ? "Definida" : "Não definida"} locked={locked} onOpen={() => open(passwordDialog)} />
-        <div className="account-settings-row" data-static><span className="account-row-icon"><span aria-hidden className="text-caption font-bold">G</span></span><span className="account-row-label">Google</span><span className="account-row-value">{googleBound ? "Conectado" : "Não conectado"}</span></div>
+        <div className="account-settings-row" data-static><span className="account-row-icon"><span aria-hidden className="text-caption font-bold">G</span></span><span className="account-row-label">Google</span><span className="account-row-value">{googleBound ? "Conectado" : "Não conectado"}</span>{!googleBound && googleReady ? <form action={connectGoogle}><Button type="submit" variant="secondary" size="sm">Conectar</Button></form> : null}</div>
       </div>
-      <p className="account-group-caption">{googleBound ? "Você pode entrar com o Google ou com e-mail e senha, se tiver uma." : "Para conectar, entre com o Google usando este mesmo e-mail."}</p>
+      <p className="account-group-caption">{googleBound ? "Você pode entrar com o Google ou com e-mail e senha, se tiver uma." : "Entre com o Google usando este mesmo e-mail para conectar a conta."}</p>
     </section>
     <section className="account-settings-section" aria-labelledby="security-sessions">
       <h2 id="security-sessions">Sessões</h2>
