@@ -29,7 +29,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       {message ? <Alert variant="error" title={message} /> : null}
       {notice ? <Alert variant="success" title={notice} /> : null}
       <PasswordLogin recover={emailEnabled()} />
-      {google ? <><p className="text-center text-body-sm text-lab-text-dim">ou</p><GoogleSignIn action={loginGoogle} enabled /></> : null}
+      {google ? <><p className="text-center text-body-sm text-lab-text-dim">ou</p><GoogleSignIn action={loginGoogle} /></> : null}
       <p className="text-center text-body-sm text-lab-text-dim">Primeira vez? <Link href="/criar-conta" className="inline-flex min-h-11 items-center text-lab-text underline underline-offset-[3px]">Criar conta</Link></p>
       {process.env.NODE_ENV === "development" ? <DevelopmentLogin /> : null}
     </AuthShell>

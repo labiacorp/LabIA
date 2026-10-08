@@ -4,6 +4,7 @@ import Google from "next-auth/providers/google";
 
 import { cookies } from "next/headers";
 import { registerSignIn, REFERRAL_COOKIE } from "@/lib/referrals";
+import { CONSENT_COOKIE, CURRENT_TERMS_VERSION } from "@/lib/consent";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/password";
@@ -116,11 +117,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async jwt({ token, user, account }) {
       if (user?.email) {
+        const jar = await cookies();
+        const consented = account?.provider === "google" && jar.get(CONSENT_COOKIE)?.value === CURRENT_TERMS_VERSION;
         const row = await registerSignIn(
           { email: user.email, name: user.name, image: user.image },
-          (await cookies()).get(REFERRAL_COOKIE)?.value,
+          jar.get(REFERRAL_COOKIE)?.value,
           account?.provider === "google" ? account.providerAccountId : undefined,
+          consented,
         );
+        // The tick is single use: a later Google sign-in must tick again.
+        if (consented) jar.delete(CONSENT_COOKIE);
         token.uid = row.id;
         token.tokenVersion = row.tokenVersion;
         token.authMethod = account?.provider;

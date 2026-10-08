@@ -6,12 +6,10 @@ import { CONSENT_FIELDS } from "@/lib/consent";
 import { acceptTerms } from "./actions";
 
 const LABELS: Record<(typeof CONSENT_FIELDS)[number], string> = {
-  acceptTerms: "Li e aceito os Termos de uso e a Política de privacidade.",
-  syntheticMedia: "Entendo que as influencers são mídia sintética e vou sinalizar o conteúdo como feito com IA nas redes.",
-  noRealPeople: "Não vou usar o rosto ou a voz de uma pessoa real sem autorização dela.",
+  acceptTerms: "I'm 18 or older and I accept the Terms of Use and the Privacy Policy.",
 };
 
-// "Antes de começar" (design): three required agreements, recorded once on the account.
+// "Antes de começar": the one agreement, for accounts that never gave it. Recorded once on the account.
 export function ConsentForm() {
   const [state, action, pending] = useActionState(acceptTerms, { error: "" });
   return <form action={action} className="flex flex-col gap-5">

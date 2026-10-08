@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 
 import { REFERRAL_BONUS_BRL, REFERRAL_CAP_BRL } from "@/lib/referral-rules";
+import { consentAcceptedNow } from "@/lib/consent";
 
 // The referral program (docs/research/referrals.md). Values are a first guess to validate with real users.
 const INVITES_BASE = 3;
@@ -31,10 +32,12 @@ export async function getReferralCode(userId: string) {
 // Finds or creates the account behind a sign-in. googleSub is passed only for Google sign-ins, which
 // prove the address: they bind the Google account, mark the e-mail verified, and drop a password that
 // nobody ever proved (set by whoever typed this address first), revoking any session it produced.
+// consented: the terms checkbox was ticked before the Google redirect (CONSENT_COOKIE), so the first acceptance is recorded.
 export async function registerSignIn(
   user: { email: string; name?: string | null; image?: string | null },
   code?: string,
   googleSub?: string,
+  consented = false,
 ) {
   const email = user.email.toLowerCase();
   const image = user.image ?? undefined;
@@ -52,6 +55,7 @@ export async function registerSignIn(
           image,
           googleSub,
           emailVerifiedAt: existing.emailVerifiedAt ?? new Date(),
+          ...(consented && existing.consentAcceptedAt === null ? consentAcceptedNow() : {}),
           ...(unproven ? { passwordHash: null, tokenVersion: { increment: 1 } } : {}),
         },
       });
@@ -72,6 +76,7 @@ export async function registerSignIn(
       name: user.name,
       image: user.image,
       googleSub,
+      ...(consented ? consentAcceptedNow() : {}),
       emailVerifiedAt: googleSub ? new Date() : undefined,
       referredById:
         referrer && referrer.email !== email ? referrer.id : undefined,

@@ -38,12 +38,19 @@ test("the legal pages are public", async ({ page }) => {
   await expect(page.locator("h1")).toHaveText("Política de Privacidade");
 });
 
-test("the login and sign-up pages are the same for everyone, and the terms come after sign-in", async ({ page }) => {
+test("the login and sign-up pages ask for the one terms tick before Google, for everyone", async ({ page }) => {
   await page.goto("/login");
   await expect(page.getByRole("link", { name: "Criar conta" })).toBeVisible();
-  await expect(page.getByRole("checkbox")).toHaveCount(0);
   await expect(page.getByText(/código de acesso|convite/i)).toHaveCount(0);
+  // Google is off in some environments; when it is on, its button waits for the tick.
+  const google = page.getByRole("button", { name: "Continuar com Google" });
+  if (await google.count()) {
+    await expect(google).toBeDisabled();
+    await page.getByRole("checkbox").check();
+    await expect(google).toBeEnabled();
+  }
   await page.goto("/criar-conta");
   await expect(page.getByRole("heading", { name: "Criar conta" })).toBeVisible();
-  await expect(page.getByRole("checkbox")).toHaveCount(0);
+  // One agreement on the sign-up form (it is absent when e-mail sign-up is off).
+  expect(await page.getByRole("checkbox").count()).toBeLessThanOrEqual(1);
 });
