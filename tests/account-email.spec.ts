@@ -74,6 +74,7 @@ test("the link confirms too, and forgot-password creates a new password that end
   // The same link does not work twice.
   await other.goto(linkIn((await lastEmail(email)).text));
   await other.getByLabel("Nova senha").fill("terceira");
+  await other.getByLabel("Repita a senha").fill("terceira");
   await other.getByRole("button", { name: "Salvar nova senha" }).click();
   await expect(other.locator("p[role=alert]")).toContainText("já foi usado");
 });
