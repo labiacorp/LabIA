@@ -5,6 +5,7 @@ import { Alert } from "@/components/ui/alert";
 import { CostConfirm } from "@/components/app/cost-confirm";
 import { Textarea } from "@/components/ui/field";
 import { rateText } from "@/lib/plan";
+import { resolutionLabel } from "@/lib/providers/image-models";
 import { track } from "@/lib/track";
 import type { getImageOptions } from "@/lib/content-generation";
 import type { ContentState } from "./actions";
@@ -41,7 +42,7 @@ export function SceneForm({ action, intent, options, balanceBrl, prompt, blocked
           {options.map((item) => <option key={item.model} value={item.model} disabled={!item.configurations.length}>{item.name}</option>)}
         </select>
         <select aria-label="Qualidade da imagem" className={pill} value={selection.resolution} disabled={pending} onChange={(event) => setSelection({ ...selection, resolution: event.target.value })}>
-          {option?.configurations.map((item) => <option key={item.resolution} value={item.resolution}>{item.resolution === "default" ? "Qualidade padrão" : item.resolution} · {rateText(item.brl)}</option>)}
+          {option?.configurations.map((item) => <option key={item.resolution} value={item.resolution}>{item.resolution === "default" ? "Qualidade padrão" : resolutionLabel(item.resolution)} · {rateText(item.brl)}</option>)}
         </select>
         <span className="flex h-8 items-center rounded-full bg-lab-surface-2 px-3 text-[13px]">a partir do retrato de frente</span>
       </div>

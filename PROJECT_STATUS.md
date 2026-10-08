@@ -223,3 +223,4 @@ Creation-home checks: 105 tests across 31 files pass, typecheck/lint/build pass.
 ## 2026-10-07 call follow-ups
 - Idea and script limit is 10.000 characters (`src/lib/limits.ts`; image/video direction prompts keep the provider limit of 2.000).
 - Integrations lives in Profile (menu and `/conta`); "Exportar meus dados" row removed (`/api/account/export` stays). Update 2026-10-07, Felipe's decision (he needs to test them): the bundle.social networks (Instagram, TikTok, LinkedIn, Threads, YouTube, Facebook) are active again for all users (`audience: "all"`); only Bluesky stays `"soon"` in `src/lib/social/networks.ts`.
+- **Image quality label (2026-10-08):** the image step shows `512px` for the provider key `0.5K` (`resolutionLabel` in `src/lib/providers/image-models.ts`); the request still sends `0.5K`. Rates and prices unchanged. Name check: "512px" is our reading of the key, to confirm with Felipe.
