@@ -49,9 +49,9 @@ export function SceneForm({ action, intent, options, balanceBrl, prompt, blocked
         <summary className="min-h-11 cursor-pointer content-center text-lab-text-dim">Direção da cena</summary>
         <Textarea id={promptId} aria-label="Direção da cena" name="prompt" defaultValue={prompt} required maxLength={option?.maxPrompt ?? 2000} disabled={pending} className="mt-1" />
       </details>
-      {blockedReason ? <Alert variant="warning" title={blockedReason} /> : null}
+      {blockedReason ? <Alert variant="warning" title={blockedReason} compact /> : null}
       <CostConfirm costBrl={configuration?.brl} balanceBrl={balanceBrl} label={label} eyebrow={`Confirmar imagem · ${option?.name ?? ""}`} detail="previstos para uma imagem com o rosto dela" disabled={!!blockedReason} pending={pending} />
-      {state.error ? <Alert variant="error" title={state.error} /> : null}
+      {state.error ? <Alert variant="error" title={state.error} compact /> : null}
     </form>
   );
 }
