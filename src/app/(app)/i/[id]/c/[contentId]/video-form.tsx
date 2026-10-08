@@ -28,6 +28,14 @@ export type VideoFormOption = {
   };
 };
 
+// The cheapest clip of a model at the chosen quality, per 5 s, so every model in the picker is priced on one unit.
+function priceFrom5s(item: VideoFormOption, quality: string) {
+  const perFive = (config: VideoFormOption["configurations"][number]) => (config.brl / config.duration) * 5;
+  const atQuality = item.configurations.filter((config) => config.resolution === quality).map(perFive);
+  const prices = atQuality.length ? atQuality : item.configurations.map(perFive);
+  return prices.length ? Math.min(...prices) : undefined;
+}
+
 type VideoFormProps = {
   action: (previous: ContentState, data: FormData) => Promise<ContentState>;
   intent: string;
@@ -122,7 +130,7 @@ export function VideoForm({ action, intent, prompt, balanceBrl, blockedReason, o
       <div className="flex flex-wrap gap-1.5">
         <select aria-label="Modelo de vídeo" className={pill} value={option?.key ?? ""} onChange={(event) => chooseModel(event.target.value)} disabled={pending || availableOptions.length === 0}>
           {availableOptions.length === 0 ? <option value="">Nenhum modelo disponível</option> : null}
-          {availableOptions.map((item) => <option key={item.key} value={item.key} disabled={item.configurations.length === 0}>{item.name}</option>)}
+          {availableOptions.map((item) => { const price = priceFrom5s(item, quality); return <option key={item.key} value={item.key} disabled={item.configurations.length === 0}>{price === undefined ? item.name : `${item.name} · from ${rateText(price)} per 5 s`}</option>; })}
         </select>
         <select aria-label="Qualidade do vídeo" className={pill} value={quality} onChange={(event) => chooseQuality(event.target.value)} disabled={pending}>
           {qualities.map((value) => <option key={value} value={value}>{qualityLabel(value)}</option>)}
