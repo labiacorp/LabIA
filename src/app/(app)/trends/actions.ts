@@ -7,7 +7,9 @@ import { requireOwner } from "@/lib/owner";
 import { findMotionModel, KLING_FIXED_PARAMS, motionSchema, type MotionBrief } from "@/lib/motion";
 import { startPlan, UserError } from "@/lib/generation";
 import { providerMediaUrl } from "@/lib/media-access";
-import { readReference } from "@/lib/reference-storage";
+import { readReference, removeReference, storeReference } from "@/lib/reference-storage";
+import { MIN_TRIM_SECONDS, trimMp4 } from "@/lib/video-trim";
+import { randomUUID } from "node:crypto";
 
 async function ownedInputs(userId: string, brief: MotionBrief) {
   const source = await prisma.asset.findFirst({
@@ -45,6 +47,30 @@ async function ownedInputs(userId: string, brief: MotionBrief) {
       (id) => references.find((asset) => asset.id === id)!,
     ),
   };
+}
+// Short test versions: keeps the first `seconds` of one of the owner's imported videos as a new library video, so a try-out
+// is quoted and billed for those seconds only. The original stays as it was.
+export async function trimSource(sourceId: string, seconds: number) {
+  const userId = await requireOwner();
+  const whole = Math.floor(Number(seconds));
+  const source = await prisma.asset.findFirst({ where: { id: sourceId, userId, kind: "VIDEO", storageKey: { not: null } } });
+  if (!source?.storageKey || !source.durationSec) return { error: "Escolha um vídeo importado." };
+  if (!Number.isFinite(whole) || whole < MIN_TRIM_SECONDS || whole >= source.durationSec)
+    return { error: `Use de ${MIN_TRIM_SECONDS} s até menos que a duração do vídeo (${source.durationSec.toFixed(1)} s).` };
+  let storageKey: string | undefined;
+  try {
+    const trimmed = await trimMp4(await readReference(source.storageKey), whole);
+    const id = randomUUID();
+    storageKey = await storeReference(`references/${id}.mp4`, trimmed.bytes, "video/mp4");
+    const name = `${(source.fileName ?? "Vídeo").replace(/\.mp4$/i, "")} (0-${whole}s).mp4`.slice(0, 120);
+    const asset = await prisma.asset.create({
+      data: { id, userId, kind: "VIDEO", url: `/api/assets/${id}/file`, storageKey, contentType: "video/mp4", fileName: name, sizeBytes: trimmed.bytes.length, width: source.width, height: source.height, durationSec: trimmed.durationSec },
+    });
+    return { asset: { id: asset.id, url: asset.url, name, durationSec: trimmed.durationSec } };
+  } catch {
+    if (storageKey) await removeReference(storageKey).catch(() => {});
+    return { error: "Não conseguimos cortar este vídeo. Tente outro arquivo." };
+  }
 }
 export async function createMotion(_previous: string, form: FormData) {
   const userId = await requireOwner();

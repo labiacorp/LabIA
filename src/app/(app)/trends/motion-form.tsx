@@ -5,7 +5,7 @@ import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { InlineUpload } from "@/components/app/inline-upload";
 import { DEFAULT_MOTION_MODEL, findMotionModel, MOTION_MODELS, motionEstimate, type MotionBrief } from "@/lib/motion";
-import { createMotion } from "./actions";
+import { createMotion, trimSource } from "./actions";
 type Media = {
   id: string;
   url: string;
@@ -39,6 +39,9 @@ export function MotionForm({
   const [sourceId, setSource] = useState(
     initial?.sourceId ?? videos[0]?.id ?? "",
   );
+  const [trimSeconds, setTrimSeconds] = useState("");
+  const [trimming, setTrimming] = useState(false);
+  const [trimError, setTrimError] = useState("");
   const [refs, setRefs] = useState<string[]>(initial?.referenceIds ?? []);
   const [modelId, setModelId] = useState(initial?.model ?? DEFAULT_MOTION_MODEL);
   const model = findMotionModel(modelId) ?? MOTION_MODELS[0];
@@ -105,6 +108,47 @@ export function MotionForm({
               src={source.url}
               className="max-h-80 w-full rounded-lg bg-black"
             />
+          )}
+          {source?.durationSec && source.durationSec > 4 && (
+            <div className="grid gap-2 rounded-control border border-lab-border bg-lab-surface-2 p-3 text-body-sm">
+              <span>Testar com menos segundos (custa menos)</span>
+              <span className="flex flex-wrap items-center gap-2">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={4}
+                  max={Math.floor(source.durationSec - 0.1)}
+                  value={trimSeconds}
+                  onChange={(e) => setTrimSeconds(e.target.value)}
+                  placeholder="8"
+                  aria-label="Segundos para manter"
+                  className="min-h-11 w-24 rounded-control border border-lab-border bg-lab-surface-1 p-3"
+                />
+                <span className="text-lab-text-dim">segundos iniciais</span>
+                <button
+                  type="button"
+                  disabled={trimming || !trimSeconds}
+                  onClick={async () => {
+                    setTrimError("");
+                    setTrimming(true);
+                    const result = await trimSource(source.id, Number(trimSeconds));
+                    setTrimming(false);
+                    if ("error" in result && result.error) return setTrimError(result.error);
+                    const asset = result.asset!;
+                    setUploaded((current) => ({ ...current, videos: [{ id: asset.id, url: asset.url, name: asset.name, durationSec: asset.durationSec }, ...current.videos] }));
+                    setSource(asset.id);
+                    setTrimSeconds("");
+                  }}
+                  className="inline-flex h-9 items-center rounded-full border border-lab-border-strong px-4 text-caption hover:bg-lab-surface-1 disabled:opacity-50 focus-visible:outline-none focus-visible:shadow-lab-focus"
+                >
+                  {trimming ? "Cortando…" : "Criar versão curta"}
+                </button>
+              </span>
+              <span className="text-caption text-lab-text-muted">
+                Guarda o começo do vídeo como um novo vídeo na lista (sem áudio). O original continua lá.
+              </span>
+              {trimError && <span role="alert" className="text-caption text-lab-danger">{trimError}</span>}
+            </div>
           )}
           <p className="text-body-sm text-lab-text-muted">
             O vídeo define a ação, a câmera e o tempo. Os exemplos desta página
@@ -185,7 +229,7 @@ export function MotionForm({
           />
         </label>
         <label className="grid gap-2 text-body-sm">
-          Organizar no personagem
+          Guardar na influencer
           <select name="influencerId" required className={field}>
             {characters.map((c) => (
               <option key={c.id} value={c.id}>
