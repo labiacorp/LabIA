@@ -43,7 +43,7 @@ Owns: `src/lib/` (generation, models, plan, social/publishing), `src/app/(app)/i
 - [ ] **F5. Model picker shows name and price.** Every model option shows the model name and its credits per 5 s (video) or per image. Resolutions use standard names (480p, 768p, 1080p), never "0.5K". The user picks model and resolution explicitly on image and video steps.
 - [ ] **F6. One approval, exact credits.** Remove double confirmations in creation and script generation; show the exact credit number before and after, no ambiguous ranges.
 - [ ] **F7. X publishing.** Verify the X account connection end to end, then scheduling with suggested times (no pre-validation of content). Bundle networks are active (Felipe's decision, 2026-10-07); Bluesky stays "Coming soon".
-- [ ] **F8. TikTok trends import (research only).** Write `docs/research/tiktok-trends.md`: APIs, storage cost, import method, cron vs agent. No code.
+- [x] **F8. TikTok trends import (research only).** Write `docs/research/tiktok-trends.md`: APIs, storage cost, import method, cron vs agent. No code. Done 2026-10-08, now also covers trending songs (Felipe). Needs the founders' answers listed at the end of the doc before any code.
 
 ## Shared, last
 
