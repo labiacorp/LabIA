@@ -31,13 +31,21 @@ vi.mock("@/lib/prisma", () => ({
     user: { deleteMany: mocks.deleteMany },
   },
 }));
-import { deleteAccount } from "./actions";
+import { connectGoogle, deleteAccount } from "./actions";
+import { signIn } from "@/auth";
 
 const form = () => {
   const data = new FormData();
   data.set("confirmation", "excluir");
   return data;
 };
+
+describe("connecting Google", () => {
+  it("starts Google sign-in and returns to the security page", async () => {
+    await connectGoogle();
+    expect(signIn).toHaveBeenCalledWith("google", { redirectTo: "/conta/seguranca" });
+  });
+});
 
 describe("account deletion and social posts", () => {
   beforeEach(() => {

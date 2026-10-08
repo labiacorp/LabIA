@@ -96,3 +96,8 @@ export async function deleteAccount(_previous: SecurityState, form: FormData): P
 export async function reauthWithGoogle() {
   await signIn("google", { redirectTo: "/conta/seguranca" }, { prompt: "login" });
 }
+
+// Google sign-in binds the Google account to the user with the same e-mail (registerSignIn in referrals.ts).
+export async function connectGoogle() {
+  await signIn("google", { redirectTo: "/conta/seguranca" });
+}
