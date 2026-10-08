@@ -140,10 +140,10 @@ export function VideoForm({ action, intent, prompt, balanceBrl, blockedReason, o
         <summary className="min-h-11 cursor-pointer content-center text-lab-text-dim">Direção do movimento</summary>
         <Textarea aria-label="Direção do movimento" name="prompt" defaultValue={prompt} required maxLength={2000} disabled={pending} className="mt-1" />
       </details>
-      {blockedReason ? <Alert variant="warning" title={blockedReason} /> : null}
+      {blockedReason ? <Alert variant="warning" title={blockedReason} compact /> : null}
       {unavailable ? <p role="status" className="text-caption text-lab-warning">Nenhuma configuração de vídeo disponível.</p> : null}
       <CostConfirm costBrl={configuration?.brl} balanceBrl={balanceBrl} label={label} eyebrow={`Confirmar vídeo · ${option?.name ?? ""}`} detail={`previstos para ${configuration?.duration ?? 15} segundos de vídeo`} disabled={!!blockedReason || unavailable} pending={pending} />
-      {state.error ? <Alert variant="error" title={state.error} /> : null}
+      {state.error ? <Alert variant="error" title={state.error} compact /> : null}
     </form>
   );
 }
