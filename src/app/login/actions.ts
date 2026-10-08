@@ -12,9 +12,13 @@ import { googleConfigured } from "@/lib/auth-config";
 import { emailEnabled } from "@/lib/email";
 import { issueEmailToken } from "@/lib/email-tokens";
 import { sendAccountExists, sendVerifyEmail } from "@/lib/account-emails";
-// Terms are accepted after the first sign-in, on "Antes de começar" (/consentimento), for every account alike.
-export async function loginGoogle() {
+import { CONSENT_COOKIE, CONSENT_FIELD, consentAcceptedNow, CURRENT_TERMS_VERSION } from "@/lib/consent";
+// The one terms checkbox is read here, before the redirect to Google. The sign-in callback records it on
+// the account (src/auth.ts); without the tick nothing is sent to Google.
+export async function loginGoogle(form: FormData) {
   if (!googleConfigured()) return;
+  if (form.get(CONSENT_FIELD) !== "on") return;
+  (await cookies()).set(CONSENT_COOKIE, CURRENT_TERMS_VERSION, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 600 });
   try {
     await signIn("google", { redirectTo: "/painel" });
   } catch (error) {
@@ -64,6 +68,7 @@ export async function authenticatePassword(
     if (ownersOnly() || !emailEnabled()) return { error: "A LabIA ainda não está aberta para novas contas." };
     const invalid = passwordError(password);
     if (invalid) return { error: invalid };
+    if (form.get(CONSENT_FIELD) !== "on") return { error: "Accept the terms to create your account." };
     if (!(await hit(`signup-ip:${await clientIp()}`, 5, 3600)))
       return { error: TOO_MANY_ATTEMPTS };
     try {
@@ -78,6 +83,8 @@ export async function authenticatePassword(
           data: { passwordHash: await hashPassword(password) },
         });
         if (claimed.count === 1) {
+          // First acceptance only: an account that already accepted keeps its date and version.
+          await prisma.user.updateMany({ where: { id: user.id, consentAcceptedAt: null }, data: consentAcceptedNow() });
           const { token, code } = await issueEmailToken(user.id, "VERIFY");
           await sendVerifyEmail(email.data, token, code!);
         } else await sendAccountExists(email.data);

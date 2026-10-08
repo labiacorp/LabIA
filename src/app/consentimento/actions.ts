@@ -6,7 +6,7 @@ import { CONSENT_FIELDS, consentAcceptedNow } from "@/lib/consent";
 
 export async function acceptTerms(_previous: { error: string }, form: FormData) {
   const userId = await requireUserId();
-  if (CONSENT_FIELDS.some((field) => form.get(field) !== "on")) return { error: "Para continuar, marque os três combinados." };
+  if (CONSENT_FIELDS.some((field) => form.get(field) !== "on")) return { error: "Accept the terms to continue." };
   // Only the first acceptance is recorded; a replayed submit never rewrites its date or version.
   await prisma.user.updateMany({ where: { id: userId, consentAcceptedAt: null }, data: consentAcceptedNow() });
   redirect("/painel");

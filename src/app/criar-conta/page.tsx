@@ -12,7 +12,7 @@ import { PasswordSignup } from "../login/password-form";
 export const metadata = { title: "Criar conta · LabIA" };
 
 // Criar conta: one signup for everyone. Password signup needs e-mail on (it sends the confirmation link);
-// Google creates the account directly. Terms come right after, on "Antes de começar".
+// Google creates the account directly. Both need the one terms checkbox first, recorded on the new account.
 export default async function SignupPage() {
   if ((await auth())?.user) redirect("/painel");
   const google = googleConfigured();
@@ -20,7 +20,7 @@ export default async function SignupPage() {
   return (
     <AuthShell title="Criar conta" description="Crie sua conta e comece pela sua primeira influencer.">
       {password ? <PasswordSignup /> : null}
-      {google ? <>{password ? <p className="text-center text-body-sm text-lab-text-dim">ou</p> : null}<GoogleSignIn action={loginGoogle} enabled /></> : null}
+      {google ? <>{password ? <p className="text-center text-body-sm text-lab-text-dim">ou</p> : null}<GoogleSignIn action={loginGoogle} /></> : null}
       {!password && !google ? <Alert variant="info" title="O cadastro abre em breve." /> : null}
       <p className="text-center text-body-sm text-lab-text-dim">Já tem conta? <Link href="/login" className="inline-flex min-h-11 items-center text-lab-text underline underline-offset-[3px]">Entrar</Link></p>
     </AuthShell>

@@ -11,8 +11,10 @@ export const LEGAL_UPDATED_AT = "outubro de 2026";
 // The form field the sign-up checkbox and its server action share. Here, not in a client component:
 // a "use client" module's exports become client references when a server action imports them.
 export const CONSENT_FIELD = "acceptTerms";
-// "Antes de começar" asks for all three (design): the terms, synthetic-media disclosure and no real people without consent.
-export const CONSENT_FIELDS = [CONSENT_FIELD, "syntheticMedia", "noRealPeople"] as const;
+// One agreement, asked before sign-in (login, sign-up) and again on "Antes de começar" for accounts that never gave it.
+export const CONSENT_FIELDS = [CONSENT_FIELD] as const;
+// Carries the tick across Google's redirect: set by the sign-in action, read by the Auth.js sign-in callback.
+export const CONSENT_COOKIE = "labia_consent";
 
 // When tracking began (the migration's timestamp). Accounts created before it were never asked and are
 // not asked now; their null fields stay null. Backfilling them would record an acceptance nobody gave.

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { CircleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConsentBox } from "@/components/app/consent-box";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { PasswordStrength } from "@/components/app/password-strength";
@@ -46,6 +47,7 @@ export function PasswordSignup() {
         <PasswordInput name="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={PASSWORD_MIN} maxLength={PASSWORD_MAX} autoComplete="new-password" placeholder={`Mínimo de ${PASSWORD_MIN} caracteres`} />
         <PasswordStrength password={password} />
       </label>
+      <ConsentBox />
       {state.error ? <p role="alert" className="flex items-center gap-1.5 text-[13px] text-lab-danger"><CircleAlert className="size-3.5 shrink-0" aria-hidden />{state.error}</p> : null}
       <Button className="h-12 w-full text-body" loading={pending}>Criar conta</Button>
     </form>
