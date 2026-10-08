@@ -9,7 +9,9 @@ export const MOTION_MODELS: MotionModel[] = [
   { id: "fal-ai/kling-video/v2.6/pro/motion-control", name: "Kling 2.6 Pro Motion Control", provider: "fal", maxReferences: 1, rates: { default: 0.112 }, note: "One character. Follows the video's framing, up to 30 s." },
   { id: "fal-ai/kling-video/v3/pro/motion-control", name: "Kling 3 Pro Motion Control", provider: "fal", maxReferences: 1, rates: { default: 0.168 }, note: "One character. Follows the video's framing, up to 30 s." },
 ];
-export const findMotionModel = (id: string) => MOTION_MODELS.find((model) => model.id === id);
+// What the Trends form preselects: Kling runs on the fal.ai key we already have, Genjutsu needs separate Higgsfield credentials.
+export const DEFAULT_MOTION_MODEL = "fal-ai/kling-video/v2.6/pro/motion-control";
+export const findMotionModel =(id: string) => MOTION_MODELS.find((model) => model.id === id);
 export const motionSchema = z.object({
   version: z.literal(1),
   trend: z.enum(["parking", "dance", "custom"]),

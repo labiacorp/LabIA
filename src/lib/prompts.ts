@@ -61,15 +61,31 @@ export const PROMPT_DEFAULTS = {
     vars: ["scene"],
     text: "Continue the action smoothly from this last frame. Keep the same face, outfit, lighting and scene.\n\nScene context: {scene}",
   },
+  // Sources: Kling's official Motion Control guide (kling.ai/quickstart/motion-control-user-guide: background and camera come from the prompt, the video defines the movement)
+  // and fal's Kling 2.6 prompt guide (fal.ai/learn/devs/kling-video-2-6-motion-control-prompt-guide: do not describe the choreography). Genjutsu's `@image1` form is the one
+  // Higgsfield's own prompt box documents (higgsfield.ai/ai/video?model=genjutsu); whether its API honours it is not confirmed. Not yet tested on a real run.
+  "motion-kling": {
+    label: "Motion recreation: Kling",
+    where: "Starting text on the Trends screen for Kling 2.6/3 Motion Control. Source: Kling's official guide (kling.ai/quickstart/motion-control-user-guide) and fal's prompt guide (fal.ai/learn/devs/kling-video-2-6-motion-control-prompt-guide), both say the video already defines the movement, so the prompt names only the character, the face and the scene.",
+    vars: [],
+    text: "Replace the person in the video with the character from the reference image. Keep the character's face, hair and outfit identical to the reference image. Keep the original framing and background.",
+  },
+  "motion-genjutsu": {
+    label: "Motion recreation: Genjutsu",
+    where: "Starting text on the Trends screen for Higgsfield Genjutsu. Source: the example prompts in Higgsfield's own prompt box (higgsfield.ai/ai/video?model=genjutsu) cite images as @image1, @image2.",
+    vars: [],
+    text: "Replace the person in the video with the character from @image1. If the video shows more people, replace them in order with @image2 and @image3. Keep the exact motion, timing, camera and background of the original video. Keep each character's face, hair and outfit identical to their image.",
+  },
   ...Object.fromEntries(TRENDS.map((trend) => [`trend-${trend.id}`, {
-    label: `Trend: ${trend.name}`,
-    where: "Starting text of the scene instructions on the Trends screen (the user can still edit it per recreation).",
+    label: `Trend: ${trend.name} (previous text)`,
+    where: "The first text this screen shipped with, kept to compare against the model texts above in a test. No longer preselected.",
     vars: [],
     text: trend.prompt,
   } satisfies PromptDefinition])),
-} as Record<PromptKey, PromptDefinition>;
+} as Record<string, PromptDefinition> as Record<PromptKey, PromptDefinition>;
 
-export type PromptKey = "face-preview" | "sheet" | "sheet-from-face" | "profile-from-face" | "portrait" | "scene" | "video-continue" | `trend-${(typeof TRENDS)[number]["id"]}`;
+export const motionPromptKey = (modelId: string): PromptKey => (modelId.startsWith("higgsfield/") ? "motion-genjutsu" : "motion-kling");
+export type PromptKey = "face-preview" | "sheet" | "sheet-from-face" | "profile-from-face" | "portrait" | "scene" | "video-continue" | "motion-kling" | "motion-genjutsu" | `trend-${(typeof TRENDS)[number]["id"]}`;
 export const PROMPT_KEYS = Object.keys(PROMPT_DEFAULTS) as PromptKey[];
 export const PROMPT_MAX = 6000;
 export type PromptTemplates = Partial<Record<PromptKey, string>>;
