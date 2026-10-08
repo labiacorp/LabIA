@@ -19,11 +19,12 @@ function actionDetail(action: string, raw: unknown) {
 }
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  await requireOwner();
+  const viewerId = await requireOwner();
   const q = ((await searchParams).q ?? "").trim().slice(0, 100);
   const where = q ? { OR: [{ email: { contains: q, mode: "insensitive" as const } }, { name: { contains: q, mode: "insensitive" as const } }] } : {};
   const invites = await prisma.inviteRequest.findMany({ orderBy: { createdAt: "desc" }, take: 50, select: { id: true, email: true, createdAt: true } });
-  const [users, total, uncertain, recent] = await Promise.all([
+  const [owners, users, total, uncertain, recent] = await Promise.all([
+    prisma.user.findMany({ where: { role: "OWNER" }, orderBy: { createdAt: "asc" }, select: { id: true, email: true, name: true, createdAt: true } }),
     prisma.user.findMany({ where, orderBy: { createdAt: "desc" }, take: PAGE, select: { id: true, email: true, name: true, role: true, createdAt: true, referredBy: { select: { email: true } } } }),
     prisma.user.count({ where }),
     prisma.step.findMany({ where: { submissionState: { in: ["submission_unknown", "cost_unknown"] } }, orderBy: { createdAt: "asc" }, take: 50, select: { id: true, kind: true, model: true, estimatedCostBrl: true, createdAt: true, influencer: { select: { name: true, user: { select: { email: true } } } }, content: { select: { title: true } } } }),
@@ -32,7 +33,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const balances = new Map((await prisma.ledgerEntry.groupBy({ by: ["userId"], where: { userId: { in: users.map((u) => u.id) } }, _sum: { deltaBrl: true } })).map((row) => [row.userId, Number(row._sum.deltaBrl ?? 0)]));
   const emails = new Map((await prisma.user.findMany({ where: { id: { in: recent.flatMap((r) => r.targetUserId ?? []) } }, select: { id: true, email: true } })).map((u) => [u.id, u.email]));
   return <div className="mx-auto max-w-content">
-    <PageHeading title="Admin" description="Contas, recargas manuais e gerações com custo a confirmar. Cada ação fica registrada abaixo." action={<Link href="/admin/prompts" className={buttonVariants({ variant: "secondary" })}>Prompts</Link>} />
+    <PageHeading title="Admin" description="Owners, contas, recargas manuais e gerações com custo a confirmar. Cada ação fica registrada abaixo." action={<Link href="/admin/prompts" className={buttonVariants({ variant: "secondary" })}>Prompts</Link>} />
+    <section className="mb-10" aria-labelledby="admin-owners">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-3"><h2 id="admin-owners" className="font-display text-xl">Owners</h2><span className="text-caption text-lab-text-muted">{owners.length} {owners.length === 1 ? "owner" : "owners"}</span></div>
+      <p className="mb-4 max-w-2xl text-body-sm leading-6 text-lab-text-dim">Contas com acesso a Admin e Tendências, e só com login do Google. Esta lista é só de leitura: para conceder ou tirar, use <code className="font-mono">scripts/owner.ts</code> no terminal.</p>
+      <ul className="divide-y divide-lab-border overflow-hidden rounded-lab border border-lab-border-strong bg-lab-surface-1">{owners.map((owner) => <li key={owner.id} className="flex flex-wrap items-center justify-between gap-2 p-4"><div className="min-w-0"><p className="break-words text-body-sm font-medium">{owner.email}{owner.id === viewerId ? <Badge className="ml-2" variant="ready">Você</Badge> : null}</p><p className="mt-1 break-words text-caption text-lab-text-dim">{owner.name ? `${owner.name} · ` : ""}conta criada em {dateLabel(owner.createdAt)}</p></div><Badge>Owner</Badge></li>)}</ul>
+    </section>
     <section className="mb-10" aria-labelledby="admin-accounts">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 id="admin-accounts" className="font-display text-xl">Contas</h2><span className="text-caption text-lab-text-muted">{users.length < total ? `${users.length} de ${total}` : `${total}`} {total === 1 ? "conta" : "contas"}</span></div>
       <form className="mb-4" role="search"><label className="sr-only" htmlFor="admin-search">Buscar conta</label><Input id="admin-search" name="q" defaultValue={q} placeholder="Buscar por e-mail ou nome" /></form>
