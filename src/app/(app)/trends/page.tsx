@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { PageHeading } from "@/components/app/page-heading";
 import { buttonVariants } from "@/components/ui/button";
 import { loadPromptTemplates, motionPromptKey, renderPrompt } from "@/lib/prompts";
-import { requireUserId } from "@/lib/session";
+import { requireOwner } from "@/lib/owner";
 import { prisma } from "@/lib/prisma";
 import {
   MOTION_MODELS,
@@ -23,7 +23,7 @@ export default async function TrendsPage({
 }: {
   searchParams: Promise<{ trend?: string; copy?: string }>;
 }) {
-  const userId = await requireUserId();
+  const userId = await requireOwner(); // 404 for everyone who is not an owner
   const params = await searchParams;
   let initial: MotionBrief | undefined;
   if (params.copy) {

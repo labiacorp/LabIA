@@ -9,14 +9,15 @@ import { AccountAvatar } from "@/components/app/account-avatar";
 import { balanceCredits } from "@/lib/plan";
 
 // Shell from the design (LabIA App.dc.html · Header e menus). Integrações is the publishing area (connect networks, publish, schedule).
-type NavItem = { href: string; label: string; icon: LucideIcon; admin?: boolean; money?: boolean };
+type NavItem = { href: string; label: string; icon: LucideIcon; admin?: boolean; money?: boolean; owner?: boolean };
 const main: NavItem[] = [
   { href: "/painel", label: "Início", icon: House },
   { href: "/influenciadores", label: "Influencers", icon: UserRound },
   { href: "/conteudos", label: "Conteúdos", icon: Film },
   { href: "/biblioteca", label: "Biblioteca", icon: Library },
   { href: "/modelos", label: "Modelos", icon: Cpu },
-  { href: "/trends", label: "Tendências", icon: TrendingUp },
+  // Owners only while motion recreation is being tried out (the page and its actions check again with requireOwner).
+  { href: "/trends", label: "Tendências", icon: TrendingUp, owner: true },
 ];
 const footer: NavItem[] = [
   { href: "/saldo", label: "Saldo e extrato", icon: Wallet, money: true },
@@ -70,7 +71,7 @@ export function AppNavigation({ name, email, balance, lowAt, newContentHref, ava
       <header className="sticky top-0 z-header flex h-header items-center gap-2 border-b border-lab-border bg-lab-bg/90 px-4 backdrop-blur lg:gap-1 lg:px-6">
         <Link href="/painel" aria-label="A LabIA, início" className={`mr-1 lg:mr-4 ${focus}`}>{wordmark("text-[24px]")}</Link>
         <nav aria-label="Navegação principal" className="hidden items-center gap-0.5 lg:flex">
-          {main.map(link)}
+          {main.filter((i) => !i.owner || owner).map(link)}
           {owner ? link(footer.find((i) => i.admin)!) : null}
         </nav>
         <span className="ml-auto" />
@@ -103,7 +104,7 @@ export function AppNavigation({ name, email, balance, lowAt, newContentHref, ava
         </div>
         <nav aria-label="Menu" className="flex flex-1 flex-col overflow-y-auto px-2 pb-6 pt-3">
           <div className="mb-2 flex items-center gap-3 rounded-card bg-lab-surface-1 p-3">{who}<span className="font-mono text-[15px] text-lab-reagent-bright">{amount}</span></div>
-          {main.map((item) => row(item, true))}
+          {main.filter((i) => !i.owner || owner).map((item) => row(item, true))}
           <span className="mx-3 my-2 h-px bg-lab-border" />
           {footer.filter((i) => !i.admin || owner).map((item) => row(item, true))}
           <span className="mx-3 my-2 h-px bg-lab-border" />

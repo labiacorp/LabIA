@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({
   character: vi.fn(),
   create: vi.fn(),
 }));
-vi.mock("@/lib/session", () => ({ requireUserId: async () => "owner" }));
+vi.mock("@/lib/owner", () => ({ requireOwner: async () => "owner" }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({
   redirect: (url: string) => {

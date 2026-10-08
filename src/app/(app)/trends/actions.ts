@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { refreshRate } from "@/lib/fx";
-import { requireUserId } from "@/lib/session";
+import { requireOwner } from "@/lib/owner";
 import { findMotionModel, KLING_FIXED_PARAMS, motionSchema, type MotionBrief } from "@/lib/motion";
 import { startPlan, UserError } from "@/lib/generation";
 import { providerMediaUrl } from "@/lib/media-access";
@@ -47,7 +47,7 @@ async function ownedInputs(userId: string, brief: MotionBrief) {
   };
 }
 export async function createMotion(_previous: string, form: FormData) {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   await refreshRate(); // quote on a fresh USD→BRL rate
   const referenceIds = form.getAll("referenceIds");
   while (referenceIds.length && !referenceIds.at(-1)) referenceIds.pop();
@@ -101,7 +101,7 @@ export async function generateMotion(
   _previous: { error?: string },
   form: FormData,
 ) {
-  const userId = await requireUserId();
+  const userId = await requireOwner();
   await refreshRate(); // quote on a fresh USD→BRL rate
   const intentId = String(form.get("intent") ?? "");
   const expectedBrl = Number(form.get("expectedBrl"));
