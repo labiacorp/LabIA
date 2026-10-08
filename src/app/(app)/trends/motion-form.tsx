@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { InlineUpload } from "@/components/app/inline-upload";
-import { findMotionModel, MOTION_MODEL, MOTION_MODELS, motionEstimate, type MotionBrief } from "@/lib/motion";
+import { DEFAULT_MOTION_MODEL, findMotionModel, MOTION_MODELS, motionEstimate, type MotionBrief } from "@/lib/motion";
 import { createMotion } from "./actions";
 type Media = {
   id: string;
@@ -14,6 +14,7 @@ type Media = {
 };
 export function MotionForm({
   trend,
+  modelPrompts,
   characters,
   images: savedImages,
   videos: savedVideos,
@@ -21,7 +22,8 @@ export function MotionForm({
   initial,
   rate,
 }: {
-  trend: { id: string; name: string; roles: readonly string[]; prompt: string };
+  trend: { id: string; name: string; roles: readonly string[] };
+  modelPrompts: Record<string, string>;
   characters: { id: string; name: string }[];
   images: Media[];
   videos: Media[];
@@ -38,8 +40,11 @@ export function MotionForm({
     initial?.sourceId ?? videos[0]?.id ?? "",
   );
   const [refs, setRefs] = useState<string[]>(initial?.referenceIds ?? []);
-  const [modelId, setModelId] = useState(initial?.model ?? MOTION_MODEL);
+  const [modelId, setModelId] = useState(initial?.model ?? DEFAULT_MOTION_MODEL);
   const model = findMotionModel(modelId) ?? MOTION_MODELS[0];
+  // The prompt starts as the chosen model's text and follows a model switch until the user types in it.
+  const [prompt, setPrompt] = useState(initial?.prompt ?? modelPrompts[model.id]);
+  const [promptEdited, setPromptEdited] = useState(Boolean(initial));
   const resolutions = Object.keys(model.rates) as MotionBrief["resolution"][];
   const [chosen, setResolution] = useState<MotionBrief["resolution"]>(
     initial?.resolution ?? "720p",
@@ -195,7 +200,11 @@ export function MotionForm({
             name="prompt"
             rows={5}
             maxLength={2000}
-            defaultValue={initial?.prompt ?? trend.prompt}
+            value={prompt}
+            onChange={(e) => {
+              setPrompt(e.target.value);
+              setPromptEdited(true);
+            }}
             className={field}
           />
         </label>
@@ -204,7 +213,10 @@ export function MotionForm({
           <select
             name="model"
             value={model.id}
-            onChange={(e) => setModelId(e.target.value)}
+            onChange={(e) => {
+              setModelId(e.target.value);
+              if (!promptEdited) setPrompt(modelPrompts[e.target.value]);
+            }}
             className={field}
           >
             {MOTION_MODELS.map((item) => (

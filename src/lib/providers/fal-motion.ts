@@ -1,6 +1,6 @@
 import { fal } from "@fal-ai/client";
 import type { CostEstimate, GenParams, GenerationResult, JobHandle, ModelInfo } from "./model-provider";
-import { findMotionModel, motionEstimate, type MotionBrief } from "@/lib/motion";
+import { findMotionModel, KLING_FIXED_PARAMS, motionEstimate, type MotionBrief } from "@/lib/motion";
 
 // fal.ai motion-control endpoints (Kling): one character image performs the movement of the reference video.
 // Billed per second of output, so the price is the published rate x the source duration rounded up (calculated, not an invoice).
@@ -23,7 +23,8 @@ export class FalMotionProvider {
     fal.config({ credentials: key });
     const images = Array.isArray(params.image_urls) ? params.image_urls : [];
     const response = await fal.queue.submit(model as never, {
-      input: { image_url: images[0], video_url: params.video_url, character_orientation: "video", keep_original_sound: false, ...(params.prompt ? { prompt: params.prompt } : {}) },
+      // The fixed options come from the saved params (KLING_FIXED_PARAMS); a step saved before they were stored falls back to the same values.
+      input: { image_url: images[0], video_url: params.video_url, character_orientation: params.character_orientation ?? KLING_FIXED_PARAMS.character_orientation, keep_original_sound: params.keep_original_sound ?? KLING_FIXED_PARAMS.keep_original_sound, ...(params.prompt ? { prompt: params.prompt } : {}) },
     } as never);
     return { id: response.request_id, provider: this.id, model };
   }

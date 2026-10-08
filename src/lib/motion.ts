@@ -9,6 +9,11 @@ export const MOTION_MODELS: MotionModel[] = [
   { id: "fal-ai/kling-video/v2.6/pro/motion-control", name: "Kling 2.6 Pro Motion Control", provider: "fal", maxReferences: 1, rates: { default: 0.112 }, note: "One character. Follows the video's framing, up to 30 s." },
   { id: "fal-ai/kling-video/v3/pro/motion-control", name: "Kling 3 Pro Motion Control", provider: "fal", maxReferences: 1, rates: { default: 0.168 }, note: "One character. Follows the video's framing, up to 30 s." },
 ];
+// What the Trends form preselects: Kling runs on the fal.ai key we already have, Genjutsu needs separate Higgsfield credentials.
+export const DEFAULT_MOTION_MODEL = "fal-ai/kling-video/v2.6/pro/motion-control";
+// Kling options that never change per request. They travel in each generation's params so the admin details show what was sent:
+// "video" = the character follows the video's position and camera (up to 30 s; "image" caps at 10 s); false = the original sound is not kept.
+export const KLING_FIXED_PARAMS = { character_orientation: "video", keep_original_sound: false } as const;
 export const findMotionModel = (id: string) => MOTION_MODELS.find((model) => model.id === id);
 export const motionSchema = z.object({
   version: z.literal(1),

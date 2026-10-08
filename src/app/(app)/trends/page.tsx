@@ -2,10 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeading } from "@/components/app/page-heading";
 import { buttonVariants } from "@/components/ui/button";
-import { loadPromptTemplates, renderPrompt } from "@/lib/prompts";
+import { loadPromptTemplates, motionPromptKey, renderPrompt } from "@/lib/prompts";
 import { requireUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import {
+  MOTION_MODELS,
   TRENDS,
   motionSchema,
   motionEstimate,
@@ -34,10 +35,10 @@ export default async function TrendsPage({
     if (!parsed.success) notFound();
     initial = parsed.data;
   }
-  // The starting text of each trend can be replaced by an admin (admin > Prompts).
+  // The starting text of each model can be replaced by an admin (admin > Prompts).
   const templates = await loadPromptTemplates();
-  const trends = TRENDS.map((trend) => ({ ...trend, prompt: renderPrompt(`trend-${trend.id}`, {}, templates) }));
-  const selected = trends.find(
+  const modelPrompts = Object.fromEntries(MOTION_MODELS.map((model) => [model.id, renderPrompt(motionPromptKey(model.id), {}, templates)]));
+  const selected = TRENDS.find(
     (t) => t.id === (initial?.trend ?? params.trend),
   );
   if (params.trend && !selected) notFound();
@@ -67,9 +68,13 @@ export default async function TrendsPage({
       `${a.influencer?.name ?? "Personagem"} · ${a.role ?? "Imagem"}`,
     durationSec: a.durationSec,
   }));
-  const images = media.filter(
-    (a) => assets.find((x) => x.id === a.id)?.kind === "IMAGE",
-  );
+  // The character sheet is a grid of faces and confuses a motion model: offer single portraits only, front portrait first.
+  const images = media
+    .filter((a) => {
+      const asset = assets.find((x) => x.id === a.id);
+      return asset?.kind === "IMAGE" && asset.role !== "SHEET";
+    })
+    .sort((a, b) => Number(assets.find((x) => x.id === b.id)?.role === "FRONT") - Number(assets.find((x) => x.id === a.id)?.role === "FRONT"));
   const videos = media.filter(
     (a) => assets.find((x) => x.id === a.id)?.kind === "VIDEO",
   );
@@ -156,6 +161,7 @@ export default async function TrendsPage({
           <MotionForm
             key={selected.id + (params.copy ?? "")}
             trend={selected}
+            modelPrompts={modelPrompts}
             characters={characters}
             images={images}
             videos={videos}

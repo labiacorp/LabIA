@@ -35,6 +35,19 @@ export async function MotionProduction({
   const model = findMotionModel(brief.model);
   const admin = await isOwner();
   const output = step?.assets.find((a) => a.kind === "VIDEO");
+  // Admin only: what was handed to the model for this generation. The media links are signed, so they are described, never printed.
+  const sent = (step?.input ?? {}) as Record<string, unknown>;
+  const viaFal = model?.provider === "fal";
+  const details: [string, string][] = [
+    ["api", viaFal ? "fal.ai" : "Higgsfield"],
+    ["resolution", String(sent.resolution ?? "-")],
+    ["source video", `${sent.sourceDuration ?? "-"} s (private link, expires in 1 h)`],
+    ["reference images", `${Array.isArray(sent.image_urls) ? sent.image_urls.length : 0} saved${viaFal ? ", the first is sent" : ", sent in order"}`],
+    ...(viaFal ? [
+      ["character_orientation", String(sent.character_orientation ?? "video (this generation predates the saved field)")],
+      ["keep_original_sound", String(sent.keep_original_sound ?? "false (this generation predates the saved field)")],
+    ] as [string, string][] : []),
+  ];
   const estimate = source?.durationSec
     ? motionEstimate(source.durationSec, brief.resolution, brief.model).brl
     : 0;
@@ -97,7 +110,7 @@ export async function MotionProduction({
           <p className="whitespace-pre-wrap text-body-sm leading-6 text-lab-text-dim">
             {brief.prompt}
           </p>
-          {admin && step?.status !== "PENDING" ? <AdminPrompt prompt={(step?.input as { prompt?: unknown } | null)?.prompt} model={step?.model} /> : null}
+          {admin && step?.status !== "PENDING" ? <AdminPrompt prompt={sent.prompt} model={step?.model} label="Generation details" details={details} /> : null}
           <p className="text-caption text-lab-text-muted">
             {model?.name ?? brief.model}{brief.resolution === "default" ? "" : ` · ${brief.resolution}`} ·{" "}
             {source?.durationSec?.toFixed(1)}s
