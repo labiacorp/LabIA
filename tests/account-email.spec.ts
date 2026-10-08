@@ -11,6 +11,7 @@ test("sign-up confirms the address before the first sign-in, by code", async ({ 
   await page.goto("/criar-conta");
   await page.getByPlaceholder("voce@exemplo.com").first().fill(email);
   await page.getByPlaceholder(/Mínimo de/).fill("abcd");
+  await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Criar conta" }).click();
   await expect(page).toHaveURL(/\/verificar-email\?email=/);
   await page.screenshot({ path: `test-results/verify-${info.project.name}.png`, fullPage: true });
@@ -45,6 +46,7 @@ test("sign-up with a taken address answers the same and mails the owner instead"
   await page.goto("/criar-conta");
   await page.getByPlaceholder("voce@exemplo.com").first().fill(email);
   await page.getByPlaceholder(/Mínimo de/).fill("outra");
+  await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Criar conta" }).click();
   await expect(page).toHaveURL(/\/verificar-email\?email=/);
   expect((await lastEmail(email)).subject).toBe("Você já tem uma conta na LabIA");
