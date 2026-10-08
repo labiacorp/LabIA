@@ -291,20 +291,30 @@ export function MotionForm({
             </select>
           </label>
         )}
-        <p className="text-body-sm text-lab-text-dim">
-          {cost === null
-            ? "Selecione o vídeo para estimar a geração."
-            : `Estimativa de geração: ~${costText(cost)}. A duração é arredondada para cima em segundos.`}{" "}
-          Salvar este rascunho é gratuito. A geração será confirmada na próxima
-          tela.
-        </p>
+        <div className="grid gap-1 rounded-control border border-lab-border bg-lab-surface-2 p-4 text-body-sm">
+          {cost === null || !source?.durationSec ? (
+            <span className="text-lab-text-dim">Escolha o vídeo para ver o custo.</span>
+          ) : (
+            <>
+              <span className="text-caption text-lab-text-muted">Custo desta geração</span>
+              <span className="font-display text-xl">~{costText(cost)}</span>
+              <span className="text-lab-text-dim">
+                {Math.ceil(source.durationSec)} s de vídeo no {model.name}
+                {resolutions.includes("default") ? "" : ` a ${resolution}`}. Para gastar menos, crie uma versão curta do vídeo acima.
+              </span>
+            </>
+          )}
+          <span className="text-lab-text-dim">
+            Nada é cobrado agora. Este botão só salva o rascunho; os créditos só saem na próxima tela, depois do seu OK.
+          </span>
+        </div>
         <Button
           loading={pending}
           disabled={!characters.length || !videos.length || !images.length}
           className="justify-self-start"
           size="lg"
         >
-          Salvar recriação
+          Salvar rascunho (grátis) e ver o custo
         </Button>
         {state && (
           <p role="alert" className="text-body-sm text-lab-danger">
