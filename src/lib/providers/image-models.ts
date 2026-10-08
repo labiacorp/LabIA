@@ -31,6 +31,10 @@ export function qualityLabel(key: string) {
   const text = QUALITY_LABEL[level] ?? level;
   return size ? `${size.toUpperCase()} · ${text}` : QUALITY_LABEL[level] ? text.charAt(0).toUpperCase() + text.slice(1) : text;
 }
+// "0.5K" is the provider's wire value (512 px); people never read it. The request still sends "0.5K".
+export function resolutionLabel(key: string) {
+  return key === "0.5K" ? "512px" : key;
+}
 export function prepareImage(model: string, params: GenParams, usdBrlRate: number) {
   const definition = findImageDefinition(model);
   if (!definition) throw new Error("Modelo de imagem não disponível.");

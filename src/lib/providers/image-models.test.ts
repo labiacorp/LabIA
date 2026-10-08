@@ -2,13 +2,21 @@ import { describe, expect, it, vi } from "vitest";
 const sdk = vi.hoisted(() => ({ config: vi.fn(), submit: vi.fn().mockResolvedValue({ request_id: "image-fixture" }) }));
 vi.mock("@fal-ai/client", () => ({ fal: { config: sdk.config, queue: sdk } }));
 import { FalProvider } from "./fal";
-import { prepareImage } from "./image-models";
+import { prepareImage, resolutionLabel } from "./image-models";
 import { getImageOptions, sceneItem } from "../content-generation";
 
 // Prices are asserted at the default rate; a USD_BRL_RATE in .env.local must not move them.
 vi.stubEnv("USD_BRL_RATE", "5.4");
 const params = { prompt: "The same person holding a product", image_urls: ["https://fixture/owned-front.png"], resolution: "2K", aspect_ratio: "9:16" };
 const provider = () => new FalProvider({ apiKey: "fixture-no-network", usdBrlRate: 5.4 });
+describe("resolution labels", () => {
+  it("shows 0.5K as 512px and keeps the other keys", () => {
+    expect(resolutionLabel("0.5K")).toBe("512px");
+    expect(resolutionLabel("1K")).toBe("1K");
+    expect(resolutionLabel("4K")).toBe("4K");
+  });
+});
+
 describe("reference image model contracts", () => {
   it.each([
     ["fal-ai/nano-banana-2/edit", "2K", .12],
