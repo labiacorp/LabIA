@@ -38,7 +38,12 @@ export function SceneForm({ action, intent, options, balanceBrl, prompt, blocked
           const next = options.find((item) => item.model === event.target.value);
           if (next) setSelection({ model: next.model, resolution: next.configurations.find((item) => item.resolution === selection.resolution)?.resolution ?? next.configurations[0]?.resolution ?? "" });
         }}>
-          {options.map((item) => <option key={item.model} value={item.model} disabled={!item.configurations.length}>{item.name}</option>)}
+          {options.map((item) => {
+            // The price at the chosen quality; "from" the cheapest one when this model has no such quality.
+            const exact = item.configurations.find((config) => config.resolution === selection.resolution);
+            const cheapest = Math.min(...item.configurations.map((config) => config.brl));
+            return <option key={item.model} value={item.model} disabled={!item.configurations.length}>{item.configurations.length ? `${item.name} · ${exact ? rateText(exact.brl) : `from ${rateText(cheapest)}`} per image` : item.name}</option>;
+          })}
         </select>
         <select aria-label="Qualidade da imagem" className={pill} value={selection.resolution} disabled={pending} onChange={(event) => setSelection({ ...selection, resolution: event.target.value })}>
           {option?.configurations.map((item) => <option key={item.resolution} value={item.resolution}>{item.resolution === "default" ? "Qualidade padrão" : item.resolution} · {rateText(item.brl)}</option>)}
