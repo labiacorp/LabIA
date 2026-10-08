@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { refreshRate } from "@/lib/fx";
 import { requireUserId } from "@/lib/session";
-import { findMotionModel, motionSchema, type MotionBrief } from "@/lib/motion";
+import { findMotionModel, KLING_FIXED_PARAMS, motionSchema, type MotionBrief } from "@/lib/motion";
 import { startPlan, UserError } from "@/lib/generation";
 import { providerMediaUrl } from "@/lib/media-access";
 import { readReference } from "@/lib/reference-storage";
@@ -142,6 +142,7 @@ export async function generateMotion(
             image_urls: references.slice(0, findMotionModel(parsed.data.model)?.maxReferences).map(providerMediaUrl),
             resolution: parsed.data.resolution,
             sourceDuration: source.durationSec,
+            ...(findMotionModel(parsed.data.model)?.provider === "fal" ? KLING_FIXED_PARAMS : {}),
           },
         },
       ],
