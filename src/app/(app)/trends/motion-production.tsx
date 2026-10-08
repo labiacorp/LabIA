@@ -157,6 +157,14 @@ export async function MotionProduction({
                 Confira as referências e o valor antes de confirmar. A
                 estimativa usa a duração arredondada para cima.
               </p>
+              <p className="text-body-sm text-lab-text-dim">
+                Som:{" "}
+                {model?.provider === "fal"
+                  ? brief.keepSound
+                    ? "o vídeo sai com o som do vídeo de referência."
+                    : "o vídeo sai mudo."
+                  : "ainda não sabemos se o Genjutsu entrega som."}
+              </p>
               <KitForm
                 action={generateMotion.bind(
                   null,

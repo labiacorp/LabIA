@@ -45,7 +45,7 @@ export default async function TrendsPage({
   const [characters, assets] = await Promise.all([
     prisma.influencer.findMany({
       where: { userId },
-      select: { id: true, name: true },
+      select: { id: true, name: true, faceAssetId: true },
       orderBy: { name: "asc" },
     }),
     prisma.asset.findMany({
@@ -67,6 +67,8 @@ export default async function TrendsPage({
       a.fileName ??
       `${a.influencer?.name ?? "Personagem"} · ${a.role ?? "Imagem"}`,
     durationSec: a.durationSec,
+    width: a.width,
+    height: a.height,
   }));
   // The character sheet is a grid of faces and confuses a motion model: offer single portraits only, front portrait first.
   const images = media

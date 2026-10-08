@@ -4,13 +4,15 @@ import Image from "next/image";
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { InlineUpload } from "@/components/app/inline-upload";
-import { DEFAULT_MOTION_MODEL, findMotionModel, MOTION_MODELS, motionEstimate, type MotionBrief } from "@/lib/motion";
+import { DEFAULT_MOTION_MODEL, findMotionModel, MIN_REFERENCE_PX, MOTION_MODELS, motionEstimate, referenceTooSmall, type MotionBrief } from "@/lib/motion";
 import { createMotion, trimSource } from "./actions";
 type Media = {
   id: string;
   url: string;
   name: string;
   durationSec: number | null;
+  width?: number | null;
+  height?: number | null;
 };
 export function MotionForm({
   trend,
@@ -24,7 +26,7 @@ export function MotionForm({
 }: {
   trend: { id: string; name: string; roles: readonly string[] };
   modelPrompts: Record<string, string>;
-  characters: { id: string; name: string }[];
+  characters: { id: string; name: string; faceAssetId: string | null }[];
   images: Media[];
   videos: Media[];
   uploadReady?: boolean;
@@ -42,7 +44,11 @@ export function MotionForm({
   const [trimSeconds, setTrimSeconds] = useState("");
   const [trimming, setTrimming] = useState(false);
   const [trimError, setTrimError] = useState("");
-  const [refs, setRefs] = useState<string[]>(initial?.referenceIds ?? []);
+  // The influencer picked here is who enters the scene: her main portrait is reference 1 until another image is chosen.
+  const [influencerId, setInfluencerId] = useState(characters[0]?.id ?? "");
+  const faceOf = (id: string) => characters.find((c) => c.id === id)?.faceAssetId ?? "";
+  const [refs, setRefs] = useState<string[]>(initial?.referenceIds ?? (faceOf(characters[0]?.id ?? "") ? [faceOf(characters[0].id)] : []));
+  const [keepSound, setKeepSound] = useState(initial?.keepSound ?? false);
   const [modelId, setModelId] = useState(initial?.model ?? DEFAULT_MOTION_MODEL);
   const model = findMotionModel(modelId) ?? MOTION_MODELS[0];
   // The prompt starts as the chosen model's text and follows a model switch until the user types in it.
@@ -61,6 +67,8 @@ export function MotionForm({
     const pick = keys.includes(resolution) ? resolution : keys.includes("720p") ? "720p" : keys[0];
     return motionEstimate(seconds, pick, item.id).usd * rate;
   };
+  const firstImage = images.find((a) => a.id === refs[0]);
+  const tooSmall = referenceTooSmall(model, firstImage ? { width: firstImage.width ?? null, height: firstImage.height ?? null } : undefined);
   const field =
     "min-h-11 w-full rounded-control border border-lab-border bg-lab-surface-2 p-3 text-body-sm";
   const usd = source?.durationSec
@@ -157,6 +165,31 @@ export function MotionForm({
         </section>
         <section className="grid content-start gap-4 rounded-lab border border-lab-border bg-lab-surface-1 p-5">
           <h2 className="font-display text-xl">2. Quem entra na cena?</h2>
+          <label className="grid gap-2 text-body-sm">
+            Influencer
+            <select
+              name="influencerId"
+              required
+              value={influencerId}
+              onChange={(e) => {
+                setInfluencerId(e.target.value);
+                const face = faceOf(e.target.value);
+                if (face) setRefs((current) => [face, ...current.slice(1)]);
+              }}
+              className={field}
+            >
+              {characters.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <span className="text-caption text-lab-text-muted">
+              {faceOf(influencerId)
+                ? "O retrato principal dela entra na cena e o resultado fica guardado nela. Para usar outra foto, troque a imagem abaixo."
+                : "Ela ainda não tem retrato principal. Escolha ou envie uma imagem abaixo."}
+            </span>
+          </label>
           {trend.roles.slice(0, model.maxReferences).map((role, index) => (
             <label key={role} className="grid gap-2 text-body-sm">
               {role}
@@ -188,7 +221,7 @@ export function MotionForm({
                   accept="image"
                   label="Upload an image"
                   onUploaded={(asset) => {
-                    setUploaded((current) => ({ ...current, images: [{ id: asset.id, url: asset.url, name: asset.name, durationSec: null }, ...current.images] }));
+                    setUploaded((current) => ({ ...current, images: [{ id: asset.id, url: asset.url, name: asset.name, durationSec: null, width: asset.width, height: asset.height }, ...current.images] }));
                     setRefs((current) => {
                       const next = [...current];
                       next[index] = asset.id;
@@ -209,6 +242,17 @@ export function MotionForm({
               )}
             </label>
           ))}
+          {tooSmall && (
+            <p role="alert" className="text-body-sm text-lab-danger">
+              Esta imagem é pequena demais para o Kling: o lado menor precisa ter pelo menos {MIN_REFERENCE_PX} px. Escolha outra ou envie uma maior.
+            </p>
+          )}
+          {model.provider === "fal" && (
+            <ul className="grid gap-1 text-caption text-lab-text-muted">
+              <li>Use uma imagem com cabeça e corpo visíveis, no mesmo enquadramento do vídeo (meio corpo com meio corpo, corpo inteiro com corpo inteiro).</li>
+              <li>O vídeo deve ter um único plano, sem cortes, uma pessoa em destaque e movimento moderado.</li>
+            </ul>
+          )}
           <p className="text-caption text-lab-text-muted">
             As referências são enviadas nessa ordem. Descreva a posição de cada
             personagem nas instruções; a correspondência depende do resultado do
@@ -227,16 +271,6 @@ export function MotionForm({
             defaultValue={trend.name}
             className={field}
           />
-        </label>
-        <label className="grid gap-2 text-body-sm">
-          Guardar na influencer
-          <select name="influencerId" required className={field}>
-            {characters.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
         </label>
         <label className="grid gap-2 text-body-sm">
           Instruções de cena
@@ -291,6 +325,19 @@ export function MotionForm({
             </select>
           </label>
         )}
+        {model.provider === "fal" ? (
+          <label className="flex items-start gap-3 text-body-sm">
+            <input type="checkbox" name="keepSound" checked={keepSound} onChange={(e) => setKeepSound(e.target.checked)} className="mt-1 size-4" />
+            <span>
+              Manter o som do vídeo de referência
+              <span className="block text-caption text-lab-text-muted">
+                Desligado, o vídeo sai mudo. Versões curtas criadas aqui não têm som.
+              </span>
+            </span>
+          </label>
+        ) : (
+          <p className="text-caption text-lab-text-muted">Som: ainda não sabemos o que o Genjutsu entrega, porque ele nunca rodou de verdade aqui.</p>
+        )}
         <div className="grid gap-1 rounded-control border border-lab-border bg-lab-surface-2 p-4 text-body-sm">
           {cost === null || !source?.durationSec ? (
             <span className="text-lab-text-dim">Escolha o vídeo para ver o custo.</span>
@@ -307,10 +354,15 @@ export function MotionForm({
           <span className="text-lab-text-dim">
             Nada é cobrado agora. Este botão só salva o rascunho; os créditos só saem na próxima tela, depois do seu OK.
           </span>
+          {model.provider === "fal" && (
+            <span className="text-caption text-lab-warning">
+              Ação muito rápida ou complexa pode gerar um vídeo mais curto que o enviado, e o Kling não devolve esse valor.
+            </span>
+          )}
         </div>
         <Button
           loading={pending}
-          disabled={!characters.length || !videos.length || !images.length}
+          disabled={!characters.length || !videos.length || !images.length || tooSmall}
           className="justify-self-start"
           size="lg"
         >

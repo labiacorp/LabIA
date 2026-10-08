@@ -12,8 +12,12 @@ export const MOTION_MODELS: MotionModel[] = [
 // What the Trends form preselects: Kling runs on the fal.ai key we already have, Genjutsu needs separate Higgsfield credentials.
 export const DEFAULT_MOTION_MODEL = "fal-ai/kling-video/v2.6/pro/motion-control";
 // Kling options that never change per request. They travel in each generation's params so the admin details show what was sent:
-// "video" = the character follows the video's position and camera (up to 30 s; "image" caps at 10 s); false = the original sound is not kept.
+// "video" = the character follows the video's position and camera (up to 30 s; "image" caps at 10 s); keep_original_sound is only the default here, each brief chooses it (`keepSound`).
 export const KLING_FIXED_PARAMS = { character_orientation: "video", keep_original_sound: false } as const;
+// Kling's guide: the character image needs its shorter side to be at least 340 px. Only checked when the size is known (older imports may not have it).
+export const MIN_REFERENCE_PX = 340;
+export const referenceTooSmall = (model: MotionModel | undefined, image?: { width: number | null; height: number | null }) =>
+  model?.provider === "fal" && Boolean(image?.width && image?.height) && Math.min(image!.width!, image!.height!) < MIN_REFERENCE_PX;
 export const findMotionModel = (id: string) => MOTION_MODELS.find((model) => model.id === id);
 export const motionSchema = z.object({
   version: z.literal(1),
@@ -25,6 +29,8 @@ export const motionSchema = z.object({
     .max(3)
     .refine((ids) => new Set(ids).size === ids.length),
   prompt: z.string().trim().max(2000),
+  // Kling only: keep the reference video's own sound in the result (off unless asked; Genjutsu's behaviour is unknown).
+  keepSound: z.boolean().default(false),
   resolution: z.enum(["480p", "720p", "1080p", "default"]),
   // Briefs saved before the picker existed have no model: they were all Genjutsu.
   model: z.string().default(MOTION_MODEL),

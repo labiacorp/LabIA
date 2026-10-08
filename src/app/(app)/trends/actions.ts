@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { refreshRate } from "@/lib/fx";
 import { requireOwner } from "@/lib/owner";
-import { findMotionModel, KLING_FIXED_PARAMS, motionSchema, type MotionBrief } from "@/lib/motion";
+import { findMotionModel, KLING_FIXED_PARAMS, MIN_REFERENCE_PX, motionSchema, referenceTooSmall, type MotionBrief } from "@/lib/motion";
 import { startPlan, UserError } from "@/lib/generation";
 import { providerMediaUrl } from "@/lib/media-access";
 import { readReference, removeReference, storeReference } from "@/lib/reference-storage";
@@ -41,6 +41,8 @@ async function ownedInputs(userId: string, brief: MotionBrief) {
     throw new UserError(
       "Escolha um vídeo importado válido e imagens da sua biblioteca.",
     );
+  if (referenceTooSmall(findMotionModel(brief.model), references.find((asset) => asset.id === brief.referenceIds[0])))
+    throw new UserError(`A imagem do personagem precisa ter pelo menos ${MIN_REFERENCE_PX} px no lado menor para o Kling.`);
   return {
     source,
     references: brief.referenceIds.map(
@@ -85,6 +87,7 @@ export async function createMotion(_previous: string, form: FormData) {
     sourceId: form.get("sourceId"),
     referenceIds,
     prompt: form.get("prompt"),
+    keepSound: form.get("keepSound") === "on",
     resolution: form.get("resolution"),
     model: form.get("model") ?? undefined,
   });
@@ -168,7 +171,7 @@ export async function generateMotion(
             image_urls: references.slice(0, findMotionModel(parsed.data.model)?.maxReferences).map(providerMediaUrl),
             resolution: parsed.data.resolution,
             sourceDuration: source.durationSec,
-            ...(findMotionModel(parsed.data.model)?.provider === "fal" ? KLING_FIXED_PARAMS : {}),
+            ...(findMotionModel(parsed.data.model)?.provider === "fal" ? { ...KLING_FIXED_PARAMS, keep_original_sound: parsed.data.keepSound } : {}),
           },
         },
       ],

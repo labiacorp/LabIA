@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { Loader2, Upload } from "lucide-react";
 
-export type UploadedAsset = { id: string; url: string; kind: "IMAGE" | "VIDEO"; name: string; durationSec: number | null };
+export type UploadedAsset = { id: string; url: string; kind: "IMAGE" | "VIDEO"; name: string; durationSec: number | null; width?: number | null; height?: number | null };
 
 // "Upload yours" next to any field that asks for an image or a video: sends the file to the same private storage as the
 // library (/api/assets/upload) and hands the new asset back so the field can select it at once.
@@ -21,7 +21,7 @@ export function InlineUpload({ accept, label = "Upload from your computer", disa
       const response = await fetch("/api/assets/upload", { method: "POST", headers: { "Content-Type": file.type, "X-File-Name": encodeURIComponent(file.name) }, body: file });
       const data = await response.json().catch(() => null);
       if (!response.ok) throw new Error(data?.error || "Could not upload. Try again.");
-      onUploaded({ id: data.id, url: data.url, kind: data.kind, name: data.name ?? file.name, durationSec: data.durationSec ?? null });
+      onUploaded({ id: data.id, url: data.url, kind: data.kind, name: data.name ?? file.name, durationSec: data.durationSec ?? null, width: data.width ?? null, height: data.height ?? null });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Upload failed.");
     } finally {
