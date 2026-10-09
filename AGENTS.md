@@ -47,6 +47,23 @@ Diego and Felipe work at the same time, each with an agent. One flow for everyon
 - `npm run test:e2e` runs its own `next dev` on port 3100 with `FAL_MOCK=1`; never point it at a server on 3000. Specs seed through `tests/helpers.ts` (`sql` over `pg`: the Prisma 7 client is ESM-only and Playwright loads CommonJS) and delete their accounts in `afterAll`.
 - Production migrates in its own build (`vercel.json` runs `prisma migrate deploy` when `VERCEL_ENV=production`); Preview builds do not, so a new migration must be applied to LabIA Dev before pushing `dev`. `prisma.config.ts` reads `DIRECT_URL` before `DATABASE_URL`: to point a Prisma command at another database, override both.
 
+## Agent skills
+
+### Issue tracker
+
+Track implementation work in TASKS.md and its corresponding Notion tasks.
+See docs/agents/issue-tracker.md.
+
+### Triage labels
+
+Use the default triage vocabulary as task metadata.
+See docs/agents/triage-labels.md.
+
+### Domain docs
+
+Use a single-context glossary and architecture decisions.
+See docs/agents/domain.md.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

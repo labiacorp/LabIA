@@ -46,3 +46,30 @@ Diego and Felipe work at the same time, each with an agent. One flow for everyon
 - Every `/admin` server action starts with `await requireOwner()` (a layout does not protect an action; `admin/actions.test.ts` checks it). Owners are granted only with `scripts/owner.ts`.
 - `npm run test:e2e` runs its own `next dev` on port 3100 with `FAL_MOCK=1`; never point it at a server on 3000. Specs seed through `tests/helpers.ts` (`sql` over `pg`: the Prisma 7 client is ESM-only and Playwright loads CommonJS) and delete their accounts in `afterAll`.
 - Production migrates in its own build (`vercel.json` runs `prisma migrate deploy` when `VERCEL_ENV=production`); Preview builds do not, so a new migration must be applied to LabIA Dev before pushing `dev`. `prisma.config.ts` reads `DIRECT_URL` before `DATABASE_URL`: to point a Prisma command at another database, override both.
+
+## Agent skills
+
+### Issue tracker
+
+Track implementation work in TASKS.md and its corresponding Notion tasks.
+See docs/agents/issue-tracker.md.
+
+### Triage labels
+
+Use the default triage vocabulary as task metadata.
+See docs/agents/triage-labels.md.
+
+### Domain docs
+
+Use a single-context glossary and architecture decisions.
+See docs/agents/domain.md.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
