@@ -31,7 +31,7 @@ export async function deleteUsers(prefix: string) {
   await sql`DELETE FROM users WHERE email LIKE ${prefix + "%"}`;
 }
 
-// The dev provider (development only) stands in for Google, the only method owner powers accept.
+// The dev provider (development only) stands in for Google. Owners can also sign in by password.
 export async function signInDev(page: Page, email: string) {
   await page.goto("/login");
   const form = page.locator("form").filter({ hasText: "Só em desenvolvimento" });

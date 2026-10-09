@@ -30,13 +30,25 @@ test("an owner on a Google-equivalent session tops up an account exactly once", 
   await sql`DELETE FROM ledger_entries WHERE user_id IN (SELECT id FROM users WHERE email = ${member})`;
 });
 
-test("the same owner signed in by password, and a normal account, get a page that does not exist", async ({ page }) => {
+test("a password owner can open Admin and Trends; a normal account cannot", async ({ page }, info) => {
   await signInPassword(page, owner, "senha-owner");
-  await expect(page.locator("a[href=\"/admin\"]")).toHaveCount(0);
+  await expect(page.locator("a[href=\"/admin\"]").first()).toBeAttached();
+  await expect(page.locator("a[href=\"/trends\"]").first()).toBeAttached();
   await page.goto("/admin");
-  await expect(page.locator("h1")).toHaveText("Página não encontrada");
+  await expect(page.locator("h1")).toHaveText("Admin");
+  await expect(page.getByRole("heading", { name: "Owners", exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.screenshot({ path: `test-results/admin-password-${info.project.name}.png`, fullPage: true });
+  await page.goto("/trends");
+  await expect(page.locator("h1")).toHaveText("Uma trend, seus personagens");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.screenshot({ path: `test-results/trends-password-${info.project.name}.png`, fullPage: true });
   await page.context().clearCookies();
   await signInPassword(page, member, "senha-membro");
+  await expect(page.locator("a[href=\"/admin\"]")).toHaveCount(0);
+  await expect(page.locator("a[href=\"/trends\"]")).toHaveCount(0);
   await page.goto("/admin");
+  await expect(page.locator("h1")).toHaveText("Página não encontrada");
+  await page.goto("/trends");
   await expect(page.locator("h1")).toHaveText("Página não encontrada");
 });

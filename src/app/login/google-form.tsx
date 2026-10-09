@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ConsentBox } from "@/components/app/consent-box";
 
-// Google sign-in, kept next to e-mail and password (owner powers need a Google session). The button waits for
+// Google sign-in, kept next to e-mail and password. The button waits for
 // the one checkbox: the tick is read by the server action before the redirect to Google.
 export function GoogleSignIn({ action }: { action: (form: FormData) => void }) {
   const [accepted, setAccepted] = useState(false);
