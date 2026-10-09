@@ -23,6 +23,7 @@ export function MotionForm({
   uploadReady = true,
   initial,
   rate,
+  draft,
 }: {
   trend: { id: string; name: string; roles: readonly string[] };
   modelPrompts: Record<string, string>;
@@ -32,6 +33,7 @@ export function MotionForm({
   uploadReady?: boolean;
   initial?: MotionBrief;
   rate: number;
+  draft?: { id: string; title: string; influencerId: string };
 }) {
   const [state, action, pending] = useActionState(createMotion, "");
   // Files uploaded from this form join the lists at once, so nothing has to be imported elsewhere first.
@@ -45,7 +47,7 @@ export function MotionForm({
   const [trimming, setTrimming] = useState(false);
   const [trimError, setTrimError] = useState("");
   // The influencer picked here is who enters the scene: her main portrait is reference 1 until another image is chosen.
-  const [influencerId, setInfluencerId] = useState(characters[0]?.id ?? "");
+  const [influencerId, setInfluencerId] = useState(draft?.influencerId ?? characters[0]?.id ?? "");
   const faceOf = (id: string) => characters.find((c) => c.id === id)?.faceAssetId ?? "";
   const [refs, setRefs] = useState<string[]>(initial?.referenceIds ?? (faceOf(characters[0]?.id ?? "") ? [faceOf(characters[0].id)] : []));
   const [keepSound, setKeepSound] = useState(initial?.keepSound ?? false);
@@ -78,6 +80,7 @@ export function MotionForm({
   return (
     <form action={action} className="grid gap-6">
       <input type="hidden" name="trend" value={trend.id} />
+      {draft ? <><input type="hidden" name="contentId" value={draft.id} /><input type="hidden" name="influencerId" value={draft.influencerId} /></> : null}
       <div className="grid gap-5 lg:grid-cols-2">
         <section className="grid content-start gap-4 rounded-lab border border-lab-border bg-lab-surface-1 p-5">
           <h2 className="font-display text-xl">1. Movimento de referência</h2>
@@ -169,6 +172,7 @@ export function MotionForm({
             Influencer
             <select
               name="influencerId"
+              disabled={!!draft}
               required
               value={influencerId}
               onChange={(e) => {
@@ -268,7 +272,7 @@ export function MotionForm({
             name="title"
             required
             maxLength={120}
-            defaultValue={trend.name}
+            defaultValue={draft?.title ?? trend.name}
             className={field}
           />
         </label>
@@ -307,7 +311,7 @@ export function MotionForm({
           <span className="text-caption text-lab-text-muted">{model.note}</span>
         </label>
         {resolutions.includes("default") ? (
-          <input type="hidden" name="resolution" value="default" />
+          <label className="grid gap-2 text-body-sm">Quality<select name="resolution" value="default" className={field} onChange={() => {}}><option value="default">Defined by this model</option></select><span className="text-caption text-lab-text-muted">This endpoint does not offer a separate resolution setting.</span></label>
         ) : (
           <label className="grid gap-2 text-body-sm">
             Resolução
@@ -338,6 +342,7 @@ export function MotionForm({
         ) : (
           <p className="text-caption text-lab-text-muted">Som: ainda não sabemos o que o Genjutsu entrega, porque ele nunca rodou de verdade aqui.</p>
         )}
+        <p className="text-body-sm">Duration: {source?.durationSec ? `${source.durationSec.toFixed(1)} s` : "choose a reference video"}. Use the short-version controls above to keep fewer seconds.</p>
         <div className="grid gap-1 rounded-control border border-lab-border bg-lab-surface-2 p-4 text-body-sm">
           {cost === null || !source?.durationSec ? (
             <span className="text-lab-text-dim">Escolha o vídeo para ver o custo.</span>
@@ -366,7 +371,7 @@ export function MotionForm({
           className="justify-self-start"
           size="lg"
         >
-          Salvar rascunho (grátis) e ver o custo
+          {draft ? "Save settings (free) and review cost" : "Salvar rascunho (grátis) e ver o custo"}
         </Button>
         {state && (
           <p role="alert" className="text-body-sm text-lab-danger">

@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   find: vi.fn(),
   create: vi.fn(),
   lock: vi.fn(),
+  stepUpdate: vi.fn(),
 }));
 vi.mock("@/lib/session", () => ({ requireUserId: mocks.user }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -21,17 +22,49 @@ vi.mock("@/lib/prisma", () => ({
       callback({
         $queryRaw: mocks.lock,
         content: { updateMany: mocks.update },
+        step: { updateMany: mocks.stepUpdate },
       }),
   },
 }));
 import { createProduction, setArchive } from "./management";
+import { getImageOptions } from "@/lib/content-generation";
+import { getVideoOptions } from "@/lib/video-options";
 describe("content organization", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     mocks.user.mockResolvedValue("owner");
     mocks.update.mockResolvedValue({ count: 1 });
+    mocks.stepUpdate.mockResolvedValue({ count: 1 });
     mocks.find.mockResolvedValue({ id: "character" });
     mocks.create.mockResolvedValue({ id: "new" });
+  });
+  it("keeps the chosen image and video settings in a free draft and computes estimates on the server", async () => {
+    const image = getImageOptions("16:9").find((item) => item.configurations.length)!;
+    const video = getVideoOptions().find((item) => item.strategy === "clip" && item.configurations.length)!;
+    const imageConfig = image.configurations.at(-1)!;
+    const videoConfig = video.configurations.at(-1)!;
+    const f = new FormData();
+    for (const [key, value] of Object.entries({ influencerId: "character", idea: "A test video", aspectRatio: "16:9", imageModel: image.model, imageResolution: imageConfig.resolution, videoModel: video.model, videoStrategy: video.strategy, videoDuration: String(videoConfig.duration), videoResolution: videoConfig.resolution, videoAudio: String(videoConfig.audio), expectedBrl: "0" })) f.set(key, value);
+    expect((await createProduction({ error: "" }, f)).created).toBe("/i/character/c/new");
+    const steps = mocks.create.mock.calls[0][0].data.steps.create;
+    expect(steps.find((step: { kind: string }) => step.kind === "IMAGE")).toMatchObject({ input: { selection: { model: image.model, resolution: imageConfig.resolution } }, estimatedCostBrl: imageConfig.brl });
+    expect(steps.find((step: { kind: string }) => step.kind === "VIDEO")).toMatchObject({ input: { selection: { model: video.model, strategy: "clip", duration: videoConfig.duration, resolution: videoConfig.resolution, audio: videoConfig.audio } }, estimatedCostBrl: videoConfig.brl });
+  });
+  it("rejects an invented model before saving a draft", async () => {
+    const f = new FormData();
+    for (const [key, value] of Object.entries({ influencerId: "character", idea: "A test", imageModel: "invented", imageResolution: "1K" })) f.set(key, value);
+    expect((await createProduction({ error: "" }, f)).error).toContain("image");
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
+  it("edits only an owned draft before paid generation starts", async () => {
+    const f = new FormData();
+    for (const [key, value] of Object.entries({ contentId: "draft", influencerId: "character", idea: "Updated draft", aspectRatio: "16:9" })) f.set(key, value);
+    expect((await createProduction({ error: "" }, f)).created).toBe("/i/character/c/draft");
+    expect(mocks.create).not.toHaveBeenCalled();
+    expect(mocks.lock).toHaveBeenCalled();
+    expect(mocks.update.mock.calls[0][0].where).toMatchObject({ id: "draft", influencerId: "character", influencer: { userId: "owner" }, archivedAt: null, steps: { none: { kind: { in: ["IMAGE", "VIDEO"] } } } });
+    mocks.update.mockResolvedValue({ count: 0 });
+    expect((await createProduction({ error: "" }, f)).error).toContain("cannot be edited");
   });
   it("archives only owned idle content while locking against concurrent paid starts", async () => {
     expect(await setArchive("content", true, "")).toBe("");

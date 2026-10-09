@@ -35,6 +35,7 @@ export async function MotionProduction({
   const model = findMotionModel(brief.model);
   const admin = await isOwner();
   const output = step?.assets.find((a) => a.kind === "VIDEO");
+  const editable = content.steps.length > 0 && content.steps.every((item) => ["PENDING", "QUOTED"].includes(item.status) && item.operationKey === null && item.submissionState === "not_submitted");
   // Admin only: what was handed to the model for this generation. The media links are signed, so they are described, never printed.
   const sent = (step?.input ?? {}) as Record<string, unknown>;
   const viaFal = model?.provider === "fal";
@@ -59,6 +60,7 @@ export async function MotionProduction({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="font-display text-h1">{content.title}</h1>
         <div className="flex flex-wrap gap-3">
+          {editable && admin ? <Link href={`/trends?edit=${content.id}`} className={buttonVariants({ variant: "secondary" })}>Edit settings</Link> : null}
           <Link
             href={`/trends?copy=${content.id}`}
             className={buttonVariants({ variant: "secondary" })}

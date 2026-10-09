@@ -12,6 +12,8 @@ import { providerConfigured } from "@/lib/provider";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/session";
 import { getVideoOptions } from "@/lib/video-options";
+import type { ImageSelection } from "@/lib/content-generation";
+import type { VideoSelection } from "@/lib/video-options";
 import type { VideoChain } from "@/lib/video-chain";
 import { chargeBrl, costCredits, costText, creditsText } from "@/lib/plan";
 import { AdminPrompt } from "@/components/app/admin-prompt";
@@ -65,7 +67,7 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
   const reel = estimateReel();
   const unknownCost = steps.some((step) => unsettled(step.submissionState) || (["DONE", "APPROVED"].includes(step.status) && step.actualCostBrl === null));
   const spent = steps.reduce((sum, step) => sum + chargeBrl(Number(step.actualCostBrl ?? 0)), 0);
-  const planned = steps.reduce((sum, step) => sum + Number(step.actualCostBrl ?? step.estimatedCostBrl ?? reel.perStep[step.kind] ?? 0), 0);
+  const planned = steps.reduce((sum, step) => sum + chargeBrl(Number(step.actualCostBrl ?? step.estimatedCostBrl ?? reel.perStep[step.kind] ?? 0)), 0);
   const [balance, front, admin] = await Promise.all([
     getBalanceBrl(userId),
     prisma.asset.findFirst({ where: { userId, id: content.influencer.faceAssetId ?? "", influencerId: id, role: "FRONT", OR: [{ step: { status: { in: ["DONE", "APPROVED"] } } }, { storageKey: { not: null } }] }, select: { id: true } }),
@@ -117,9 +119,9 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
   const imageBlocked = !configured ? "A geração ainda precisa ser configurada pela equipe." : !front ? "Crie o rosto da influencer antes de gerar a cena." : undefined;
   const sceneAsset = media("IMAGE");
   const form = (step: (typeof steps)[number], label?: string) => step.kind === "IMAGE"
-    ? <SceneForm action={generateScene.bind(null, id, contentId)} intent={randomUUID()} options={getImageOptions(content.aspectRatio)} balanceBrl={balance} prompt={prompt} blockedReason={imageBlocked} label={label} />
+    ? <SceneForm action={generateScene.bind(null, id, contentId)} intent={randomUUID()} options={getImageOptions(content.aspectRatio)} balanceBrl={balance} prompt={prompt} blockedReason={imageBlocked} label={label} initial={(step.input as { selection?: ImageSelection } | null)?.selection} />
     : step.kind === "VIDEO"
-      ? <VideoForm action={generateVideo.bind(null, id, contentId)} intent={randomUUID()} balanceBrl={balance} options={getVideoOptions(sceneAsset ? { width: sceneAsset.width, height: sceneAsset.height } : undefined)} prompt={prompt} blockedReason={!configured ? "A geração ainda precisa ser configurada pela equipe." : undefined} label={label} />
+      ? <VideoForm action={generateVideo.bind(null, id, contentId)} intent={randomUUID()} balanceBrl={balance} options={getVideoOptions(sceneAsset ? { width: sceneAsset.width, height: sceneAsset.height } : undefined)} prompt={prompt} blockedReason={!configured ? "A geração ainda precisa ser configurada pela equipe." : undefined} label={label} initial={(step.input as { selection?: VideoSelection } | null)?.selection} />
       : null;
 
   const card = (step: (typeof steps)[number], index: number) => {
@@ -200,6 +202,7 @@ export default async function ContentPage({ params }: { params: Promise<{ id: st
         <DeleteContentButton influencerId={id} contentId={contentId} stages={steps.length} spent={unknownCost ? "créditos" : costText(spent)} running={running} />
       </div>
       <h1 className="break-words font-display text-[30px] font-black uppercase leading-[.9] lg:text-[40px]">{content.title}</h1>
+      {steps.filter((step) => ["IMAGE", "VIDEO"].includes(step.kind)).every((step) => ["PENDING", "QUOTED"].includes(step.status) && step.operationKey === null && step.submissionState === "not_submitted") ? <Link href={`/conteudos/novo?edit=${contentId}`} className="inline-flex min-h-11 w-fit items-center rounded-full border border-lab-border-strong px-4 text-body-sm">Edit settings</Link> : null}
       {!active && finalCut ? <div className="lg:hidden">{preview("")}</div> : null}
       <div className="grid grid-cols-2 border-y border-lab-border">
         <div className="flex flex-col gap-0.5 py-3"><span className="font-mono text-[11px] text-lab-text-dim">gasto ✓</span><span className="font-mono text-[22px]">{unknownCost ? "indisponível" : costText(spent)}</span></div>

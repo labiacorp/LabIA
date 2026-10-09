@@ -4,6 +4,13 @@ Production is `main`; all work lands on `dev` (Preview) first, see CLAUDE.md "Br
 
 Open work and who does it: `TASKS.md`.
 
+## Draft generation settings (2026-10-09, local implementation)
+
+- New content exposes format, image model/quality and video model/audio/quality/duration before draft creation. Controls reuse the generation catalogs; the visible estimate sums whole-credit step charges. The server validates each selected combination and computes estimates itself, then stores the choices in the pending steps. Image/video generation forms reopen on those saved choices.
+- Untouched content drafts offer `Edit settings` at `/conteudos/novo?edit=<id>`; changing settings updates the same content. The server checks ownership, locks the user row shared with paid starts, and refuses edits after a paid step was submitted or completed. Creating and editing drafts do not reserve credits.
+- Untouched motion recreations offer `Edit settings` at `/trends?edit=<id>` for model, supported quality, sound and reference selection. Duration follows the selected source; the existing short-version control creates a shorter source. Endpoints without a resolution option show that limitation explicitly. Submitted generations retain their recorded settings and use the existing copy flow for a new attempt.
+- Browser validation is local/mock on desktop and 390px. No paid provider run or production release has been performed for this change.
+
 ## What it is
 
 A pipeline to produce content with AI influencers: Influencer (face, niche, tone) > Content (one piece) > Steps (script, image, video, final assembly). UI in PT-BR. Sold as one monthly subscription (R$ 49,90, Stripe) that grants credits; every step shows its credit cost before and records the real cost after.

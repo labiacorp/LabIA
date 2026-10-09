@@ -10,6 +10,7 @@ import { providerMediaUrl } from "@/lib/media-access";
 import { readReference, removeReference, storeReference } from "@/lib/reference-storage";
 import { MIN_TRIM_SECONDS, trimMp4 } from "@/lib/video-trim";
 import { randomUUID } from "node:crypto";
+import { Prisma } from "@/generated/prisma/client";
 
 async function ownedInputs(userId: string, brief: MotionBrief) {
   const source = await prisma.asset.findFirst({
@@ -106,22 +107,36 @@ export async function createMotion(_previous: string, form: FormData) {
     )
       return "Escolha um personagem da sua conta para organizar a produção.";
     await ownedInputs(userId, parsed.data);
-    const content = await prisma.content.create({
-      data: {
-        influencerId,
-        title,
-        idea: parsed.data.prompt,
-        motion: parsed.data,
-        steps: { create: { kind: "ASSEMBLY", position: 0 } },
-      },
-    });
-    id = content.id;
+    const contentId = String(form.get("contentId") ?? "");
+    if (contentId) {
+      const saved = await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM users WHERE id = ${userId} FOR UPDATE`;
+        return tx.content.updateMany({
+          where: { id: contentId, influencerId, influencer: { userId }, archivedAt: null, motion: { not: Prisma.DbNull }, steps: { every: { status: { in: ["PENDING", "QUOTED"] }, operationKey: null, submissionState: "not_submitted" } } },
+          data: { title, idea: parsed.data.prompt, motion: parsed.data },
+        });
+      });
+      if (!saved.count) return "This draft cannot be edited: it is unavailable or generation has already started.";
+      id = contentId;
+    } else {
+      const content = await prisma.content.create({
+        data: {
+          influencerId,
+          title,
+          idea: parsed.data.prompt,
+          motion: parsed.data,
+          steps: { create: { kind: "ASSEMBLY", position: 0 } },
+        },
+      });
+      id = content.id;
+    }
   } catch (error) {
     return error instanceof UserError
       ? error.message
       : "Não conseguimos salvar. Suas escolhas continuam no formulário.";
   }
   revalidatePath("/conteudos");
+  revalidatePath(`/i/${influencerId}/c/${id}`);
   redirect(`/i/${influencerId}/c/${id}`);
 }
 export async function generateMotion(

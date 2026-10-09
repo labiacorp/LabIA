@@ -4,6 +4,8 @@ const mocks = vi.hoisted(() => ({
   images: vi.fn(),
   character: vi.fn(),
   create: vi.fn(),
+  update: vi.fn(),
+  lock: vi.fn(),
 }));
 vi.mock("@/lib/owner", () => ({ requireOwner: async () => "owner" }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -17,6 +19,7 @@ vi.mock("@/lib/prisma", () => ({
     asset: { findFirst: mocks.source, findMany: mocks.images },
     influencer: { findFirst: mocks.character },
     content: { create: mocks.create },
+    $transaction: async (callback: (tx: unknown) => unknown) => callback({ $queryRaw: mocks.lock, content: { updateMany: mocks.update } }),
   },
 }));
 import { createMotion } from "./actions";
@@ -41,6 +44,22 @@ describe("motion input ownership", () => {
     mocks.source.mockResolvedValue({ id: "video", durationSec: 5 });
     mocks.images.mockResolvedValue([{ id: "first" }]);
     mocks.create.mockResolvedValue({ id: "new" });
+    mocks.update.mockResolvedValue({ count: 1 });
+  });
+  it("updates the owned untouched recreation instead of creating a copy", async () => {
+    const f = form();
+    f.set("contentId", "draft");
+    await expect(createMotion("", f)).rejects.toThrow("/i/character/c/draft");
+    expect(mocks.create).not.toHaveBeenCalled();
+    expect(mocks.lock).toHaveBeenCalled();
+    expect(mocks.update.mock.calls[0][0].where).toMatchObject({ id: "draft", influencerId: "character", influencer: { userId: "owner" }, archivedAt: null, steps: { every: { status: { in: ["PENDING", "QUOTED"] }, operationKey: null, submissionState: "not_submitted" } } });
+  });
+  it("does not overwrite a foreign, running or previously submitted recreation", async () => {
+    mocks.update.mockResolvedValue({ count: 0 });
+    const f = form();
+    f.set("contentId", "locked");
+    expect(await createMotion("", f)).toContain("cannot be edited");
+    expect(mocks.create).not.toHaveBeenCalled();
   });
   it("rejects foreign source media before creating a draft", async () => {
     mocks.source.mockResolvedValue(null);

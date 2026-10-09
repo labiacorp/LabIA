@@ -21,19 +21,21 @@ import { MotionForm } from "./motion-form";
 export default async function TrendsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ trend?: string; copy?: string }>;
+  searchParams: Promise<{ trend?: string; copy?: string; edit?: string }>;
 }) {
   const userId = await requireOwner(); // 404 for everyone who is not an owner
   const params = await searchParams;
   let initial: MotionBrief | undefined;
-  if (params.copy) {
+  let draft: { id: string; title: string; influencerId: string } | undefined;
+  if (params.copy || params.edit) {
     const source = await prisma.content.findFirst({
-      where: { id: params.copy, influencer: { userId } },
-      select: { motion: true },
+      where: { id: params.edit ?? params.copy, influencer: { userId }, ...(params.edit ? { archivedAt: null, steps: { every: { status: { in: ["PENDING", "QUOTED"] }, operationKey: null, submissionState: "not_submitted" } } } : {}) },
+      select: { id: true, title: true, influencerId: true, motion: true },
     });
     const parsed = motionSchema.safeParse(source?.motion);
     if (!parsed.success) notFound();
     initial = parsed.data;
+    if (params.edit && source) draft = { id: source.id, title: source.title, influencerId: source.influencerId };
   }
   // The starting text of each model can be replaced by an admin (admin > Prompts).
   const templates = await loadPromptTemplates();
@@ -161,7 +163,7 @@ export default async function TrendsPage({
             </p>
           )}
           <MotionForm
-            key={selected.id + (params.copy ?? "")}
+            key={selected.id + (params.edit ?? params.copy ?? "")}
             trend={selected}
             modelPrompts={modelPrompts}
             characters={characters}
@@ -169,6 +171,7 @@ export default async function TrendsPage({
             videos={videos}
             uploadReady={referenceStorageReady()}
             initial={initial}
+            draft={draft}
             rate={motionEstimate(4, "720p").rate}
           />
         </>

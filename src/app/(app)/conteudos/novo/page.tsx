@@ -11,15 +11,25 @@ import { IMAGE_DEFINITIONS } from "@/lib/providers/image-models";
 import { VIDEO_DEFINITIONS } from "@/lib/providers/video-models";
 import { requireUserId } from "@/lib/session";
 import { CreationForm } from "./creation-form";
+import { getImageOptions } from "@/lib/content-generation";
+import { getVideoOptions } from "@/lib/video-options";
+import type { DraftSettings } from "@/lib/content-draft";
 
 // Novo conteúdo, from the design. ?template, ?copy and ?starter still prefill the idea (and script) from a saved brief.
-export default async function NewContentPage({ searchParams }: { searchParams: Promise<{ influencer?: string; template?: string; starter?: string; copy?: string }> }) {
+export default async function NewContentPage({ searchParams }: { searchParams: Promise<{ influencer?: string; template?: string; starter?: string; copy?: string; edit?: string }> }) {
   const userId = await requireUserId();
   const params = await searchParams;
   const influencers = await prisma.influencer.findMany({ where: { userId }, select: { id: true, name: true, faceAssetId: true }, orderBy: { updatedAt: "desc" } });
   const faces = await prisma.asset.findMany({ where: { id: { in: influencers.map((i) => i.faceAssetId).filter((id): id is string => !!id) }, userId }, select: { id: true, url: true } });
   let initial: { title: string; idea: string; script: string; aspectRatio: string } | undefined;
-  if (params.template) {
+  let draft: { id: string; influencerId: string; settings: DraftSettings } | undefined;
+  if (params.edit) {
+    const item = await prisma.content.findFirst({ where: { id: params.edit, influencer: { userId }, archivedAt: null, steps: { none: { kind: { in: ["IMAGE", "VIDEO"] }, OR: [{ status: { notIn: ["PENDING", "QUOTED"] } }, { operationKey: { not: null } }, { submissionState: { not: "not_submitted" } }] } } }, include: { steps: true } });
+    if (!item || item.motion) notFound();
+    initial = { title: item.title, idea: item.idea ?? item.title, script: scriptText(item.steps.find((step) => step.kind === "SCRIPT")?.input), aspectRatio: item.aspectRatio };
+    const selection = (kind: string) => (item.steps.find((step) => step.kind === kind)?.input as { selection?: unknown } | null)?.selection;
+    draft = { id: item.id, influencerId: item.influencerId, settings: { image: selection("IMAGE") as DraftSettings["image"], video: selection("VIDEO") as DraftSettings["video"] } };
+  } else if (params.template) {
     const item = await prisma.contentTemplate.findFirst({ where: { id: params.template, userId } });
     if (!item) notFound();
     initial = item;
@@ -41,12 +51,15 @@ export default async function NewContentPage({ searchParams }: { searchParams: P
   ];
   return <div className="mx-auto flex max-w-[640px] flex-col gap-6">
     {influencers.length ? <CreationForm
-      key={params.template || params.copy || params.starter || "blank"}
+      key={params.edit || params.template || params.copy || params.starter || "blank"}
       influencers={influencers.map((item) => ({ id: item.id, name: item.name, face: faces.find((f) => f.id === item.faceAssetId)?.url }))}
-      selected={influencers.find((i) => i.id === params.influencer)?.id ?? influencers[0].id}
+      selected={draft?.influencerId ?? influencers.find((i) => i.id === params.influencer)?.id ?? influencers[0].id}
       initial={initial}
       rows={rows}
       totalBrl={reel.totalBrl}
+      imageOptions={{ "9:16": getImageOptions("9:16"), "16:9": getImageOptions("16:9"), "1:1": getImageOptions("1:1") }}
+      videoOptions={getVideoOptions()}
+      draft={draft}
     /> : <>
       <h1 className="font-display text-[30px] font-black uppercase leading-[.9] lg:text-[40px]">Novo conteúdo</h1>
       <EmptyState icon={UserRound} title="Nenhuma influencer" description="Crie a primeira. Você aprova o rosto antes de gerar qualquer vídeo." action={<Link href="/influenciadores/nova" className={buttonVariants({ size: "lg" })}><Plus className="size-[18px]" />Criar influencer</Link>} />
