@@ -28,9 +28,10 @@ describe.skipIf(!process.env.DATABASE_URL)("concurrent access limits", () => {
   });
   it("keeps keys independent and expires old attempts", async () => {
     const value = key();
-    await prisma.rateLimitEvent.create({
-      data: { key: value, createdAt: new Date(Date.now() - 700000) },
-    });
+    await prisma.$executeRaw`
+      INSERT INTO rate_limit_events (key, created_at)
+      VALUES (${value}, now() - interval '700 seconds')
+    `;
     expect(await hit(value, 1, 600)).toBe(true);
     expect(await hit(value, 1, 600)).toBe(false);
     expect(await hit(key(), 1, 600)).toBe(true);

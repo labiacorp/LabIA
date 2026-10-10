@@ -4,14 +4,15 @@ Production is `main`; all work lands on `dev` (Preview) first, see CLAUDE.md "Br
 
 Open work and who does it: `TASKS.md`.
 
-## Motion trim corrections and Standard models (2026-10-10, local)
+## Motion trim corrections and Standard models (2026-10-10)
 
 - The cut editor stays reachable on a four-second clip. Users can reopen it, cancel an edit or restore the original. Unsaved source/original choices are remembered in account-scoped browser storage; saved motion briefs also retain an optional originalSourceId, with server ownership validation. Older cuts without that link offer an explicit original-video picker. No schema migration is required.
 - Cuts preserve source audio and decoder configuration. Full compressed audio packets remain inside the video boundary; the final video sample is capped at the requested boundary, including 29.97 fps sources. Previously silent cuts remain silent: choose the original and create a new version to restore its sound.
 - Canceling during a pending request restores the original selection and ignores late selection changes. The server may finish and retain its separate short copy in the library; the UI states this. Original files are never overwritten or deleted by trimming.
 - Model controls wait for client initialization before accepting input. Two verified Standard Motion Control entries reuse the existing fal transport; the Pro default and existing saved model IDs remain unchanged. No paid generation was run.
 - Verification: six installed-Chrome desktop/390px scenarios passed, covering reopen, navigation, saved original linkage, legacy clips and cancellation while a request finishes. Independent ffprobe inspection and ffmpeg decoding confirmed four-second H.264 video with AAC audio at 25 and 29.97 fps. The local full suite reported 313 passed, 45 failed and 6 skipped, including database connection errors and rate-limit/admin assertions; it is not green. Felipe requested production release; deployment verification remains pending.
-- Final typecheck, lint, focused tests (21 in five files) and production build passed. Felipe declined a full-suite exception and requested fixing the suite before release. No push or production deployment has been performed for this batch.
+- Final typecheck, lint and focused tests (21 in five files) passed. Felipe declined a full-suite exception and requested fixing the suite before release.
+- Test-environment repair: the expired rate-limit fixture now uses database-relative time. The local PGlite 0.4.3 harness preserves the expected error response while filtering its premature ReadyForQuery frame (upstream issue #958, local compatibility code in .handoff/pglite-protocol.mjs). Local-database test files run sequentially because the embedded socket shares session state; parallel requests inside each test and hosted-database file parallelism are retained. The final standard `npx vitest run` passed all 364 tests in 68 files, with no skips. Deployment evidence is recorded in the session handoff and the existing Notion task.
 
 ## Draft generation settings (released 2026-10-10 in 1b04c32)
 
