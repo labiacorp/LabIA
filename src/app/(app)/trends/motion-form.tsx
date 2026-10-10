@@ -1,7 +1,7 @@
 "use client";
 import { costText } from "@/lib/plan";
 import Image from "next/image";
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { InlineUpload } from "@/components/app/inline-upload";
 import { DEFAULT_MOTION_MODEL, findMotionModel, MIN_REFERENCE_PX, MOTION_MODELS, motionEstimate, referenceTooSmall, type MotionBrief } from "@/lib/motion";
@@ -13,9 +13,21 @@ type Media = {
   durationSec: number | null;
   width?: number | null;
   height?: number | null;
+  originalSourceId?: string;
 };
+function subscribeSourceHistory(callback: () => void) {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
+function remembered(key: string) {
+  try { return window.localStorage.getItem(key) ?? ""; } catch { return ""; }
+}
+function remember(key: string, value: string) {
+  try { window.localStorage.setItem(key, value); } catch { /* Saving the draft still preserves its original source. */ }
+}
 export function MotionForm({
   trend,
+  userId,
   modelPrompts,
   characters,
   images: savedImages,
@@ -26,6 +38,7 @@ export function MotionForm({
   draft,
 }: {
   trend: { id: string; name: string; roles: readonly string[] };
+  userId: string;
   modelPrompts: Record<string, string>;
   characters: { id: string; name: string; faceAssetId: string | null }[];
   images: Media[];
@@ -36,16 +49,38 @@ export function MotionForm({
   draft?: { id: string; title: string; influencerId: string };
 }) {
   const [state, action, pending] = useActionState(createMotion, "");
+  const ready = useSyncExternalStore(subscribeSourceHistory, () => true, () => false);
   // Files uploaded from this form join the lists at once, so nothing has to be imported elsewhere first.
   const [uploaded, setUploaded] = useState<{ images: Media[]; videos: Media[] }>({ images: [], videos: [] });
   const images = [...uploaded.images, ...savedImages];
   const videos = [...uploaded.videos, ...savedVideos];
-  const [sourceId, setSource] = useState(
-    initial?.sourceId ?? videos[0]?.id ?? "",
-  );
+  const historyKey = `labia:motion-source:v1:${userId}:${draft?.id ?? initial?.sourceId ?? trend.id}`;
+  const cachedSource = useSyncExternalStore(subscribeSourceHistory, () => remembered(historyKey), () => "");
+  const [sourceOverride, setSourceOverride] = useState<string | null>(null);
+  const preferredSource = sourceOverride ?? (cachedSource || initial?.sourceId || videos[0]?.id || "");
+  const sourceId = videos.some((video) => video.id === preferredSource) ? preferredSource : videos.find((video) => video.id === initial?.sourceId)?.id ?? videos[0]?.id ?? "";
+  const originKey = `labia:motion-original:v1:${userId}:${sourceId}`;
+  const cachedOriginal = useSyncExternalStore(subscribeSourceHistory, () => remembered(originKey), () => "");
+  const [manualOriginal, setManualOriginal] = useState("");
+  const originalId = manualOriginal || (sourceId === initial?.sourceId ? initial.originalSourceId : "") || videos.find((video) => video.id === sourceId)?.originalSourceId || cachedOriginal;
+  const original = videos.find((video) => video.id === originalId && video.id !== sourceId);
+  const [editingTrim, setEditingTrim] = useState(false);
+  const trimRequest = useRef(0);
   const [trimSeconds, setTrimSeconds] = useState("");
   const [trimming, setTrimming] = useState(false);
   const [trimError, setTrimError] = useState("");
+  const [trimNotice, setTrimNotice] = useState("");
+  function setSource(id: string) {
+    trimRequest.current++;
+    setSourceOverride(id);
+    remember(historyKey, id);
+    setManualOriginal("");
+    setEditingTrim(false);
+    setTrimming(false);
+    setTrimSeconds("");
+    setTrimError("");
+    setTrimNotice("");
+  }
   // The influencer picked here is who enters the scene: her main portrait is reference 1 until another image is chosen.
   const [influencerId, setInfluencerId] = useState(draft?.influencerId ?? characters[0]?.id ?? "");
   const faceOf = (id: string) => characters.find((c) => c.id === id)?.faceAssetId ?? "";
@@ -63,6 +98,40 @@ export function MotionForm({
   // Switching model keeps the resolution when the new one has it, else falls back to its first.
   const resolution = resolutions.includes(chosen) ? chosen : resolutions.includes("720p") ? "720p" : resolutions[0];
   const source = videos.find((v) => v.id === sourceId);
+  const trimBase = original ?? source;
+  const canTrim = Boolean(trimBase?.durationSec && trimBase.durationSec > 4);
+  async function applyTrim() {
+    if (!trimBase) return;
+    const request = ++trimRequest.current;
+    const originalId = trimBase.id;
+    setTrimError("");
+    setTrimNotice("");
+    setTrimming(true);
+    try {
+      const result = await trimSource(originalId, Number(trimSeconds));
+      if (result.asset) {
+        const asset = result.asset;
+        remember(`labia:motion-original:v1:${userId}:${asset.id}`, originalId);
+        setUploaded((current) => ({ ...current, videos: [{ id: asset.id, url: asset.url, name: asset.name, durationSec: asset.durationSec, originalSourceId: originalId }, ...current.videos] }));
+        if (request === trimRequest.current) setSource(asset.id);
+      } else if (request === trimRequest.current) setTrimError(result.error ?? "Could not cut the video.");
+    } catch {
+      if (request === trimRequest.current) setTrimError("Could not cut the video. Your original is unchanged.");
+    } finally {
+      if (request === trimRequest.current) setTrimming(false);
+    }
+  }
+  function cancelTrim() {
+    trimRequest.current++;
+    if (trimming && trimBase) {
+      setSource(trimBase.id);
+      setTrimNotice("Original selected. A completed short copy may remain in your library.");
+    }
+    setEditingTrim(false);
+    setTrimming(false);
+    setTrimSeconds("");
+    setTrimError("");
+  }
   // What this source would cost on a model at the resolution the form holds (or the model's own default).
   const priceOf = (item: (typeof MOTION_MODELS)[number], seconds: number) => {
     const keys = Object.keys(item.rates) as MotionBrief["resolution"][];
@@ -78,8 +147,11 @@ export function MotionForm({
     : null;
   const cost = usd === null ? null : usd * rate;
   return (
-    <form action={action} className="grid gap-6">
+    <form action={action} className="grid gap-6" aria-busy={!ready || pending}>
+      {!ready ? <p role="status" className="text-body-sm text-lab-text-muted">Loading video settings…</p> : null}
+      <fieldset disabled={!ready || pending} className="contents">
       <input type="hidden" name="trend" value={trend.id} />
+      {original ? <input type="hidden" name="originalSourceId" value={original.id} /> : null}
       {draft ? <><input type="hidden" name="contentId" value={draft.id} /><input type="hidden" name="influencerId" value={draft.influencerId} /></> : null}
       <div className="grid gap-5 lg:grid-cols-2">
         <section className="grid content-start gap-4 rounded-lab border border-lab-border bg-lab-surface-1 p-5">
@@ -120,44 +192,52 @@ export function MotionForm({
               className="max-h-80 w-full rounded-lg bg-black"
             />
           )}
-          {source?.durationSec && source.durationSec > 4 && (
+          {source && (
             <div className="grid gap-2 rounded-control border border-lab-border bg-lab-surface-2 p-3 text-body-sm">
-              <span>Testar com menos segundos (custa menos)</span>
-              <span className="flex flex-wrap items-center gap-2">
+              <span>Video length · {source.durationSec?.toFixed(1)} s selected</span>
+              <span className="flex flex-wrap gap-2">
+                <button type="button" className="min-h-11 rounded-full border border-lab-border-strong px-4" onClick={() => { setEditingTrim(true); setTrimNotice(""); }}>Edit cut</button>
+                {original ? <button type="button" className="min-h-11 rounded-full border border-lab-border-strong px-4" onClick={() => setSource(original.id)}>Use original video</button> : null}
+              </span>
+              {editingTrim ? <div className="grid gap-2">
+                {!canTrim ? <label className="grid gap-2">Original video
+                  <select aria-label="Original video" value={manualOriginal || cachedOriginal || ""} className={field} onChange={(event) => { setManualOriginal(event.target.value); remember(originKey, event.target.value); }}>
+                    <option value="">Choose the original video</option>
+                    {videos.filter((video) => video.id !== sourceId && (video.durationSec ?? 0) > 4).map((video) => <option key={video.id} value={video.id}>{video.name} · {video.durationSec?.toFixed(1)} s</option>)}
+                  </select>
+                  <span className="text-caption text-lab-text-muted">Four seconds is the minimum. Select or upload the original to make a different cut.</span>
+                </label> : null}
+                {trimBase ? <span className="text-caption text-lab-text-muted">Cut from: {trimBase.name} · {trimBase.durationSec?.toFixed(1)} s</span> : null}
+                <span className="flex flex-wrap items-center gap-2">
                 <input
                   type="number"
                   inputMode="numeric"
                   min={4}
-                  max={Math.floor(source.durationSec - 0.1)}
+                  max={Math.max(4, Math.floor((trimBase?.durationSec ?? 4) - 0.1))}
+                  step={1}
                   value={trimSeconds}
                   onChange={(e) => setTrimSeconds(e.target.value)}
-                  placeholder="8"
-                  aria-label="Segundos para manter"
+                  placeholder="4"
+                  aria-label="Seconds to keep"
+                  disabled={!canTrim || trimming}
                   className="min-h-11 w-24 rounded-control border border-lab-border bg-lab-surface-1 p-3"
                 />
-                <span className="text-lab-text-dim">segundos iniciais</span>
+                <span className="text-lab-text-dim">first seconds</span>
                 <button
                   type="button"
-                  disabled={trimming || !trimSeconds}
-                  onClick={async () => {
-                    setTrimError("");
-                    setTrimming(true);
-                    const result = await trimSource(source.id, Number(trimSeconds));
-                    setTrimming(false);
-                    if ("error" in result && result.error) return setTrimError(result.error);
-                    const asset = result.asset!;
-                    setUploaded((current) => ({ ...current, videos: [{ id: asset.id, url: asset.url, name: asset.name, durationSec: asset.durationSec }, ...current.videos] }));
-                    setSource(asset.id);
-                    setTrimSeconds("");
-                  }}
-                  className="inline-flex h-9 items-center rounded-full border border-lab-border-strong px-4 text-caption hover:bg-lab-surface-1 disabled:opacity-50 focus-visible:outline-none focus-visible:shadow-lab-focus"
+                  disabled={trimming || !canTrim || !trimSeconds || Number(trimSeconds) < 4 || Number(trimSeconds) >= (trimBase?.durationSec ?? 0)}
+                  onClick={applyTrim}
+                  className="inline-flex min-h-11 items-center rounded-full border border-lab-border-strong px-4 text-caption hover:bg-lab-surface-1 disabled:opacity-50 focus-visible:outline-none focus-visible:shadow-lab-focus"
                 >
-                  {trimming ? "Cortando…" : "Criar versão curta"}
+                  {trimming ? "Cutting…" : "Create short version"}
                 </button>
+                <button type="button" className="min-h-11 rounded-full border border-lab-border-strong px-4" onClick={cancelTrim}>Cancel</button>
               </span>
+              </div> : null}
               <span className="text-caption text-lab-text-muted">
-                Guarda o começo do vídeo como um novo vídeo na lista (sem áudio). O original continua lá.
+                Saves a separate short version and preserves source audio. The original is kept. Older silent cuts need a new cut from the original to recover sound.
               </span>
+              {trimNotice ? <span role="status" className="text-caption text-lab-text-muted">{trimNotice}</span> : null}
               {trimError && <span role="alert" className="text-caption text-lab-danger">{trimError}</span>}
             </div>
           )}
@@ -335,7 +415,7 @@ export function MotionForm({
             <span>
               Manter o som do vídeo de referência
               <span className="block text-caption text-lab-text-muted">
-                Desligado, o vídeo sai mudo. Versões curtas criadas aqui não têm som.
+                Uses the audio present in the selected video. Off generates a silent video.
               </span>
             </span>
           </label>
@@ -367,7 +447,7 @@ export function MotionForm({
         </div>
         <Button
           loading={pending}
-          disabled={!characters.length || !videos.length || !images.length || tooSmall}
+          disabled={!characters.length || !videos.length || !images.length || tooSmall || trimming}
           className="justify-self-start"
           size="lg"
         >
@@ -379,6 +459,7 @@ export function MotionForm({
           </p>
         )}
       </section>
+      </fieldset>
     </form>
   );
 }

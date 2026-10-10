@@ -87,4 +87,18 @@ describe("motion input ownership", () => {
       "first",
     ]);
   });
+  it("preserves the original source on a saved short version and checks its ownership", async () => {
+    const f = form();
+    f.set("originalSourceId", "original");
+    await expect(createMotion("", f)).rejects.toThrow("/i/character/c/new");
+    expect(mocks.create.mock.calls[0][0].data.motion.originalSourceId).toBe("original");
+    expect(mocks.source.mock.calls.at(-1)?.[0].where).toMatchObject({ id: "original", userId: "owner", kind: "VIDEO" });
+  });
+  it("rejects a foreign original before saving the short-version draft", async () => {
+    mocks.source.mockResolvedValueOnce({ id: "video", durationSec: 5 }).mockResolvedValueOnce(null);
+    const f = form();
+    f.set("originalSourceId", "foreign");
+    expect(await createMotion("", f)).toContain("own library");
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
 });

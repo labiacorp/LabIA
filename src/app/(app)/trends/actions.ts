@@ -86,6 +86,7 @@ export async function createMotion(_previous: string, form: FormData) {
     version: 1,
     trend: form.get("trend"),
     sourceId: form.get("sourceId"),
+    originalSourceId: form.get("originalSourceId") || undefined,
     referenceIds,
     prompt: form.get("prompt"),
     keepSound: form.get("keepSound") === "on",
@@ -107,6 +108,8 @@ export async function createMotion(_previous: string, form: FormData) {
     )
       return "Escolha um personagem da sua conta para organizar a produção.";
     await ownedInputs(userId, parsed.data);
+    if (parsed.data.originalSourceId && !(await prisma.asset.findFirst({ where: { id: parsed.data.originalSourceId, userId, kind: "VIDEO", storageKey: { not: null } }, select: { id: true } })))
+      return "Choose an original video from your own library.";
     const contentId = String(form.get("contentId") ?? "");
     if (contentId) {
       const saved = await prisma.$transaction(async (tx) => {

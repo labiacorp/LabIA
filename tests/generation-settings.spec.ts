@@ -79,7 +79,7 @@ test("motion recreation keeps editable model, quality and source duration in the
   await page.getByRole("link", { name: "Edit settings", exact: true }).click();
   await expect(page.locator('select[name="model"]')).toHaveValue("higgsfield/genjutsu/motion-transfer/v1.0");
   await expect(page.locator('select[name="resolution"]')).toHaveValue("480p");
-  await page.locator('select[name="model"]').selectOption("fal-ai/kling-video/v3/pro/motion-control");
+  await page.locator('select[name="model"]').selectOption("fal-ai/kling-video/v3/standard/motion-control");
   await page.locator('select[name="sourceId"]').selectOption(shortId);
   await expect(page.locator('select[name="resolution"]')).toHaveValue("default");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -87,5 +87,5 @@ test("motion recreation keeps editable model, quality and source duration in the
   await page.getByRole("button", { name: "Save settings (free) and review cost" }).click();
   await expect(page).toHaveURL(new RegExp(`/c/${contentId}$`), { timeout: 60_000 });
   const [saved] = await sql`SELECT motion FROM contents WHERE id=${contentId}`;
-  expect(saved.motion).toMatchObject({ model: "fal-ai/kling-video/v3/pro/motion-control", resolution: "default", sourceId: shortId });
+  expect(saved.motion).toMatchObject({ model: "fal-ai/kling-video/v3/standard/motion-control", resolution: "default", sourceId: shortId });
 });

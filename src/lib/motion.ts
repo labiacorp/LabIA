@@ -2,12 +2,14 @@ import { usdBrlRate } from "@/lib/fx";
 import { z } from "zod";
 export const MOTION_MODEL = "higgsfield/genjutsu/motion-transfer/v1.0";
 // Motion-transfer endpoints the user can pick on /trends. `rates` are USD per second of output by resolution
-// ("default" = the endpoint has no resolution choice). Kling prices checked on fal.ai on 2026-10-07; they take a single reference image.
+// ("default" = the endpoint has no resolution choice). Kling prices checked on fal.ai on 2026-10-10; they take a single reference image.
 export type MotionModel = { id: string; name: string; provider: "higgsfield" | "fal"; maxReferences: number; rates: Record<string, number>; note: string };
 export const MOTION_MODELS: MotionModel[] = [
   { id: MOTION_MODEL, name: "Genjutsu Motion Transfer", provider: "higgsfield", maxReferences: 3, rates: { "480p": 0.318, "720p": 0.681, "1080p": 1.632 }, note: "Up to 3 characters. Final cost is confirmed after the run." },
   { id: "fal-ai/kling-video/v2.6/pro/motion-control", name: "Kling 2.6 Pro Motion Control", provider: "fal", maxReferences: 1, rates: { default: 0.112 }, note: "One character. Follows the video's framing, up to 30 s." },
   { id: "fal-ai/kling-video/v3/pro/motion-control", name: "Kling 3 Pro Motion Control", provider: "fal", maxReferences: 1, rates: { default: 0.168 }, note: "One character. Follows the video's framing, up to 30 s." },
+  { id: "fal-ai/kling-video/v2.6/standard/motion-control", name: "Kling 2.6 Standard Motion Control", provider: "fal", maxReferences: 1, rates: { default: 0.07 }, note: "One character. Follows the video's framing, up to 30 s." },
+  { id: "fal-ai/kling-video/v3/standard/motion-control", name: "Kling 3 Standard Motion Control", provider: "fal", maxReferences: 1, rates: { default: 0.126 }, note: "One character. Follows the video's framing, up to 30 s." },
 ];
 // What the Trends form preselects: Kling runs on the fal.ai key we already have, Genjutsu needs separate Higgsfield credentials.
 export const DEFAULT_MOTION_MODEL = "fal-ai/kling-video/v2.6/pro/motion-control";
@@ -23,6 +25,7 @@ export const motionSchema = z.object({
   version: z.literal(1),
   trend: z.enum(["parking", "dance", "custom"]),
   sourceId: z.string().min(1),
+  originalSourceId: z.string().min(1).optional(),
   referenceIds: z
     .array(z.string().min(1))
     .min(1)

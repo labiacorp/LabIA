@@ -165,6 +165,7 @@ export default async function TrendsPage({
           <MotionForm
             key={selected.id + (params.edit ?? params.copy ?? "")}
             trend={selected}
+            userId={userId}
             modelPrompts={modelPrompts}
             characters={characters}
             images={images}

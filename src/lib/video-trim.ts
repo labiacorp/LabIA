@@ -3,20 +3,23 @@ import { createFile, DataStream, Endianness, type Movie, type Sample } from "mp4
 export const MIN_TRIM_SECONDS = 4;
 
 // Keeps the first `seconds` of an H.264 MP4 without re-encoding: the video samples up to that point are copied into a new file
-// (the first frame is always a keyframe, so the cut needs no decoding). Audio is dropped, because the motion models do not keep the original sound.
+// (the first frame is a keyframe, so the cut needs no decoding). Source audio and its decoder configuration are copied too.
 export async function trimMp4(bytes: Uint8Array, seconds: number): Promise<{ bytes: Uint8Array; durationSec: number }> {
   const source = createFile();
   let info: Movie | undefined;
   let failed = false;
-  const samples: Sample[] = [];
-  source.onSamples = (_id, _user, batch) => {
-    samples.push(...batch);
+  const samples = new Map<number, Sample[]>();
+  source.onSamples = (id, _user, batch) => {
+    const collected = samples.get(id) ?? [];
+    collected.push(...batch);
+    samples.set(id, collected);
   };
   source.onReady = (value) => {
     info = value;
     const first = value.videoTracks[0];
     if (first) {
       source.setExtractionOptions(first.id);
+      for (const audio of value.audioTracks) source.setExtractionOptions(audio.id);
       source.start();
     }
   };
@@ -36,7 +39,8 @@ export async function trimMp4(bytes: Uint8Array, seconds: number): Promise<{ byt
 
   const timescale = video.timescale;
   const limit = seconds * timescale;
-  const kept = samples.filter((sample) => sample.dts < limit && sample.data);
+  const kept = (samples.get(video.id) ?? []).filter((sample) => sample.dts < limit && sample.data)
+    .map((sample) => ({ ...sample, duration: Math.min(sample.duration, limit - sample.dts) }));
   if (!kept.length) throw Error("Invalid MP4");
   const avcC = source.moov?.traks.find((trak) => trak.tkhd.track_id === video.id)?.mdia.minf.stbl.stsd.entries[0] as unknown as { avcC?: { write(stream: DataStream): void } };
   if (!avcC?.avcC) throw Error("Invalid MP4");
@@ -58,6 +62,39 @@ export async function trimMp4(bytes: Uint8Array, seconds: number): Promise<{ byt
   });
   for (const sample of kept) {
     output.addSample(track, sample.data!, { duration: sample.duration, dts: sample.dts, cts: sample.cts, is_sync: sample.is_sync });
+  }
+  // Preserve edit lists so encoder delay and composition offsets stay aligned across audio/video.
+  const copyEdits = (fromId: number, toId: number) => {
+    const edits = source.moov?.traks.find((item) => item.tkhd.track_id === fromId)?.edts;
+    const target = output.moov?.traks.find((item) => item.tkhd.track_id === toId);
+    if (!edits?.elst || !target) return;
+    let remaining = mediaDuration;
+    edits.elst.entries = edits.elst.entries.flatMap((entry) => {
+      const duration = Math.min(remaining, Math.round(entry.segment_duration * timescale / movie.timescale));
+      remaining -= duration;
+      return duration > 0 ? [{ ...entry, segment_duration: duration }] : [];
+    });
+    target.addBox(edits);
+  };
+  copyEdits(video.id, track);
+  for (const audio of movie.audioTracks) {
+    const sourceTrack = source.moov?.traks.find((item) => item.tkhd.track_id === audio.id);
+    const description = sourceTrack?.mdia.minf.stbl.stsd.entries[0];
+    if (!description || !audio.audio) throw Error("Unsupported audio track");
+    // Keep whole compressed audio packets inside the video boundary; a trailing packet must not
+    // extend a four-second source into the next billable second.
+    const audioLimit = mediaDuration / timescale * audio.timescale;
+    const audioSamples = (samples.get(audio.id) ?? []).filter((sample) => sample.dts + sample.duration <= audioLimit && sample.data);
+    if (!audioSamples.length) throw Error("Audio samples could not be preserved");
+    type TrackOptions = NonNullable<Parameters<typeof output.addTrack>[0]>;
+    const audioTrack = output.addTrack({
+      type: description.type as TrackOptions["type"], hdlr: "soun", timescale: audio.timescale,
+      media_duration: audioSamples.reduce((sum, sample) => sum + sample.duration, 0), duration: mediaDuration,
+      channel_count: audio.audio.channel_count, samplerate: audio.audio.sample_rate, samplesize: audio.audio.sample_size,
+      description_boxes: description.boxes as TrackOptions["description_boxes"],
+    });
+    for (const sample of audioSamples) output.addSample(audioTrack, sample.data!, { duration: sample.duration, dts: sample.dts, cts: sample.cts, is_sync: sample.is_sync });
+    copyEdits(audio.id, audioTrack);
   }
   const stream = output.getBuffer();
   const durationSec = mediaDuration / timescale;
